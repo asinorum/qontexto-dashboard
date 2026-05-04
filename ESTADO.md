@@ -31,9 +31,26 @@ Deploy: `https://qontexto.com`
 | 13.4 | Card Voces — word cloud dinámico | ✅ 2026-05-04 |
 | 13.5 | Card Momento — sparkline dinámico, pill de tendencia | ✅ 2026-05-04 |
 | 13.6 | Tab Señales — timeline, análisis narrativo, emisoras | ✅ 2026-05-04 |
-| 13.5 | Card Momento — sparkline dinámico, pill de tendencia | Pendiente |
-| 13.6 | Tab Señales — timeline, análisis narrativo, emisoras | Pendiente |
 | 13.7 | Deploy en qontexto.com | Pendiente |
+
+---
+
+## Revisiones pendientes en narrative-intelligence
+
+### `label` faltante en streams_monitored
+El campo `label` (nombre legible de la emisora, ej. "Nova Chimbote") se guarda en el
+dict de la sesión al hacer `POST /session/stream/add`, pero **no se incluye** en el
+`streams_metadata` que se pasa al `ReportEngine` (ver `src/api/routers/reports.py`,
+función `_engine_for_session`).
+
+Como resultado, `GET /session/{id}/state` devuelve `streams_monitored` sin `label`,
+y el Tab Señales del dashboard muestra `radio_id` como fallback (ej. `"nova_am_980"`)
+en lugar del nombre legible.
+
+**Corrección**: añadir `"label": s.get("label", "")` al dict de `streams_metadata`
+en `_engine_for_session` y en `start_session_pipeline`.
+
+---
 
 ### Fase 12 — Notificaciones salientes (posterior)
 Webhook o integración n8n cuando `severity: critical`.
