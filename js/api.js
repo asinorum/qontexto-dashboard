@@ -19,6 +19,24 @@ const URGENCY = {
 };
 const _URGENCY_ORDER = ['critical', 'high', 'medium', 'low'];
 
+const _TONE_URGENCY = {
+  conspirativo:    'critical',
+  confrontacional: 'critical',
+  alarmista:       'high',
+  critico:         'medium',
+  informativo:     'low',
+  positivo:        'low',
+};
+
+// 12 slots ordenados desde el centro hacia los bordes
+const _WC_SLOTS   = [
+  { top: 65,  left: 88  }, { top: 44,  left: 168 }, { top: 98,  left: 8   }, { top: 108, left: 162 },
+  { top: 22,  left: 48  }, { top: 138, left: 85  }, { top: 78,  left: 218 }, { top: 5,   left: 168 },
+  { top: 152, left: 8   }, { top: 6,   left: 4   }, { top: 158, left: 188 }, { top: 130, left: 220 },
+];
+const _WC_SIZES   = [28, 20, 17, 15, 13, 12, 11, 11, 10, 10, 9, 9];
+const _WC_WEIGHTS = [500, 500, 500, 500, 500, 400, 400, 400, 400, 400, 400, 400];
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function limaTime(date = new Date()) {
@@ -135,6 +153,58 @@ function _updateNarrativasCard(state) {
   _setText('card-narrativas-footer', `${n} emisora${n !== 1 ? 's' : ''} · ${limaTime()} PE`);
 }
 
+// ── Card Voces ────────────────────────────────────────────────────────────────
+
+function _buildVocesItems(snapshot) {
+  if (!snapshot?.per_stream) return null;
+
+  const freq    = {};
+  const urgency = {};
+
+  for (const stream of Object.values(snapshot.per_stream)) {
+    const su = _TONE_URGENCY[stream.tone] ?? 'low';
+    for (const kw of (stream.top_keywords ?? [])) {
+      freq[kw]    = (freq[kw] ?? 0) + 1;
+      urgency[kw] = _maxUrgency(urgency[kw], su);
+    }
+  }
+
+  const sorted = Object.keys(freq).sort((a, b) => freq[b] - freq[a]);
+  if (!sorted.length) return null;
+
+  return sorted.slice(0, _WC_SLOTS.length).map(kw => ({
+    label:   kw,
+    count:   freq[kw],
+    urgency: urgency[kw] ?? 'low',
+  }));
+}
+
+function _updateVocesCard(state) {
+  const items = _buildVocesItems(state.latest_snapshot);
+  if (!items) return;
+
+  const wcEl = document.getElementById('word-cloud');
+  if (wcEl) {
+    wcEl.innerHTML = items.map((item, i) => {
+      const slot   = _WC_SLOTS[i];
+      const size   = _WC_SIZES[i]   ?? 9;
+      const weight = _WC_WEIGHTS[i] ?? 400;
+      const color  = URGENCY[item.urgency]?.color ?? 'var(--text3)';
+      return `<span style="font-size:${size}px;font-weight:${weight};color:${color};` +
+        `top:${slot.top}px;left:${slot.left}px">${_esc(item.label)}</span>`;
+    }).join('');
+  }
+
+  if (items.length >= 2) {
+    _setText('card-voces-title', `${items[0].label} y ${items[1].label} dominan el centro`);
+  } else if (items.length === 1) {
+    _setText('card-voces-title', `${items[0].label} domina el centro`);
+  }
+
+  const n = state.streams_monitored?.length ?? 0;
+  _setText('card-voces-footer', `${n} emisora${n !== 1 ? 's' : ''} · ${limaTime()} PE`);
+}
+
 // ── UI update ─────────────────────────────────────────────────────────────────
 
 function _updateUI(state) {
@@ -153,6 +223,7 @@ function _updateUI(state) {
   }
 
   _updateNarrativasCard(state);
+  _updateVocesCard(state);
 }
 
 // ── Poll ──────────────────────────────────────────────────────────────────────

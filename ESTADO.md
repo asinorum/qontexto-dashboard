@@ -11,10 +11,10 @@ Deploy: `https://qontexto.com`
 
 ## Próxima sesión — continuar aquí
 
-**Subfase 13.4 — Card Voces dinámico**
-Reemplazar el word cloud estático con palabras reales desde `latest_snapshot.per_stream[*].top_keywords`.
-Peso visual por frecuencia entre streams. Colores del semáforo según urgencia de la narrativa dominante
-de cada stream.
+**Subfase 13.5 — Card Momento dinámico**
+Sparkline multi-narrativa con datos reales desde `state.snapshots`.
+Eje X = `window_start` de cada snapshot. Eje Y = `correlation_score` de la narrativa dominante.
+Pill de tendencia (Escalando / Estable / Cediendo) comparando último snapshot vs promedio.
 
 ---
 
@@ -27,7 +27,7 @@ de cada stream.
 | 13.1 | Proyecto base — estructura, CSS, shell estático con Docker | ✅ 2026-05-04 |
 | 13.2 | Conexión API — sesión activa, poll 30s, stat cards | ✅ 2026-05-04 |
 | 13.3 | Card Narrativas — pie chart dinámico, veredictos | ✅ 2026-05-04 |
-| 13.4 | Card Voces — word cloud dinámico | Pendiente |
+| 13.4 | Card Voces — word cloud dinámico | ✅ 2026-05-04 |
 | 13.5 | Card Momento — sparkline dinámico, pill de tendencia | Pendiente |
 | 13.6 | Tab Señales — timeline, análisis narrativo, emisoras | Pendiente |
 | 13.7 | Deploy en qontexto.com | Pendiente |
