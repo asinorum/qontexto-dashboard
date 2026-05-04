@@ -1,0 +1,298 @@
+
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Dashboard Qontexto completo con dos tabs: Resumen para el director y Señales para el analista.</h2>
+
+<style>
+#qapp*{box-sizing:border-box;margin:0;padding:0}
+#qapp{
+  --bg:#EFEDE6;--surface:#FAFAF7;--surface2:#EDEAE2;--border:rgba(0,0,0,0.07);
+  --text1:#1C1C1A;--text2:#5C5A52;--text3:#9C9A90;
+  background:var(--bg);border-radius:16px;overflow:hidden;
+  font-family:var(--font-sans);
+}
+#qapp[data-theme=dark]{
+  --bg:#111110;--surface:#1C1C1A;--surface2:#252522;--border:rgba(255,255,255,0.07);
+  --text1:#EEECEA;--text2:#9A9890;--text3:#5A5852;
+}
+.qnav{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;background:var(--surface);border-bottom:.5px solid var(--border)}
+.qlogo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:500;color:var(--text1)}
+.qlogo-dot{width:10px;height:10px;border-radius:50%;background:#FF5722;flex-shrink:0}
+.qtabs{display:flex;background:var(--surface2);border-radius:10px;padding:3px;gap:2px}
+.qtab{padding:5px 16px;border-radius:7px;font-size:13px;color:var(--text2);cursor:pointer;border:none;background:transparent;font-family:var(--font-sans)}
+.qtab.active{background:var(--surface);color:var(--text1);font-weight:500}
+.qnav-right{display:flex;align-items:center;gap:12px}
+.qlive{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.qlive-dot{width:7px;height:7px;border-radius:50%;background:#4CAF50;flex-shrink:0}
+.qbtn{width:32px;height:32px;border-radius:8px;border:.5px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.qtimebar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:44px;background:var(--surface);border-bottom:.5px solid var(--border)}
+.qwlabel{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-right:12px}
+.qwindow-tabs{display:flex;align-items:center;gap:2px}
+.qwt{padding:4px 11px;border-radius:6px;font-size:12px;color:var(--text3);cursor:pointer;border:none;background:transparent;font-family:var(--font-sans)}
+.qwt.active{background:var(--surface2);color:var(--text1);font-weight:500}
+.qrange{font-size:11px;color:var(--text3)}
+.qsnap{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:8px;border:.5px solid var(--border);background:var(--surface2);font-size:11px;font-weight:500;color:var(--text2);cursor:pointer;font-family:var(--font-sans)}
+.qsnap-dot{width:6px;height:6px;border-radius:50%;background:#FF5722;flex-shrink:0}
+.qcontent{padding:14px 20px 24px}
+.qstats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.qstat{background:var(--surface);border-radius:16px;padding:14px 16px;border:.5px solid var(--border)}
+.qstat-lbl{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.qstat-val{font-size:26px;font-weight:500;color:var(--text1);line-height:1;margin-bottom:3px}
+.qstat-sub{font-size:11px;color:var(--text3)}
+.qcard{background:var(--surface);border-radius:20px;border:.5px solid var(--border);padding:18px;position:relative}
+.qcard-lbl{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.qcard-title{font-size:13px;font-weight:500;color:var(--text1);margin-bottom:14px;line-height:1.45}
+.qcard-note{font-size:10px;color:var(--text3);margin-top:10px;padding:7px 10px;background:var(--surface2);border-radius:8px;line-height:1.5}
+.qcard-footer{font-size:10px;color:var(--text3);margin-top:10px;padding-top:10px;border-top:.5px solid var(--border)}
+.qverdict{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px}
+.qleg-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.qleg-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.qleg-name{font-size:11px;color:var(--text2);margin-left:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qleg-tag{font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap;margin-left:6px}
+.qwc{position:relative;width:100%;height:170px;overflow:hidden}
+.qwc span{position:absolute;line-height:1;cursor:default;white-space:nowrap}
+.qtimeline{display:flex;flex-direction:column}
+.qtevent{display:flex;gap:14px;padding-bottom:18px}
+.qtevent:last-child{padding-bottom:0}
+.qtl-left{display:flex;flex-direction:column;align-items:center;width:38px;flex-shrink:0}
+.qtl-time{font-size:10px;color:var(--text3);white-space:nowrap;margin-bottom:5px;text-align:right;width:100%}
+.qtl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.qtl-line{width:1px;flex:1;background:var(--border);margin-top:4px}
+.qtevent:last-child .qtl-line{display:none}
+.qtl-title{font-size:13px;font-weight:500;color:var(--text1);margin-bottom:2px}
+.qtl-sub{font-size:11px;color:var(--text3);line-height:1.4}
+.qtl-quote{font-size:12px;color:#991B1B;margin-top:4px;font-style:italic}
+.qstream-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qstream{background:var(--surface);border-radius:16px;border:.5px solid var(--border);padding:14px}
+.qstream-name{font-size:13px;font-weight:500;color:var(--text1);margin-bottom:2px;display:flex;align-items:center;gap:6px}
+.qstream-region{font-size:11px;color:var(--text3);margin-bottom:10px}
+.qstream-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.qstream-key{color:var(--text3)}
+.qstream-val{font-weight:500;color:var(--text1)}
+</style>
+
+<div id="qapp" data-theme="light">
+
+  <nav class="qnav">
+    <div class="qlogo"><div class="qlogo-dot"></div>Qontexto</div>
+    <div class="qtabs">
+      <button class="qtab active" onclick="switchTab('resumen',this)">Resumen</button>
+      <button class="qtab" onclick="switchTab('senales',this)">Señales</button>
+    </div>
+    <div class="qnav-right">
+      <div class="qlive"><div class="qlive-dot"></div>3 streams · 14:32 PE</div>
+      <button class="qbtn" onclick="toggleTheme()" title="Cambiar modo">
+        <svg id="ico-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg id="ico-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="qtimebar">
+    <div style="display:flex;align-items:center">
+      <span class="qwlabel">Ventana</span>
+      <div class="qwindow-tabs">
+        <button class="qwt" onclick="setWindow(this,'30 min')">30 min</button>
+        <button class="qwt active" onclick="setWindow(this,'1 h')">1 h</button>
+        <button class="qwt" onclick="setWindow(this,'3 h')">3 h</button>
+        <button class="qwt" onclick="setWindow(this,'Personalizado')">Personalizado</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span class="qrange">13:32 — 14:32 PE</span>
+      <button class="qsnap"><div class="qsnap-dot"></div>Snapshot PDF</button>
+    </div>
+  </div>
+
+  <!-- Tab: Resumen -->
+  <div id="tab-resumen" class="qcontent">
+    <div class="qstats">
+      <div class="qstat"><div class="qstat-lbl">Ventana</div><div class="qstat-val" id="stat-vent">1 h</div><div class="qstat-sub">deslizante · en vivo</div></div>
+      <div class="qstat"><div class="qstat-lbl">Streams</div><div class="qstat-val">3</div><div class="qstat-sub">activos ahora</div></div>
+      <div class="qstat"><div class="qstat-lbl">Alertas</div><div class="qstat-val" style="color:#EF4444">8</div><div class="qstat-sub">en esta ventana</div></div>
+      <div class="qstat"><div class="qstat-lbl">Actualizado</div><div class="qstat-val">~30s</div><div class="qstat-sub">recálculo automático</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="qcard">
+        <div class="qcard-lbl">Narrativas</div>
+        <div class="qcard-title">Paro regional Áncash requiere atención inmediata</div>
+        <div style="position:relative;width:100%;height:155px"><canvas id="pieChart" role="img" aria-label="Pie chart de urgencia narrativa con cuatro segmentos">Paro Áncash alerta máxima, Antamina señal temprana, San Marcos emergiendo, Reforestación estable.</canvas></div>
+        <div style="margin-top:14px">
+          <div class="qleg-row"><span style="display:flex;align-items:center;min-width:0;flex:1"><span class="qleg-dot" style="background:#991B1B"></span><span class="qleg-name">Paro regional Áncash</span></span><span class="qleg-tag" style="background:#FEF2F2;color:#991B1B">Alerta máxima</span></div>
+          <div class="qleg-row"><span style="display:flex;align-items:center;min-width:0;flex:1"><span class="qleg-dot" style="background:#EF4444"></span><span class="qleg-name">Conflicto Antamina</span></span><span class="qleg-tag" style="background:#FEF2F2;color:#B91C1C">Señal temprana</span></div>
+          <div class="qleg-row"><span style="display:flex;align-items:center;min-width:0;flex:1"><span class="qleg-dot" style="background:#F59E0B"></span><span class="qleg-name">Tensión social San Marcos</span></span><span class="qleg-tag" style="background:#FFFBEB;color:#B45309">Emergiendo</span></div>
+          <div class="qleg-row" style="margin-bottom:0"><span style="display:flex;align-items:center;min-width:0;flex:1"><span class="qleg-dot" style="background:#4CAF50"></span><span class="qleg-name">Reforestación minera</span></span><span class="qleg-tag" style="background:#F0FBF1;color:#2E7D32">Estable</span></div>
+        </div>
+        <div class="qcard-note">Tamaño + color = urgencia.</div>
+        <div class="qcard-footer">3 emisoras · 14:32 PE</div>
+      </div>
+
+      <div class="qcard">
+        <div class="qcard-lbl">Voces</div>
+        <div class="qcard-title">Paro y Áncash dominan el centro; reforestación cede hacia los bordes</div>
+        <div class="qwc">
+          <span style="font-size:28px;font-weight:500;color:#991B1B;top:65px;left:88px">paro</span>
+          <span style="font-size:20px;font-weight:500;color:#991B1B;top:44px;left:168px">Áncash</span>
+          <span style="font-size:17px;font-weight:500;color:#EF4444;top:98px;left:8px">Antamina</span>
+          <span style="font-size:15px;font-weight:500;color:#EF4444;top:108px;left:162px">San Marcos</span>
+          <span style="font-size:13px;color:#F59E0B;top:22px;left:48px">convocatoria</span>
+          <span style="font-size:12px;color:#F59E0B;top:138px;left:85px">movilización</span>
+          <span style="font-size:11px;color:#F59E0B;top:78px;left:218px">dirigente</span>
+          <span style="font-size:11px;color:#4CAF50;top:5px;left:168px">reforestación</span>
+          <span style="font-size:10px;color:#4CAF50;top:152px;left:8px">Cajamarca</span>
+          <span style="font-size:10px;color:var(--text3);top:6px;left:4px">minería</span>
+          <span style="font-size:9px;color:var(--text3);top:158px;left:188px">comunidades</span>
+        </div>
+        <div class="qcard-note">Centro + color oscuro = urgencia máxima.</div>
+        <div class="qcard-footer">3 emisoras · 14:32 PE</div>
+      </div>
+    </div>
+
+    <div class="qcard">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
+        <div>
+          <div class="qcard-lbl">Momento</div>
+          <div class="qcard-title" style="margin-bottom:0">Paro regional Áncash irrumpió a las 14:15 — conflicto Antamina escala de fondo desde el inicio</div>
+        </div>
+        <div class="qverdict" style="background:#FEF2F2;color:#991B1B;flex-shrink:0;margin-top:18px">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#991B1B" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+          Escalando
+        </div>
+      </div>
+      <div style="position:relative;width:100%;height:160px;margin-top:14px"><canvas id="sparkline" role="img" aria-label="Línea temporal multi-narrativa mostrando escalada del paro desde 14:15">Paro Áncash irrumpe a las 14:15. Antamina crecimiento sostenido. Otras narrativas contexto estable.</canvas></div>
+      <div class="qcard-note">Líneas gruesas = narrativas urgentes. Líneas tenues = contexto. El color es el mismo en los tres cards.</div>
+      <div class="qcard-footer">3 emisoras · 13:32 — 14:32 PE</div>
+    </div>
+  </div>
+
+  <!-- Tab: Señales -->
+  <div id="tab-senales" class="qcontent" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+
+      <div class="qcard">
+        <div class="qcard-lbl" style="margin-bottom:14px">Línea de tiempo · Última hora</div>
+        <div class="qtimeline">
+          <div class="qtevent">
+            <div class="qtl-left"><div class="qtl-time">13:32</div><div class="qtl-dot" style="background:#4CAF50"></div><div class="qtl-line"></div></div>
+            <div><div class="qtl-title">Inicio de ventana</div><div class="qtl-sub">3 streams activos</div></div>
+          </div>
+          <div class="qtevent">
+            <div class="qtl-left"><div class="qtl-time">14:08</div><div class="qtl-dot" style="background:var(--text3)"></div><div class="qtl-line"></div></div>
+            <div><div class="qtl-title">Primeras menciones</div><div class="qtl-sub">Reforestación minera · RPP Cajamarca · narrativa aislada</div></div>
+          </div>
+          <div class="qtevent">
+            <div class="qtl-left"><div class="qtl-time">14:21</div><div class="qtl-dot" style="background:#F59E0B"></div><div class="qtl-line"></div></div>
+            <div><div class="qtl-title">Mención a San Marcos</div><div class="qtl-sub">Radio San Marcos · Áncash · tono neutral</div></div>
+          </div>
+          <div class="qtevent" style="background:rgba(153,27,27,0.05);border-radius:12px;padding:10px;margin:0 -4px">
+            <div class="qtl-left"><div class="qtl-time" style="color:#991B1B;font-weight:500">14:28</div><div class="qtl-dot" style="background:#991B1B"></div><div class="qtl-line"></div></div>
+            <div><div class="qtl-title" style="color:#991B1B">Señal de atención — Nova Chimbote</div><div class="qtl-quote">"San Marcos, te vas a acordar de mí"</div></div>
+          </div>
+          <div class="qtevent">
+            <div class="qtl-left"><div class="qtl-time">14:32</div><div class="qtl-dot" style="background:#4CAF50;box-shadow:0 0 0 3px rgba(76,175,80,0.2)"></div></div>
+            <div><div class="qtl-title" style="color:var(--text2);font-style:italic">Ahora — monitoreo activo</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="qcard">
+        <div class="qcard-lbl" style="margin-bottom:12px">Análisis narrativo</div>
+        <div style="font-size:13px;color:var(--text2);line-height:1.65">
+          <p style="margin-bottom:12px">Durante la última hora se registraron <span style="font-weight:500;color:var(--text1)">8 alertas</span> con narrativa dominante centrada en <span style="font-weight:500;color:#4CAF50">reforestación minera en Cajamarca</span> y menciones aisladas a San Marcos, sin evidencia de campaña articulada.</p>
+          <p style="margin-bottom:12px">Destaca una <span style="font-weight:500;color:#991B1B">señal de atención en Nova Chimbote</span> (Áncash): la frase <em style="color:#991B1B">"San Marcos, te vas a acordar de mí"</em> podría indicar declaración de dirigente o inicio de movilización.</p>
+          <div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
+            <div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Recomendación</div>
+            <div style="font-size:12px;color:var(--text1);line-height:1.5">Verificar convocatoria de protesta en San Marcos hoy. Monitoreo intensivo de Nova Chimbote próximos 30 minutos.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="qcard">
+      <div class="qcard-lbl" style="margin-bottom:12px">Resumen por emisora</div>
+      <div class="qstream-grid">
+        <div class="qstream" style="border-color:rgba(153,27,27,0.2)">
+          <div class="qstream-name"><div style="width:8px;height:8px;border-radius:50%;background:#991B1B;flex-shrink:0"></div>Nova Chimbote</div>
+          <div class="qstream-region">Áncash</div>
+          <div class="qstream-row"><span class="qstream-key">Alertas</span><span class="qstream-val" style="color:#EF4444">5</span></div>
+          <div class="qstream-row"><span class="qstream-key">Estado</span><span class="qstream-val" style="color:#991B1B">Vigilancia</span></div>
+        </div>
+        <div class="qstream">
+          <div class="qstream-name"><div style="width:8px;height:8px;border-radius:50%;background:#4CAF50;flex-shrink:0"></div>RPP Cajamarca</div>
+          <div class="qstream-region">Cajamarca</div>
+          <div class="qstream-row"><span class="qstream-key">Alertas</span><span class="qstream-val">2</span></div>
+          <div class="qstream-row"><span class="qstream-key">Estado</span><span class="qstream-val" style="color:#4CAF50">Normal</span></div>
+        </div>
+        <div class="qstream">
+          <div class="qstream-name"><div style="width:8px;height:8px;border-radius:50%;background:#4CAF50;flex-shrink:0"></div>Radio San Marcos</div>
+          <div class="qstream-region">Áncash</div>
+          <div class="qstream-row"><span class="qstream-key">Alertas</span><span class="qstream-val">1</span></div>
+          <div class="qstream-row"><span class="qstream-key">Estado</span><span class="qstream-val" style="color:#4CAF50">Normal</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let isDark=false,pieRef,sparkRef;
+function tickColor(){return isDark?'rgba(154,152,144,0.45)':'rgba(90,88,80,0.4)';}
+function surfaceColor(){return isDark?'#1C1C1A':'#FAFAF7';}
+
+function initCharts(){
+  if(pieRef)pieRef.destroy();
+  if(sparkRef)sparkRef.destroy();
+  pieRef=new Chart(document.getElementById('pieChart'),{
+    type:'pie',
+    data:{
+      labels:['Paro regional Áncash','Conflicto Antamina','Tensión social San Marcos','Reforestación minera'],
+      datasets:[{data:[40,30,20,10],backgroundColor:['#991B1B','#EF4444','#F59E0B','#4CAF50'],borderWidth:3,borderColor:surfaceColor(),hoverOffset:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>{const v=['Alerta máxima','Señal temprana','Emergiendo','Estable'];return ` ${c.label}: ${v[c.dataIndex]}`;}}}}
+    }
+  });
+  sparkRef=new Chart(document.getElementById('sparkline'),{
+    type:'line',
+    data:{
+      labels:['13:32','13:45','14:00','14:08','14:15','14:21','14:28','14:32'],
+      datasets:[
+        {label:'Paro regional Áncash',data:[0,0,0,0,1,2,5,8],borderColor:'#991B1B',backgroundColor:'rgba(153,27,27,0.07)',fill:true,tension:0.4,borderWidth:2.5,pointRadius:[0,0,0,0,5,4,7,7],pointBackgroundColor:'#991B1B',pointBorderWidth:0},
+        {label:'Conflicto Antamina',data:[0,1,1,2,2,3,4,5],borderColor:'#EF4444',backgroundColor:'transparent',fill:false,tension:0.4,borderWidth:2,pointRadius:[0,0,0,3,0,3,5,5],pointBackgroundColor:'#EF4444',pointBorderWidth:0},
+        {label:'Tensión San Marcos',data:[1,1,2,2,3,3,3,3],borderColor:'rgba(245,158,11,0.35)',fill:false,tension:0.4,borderWidth:1,pointRadius:0},
+        {label:'Reforestación minera',data:[2,3,3,3,3,2,2,2],borderColor:'rgba(76,175,80,0.35)',fill:false,tension:0.4,borderWidth:1,pointRadius:0}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:(c)=>` ${c.dataset.label}`}}},
+      scales:{y:{display:false,min:-0.5,max:10},x:{grid:{display:false},border:{display:false},ticks:{color:tickColor(),font:{size:10},maxRotation:0}}}
+    }
+  });
+}
+
+function toggleTheme(){
+  isDark=!isDark;
+  document.getElementById('qapp').setAttribute('data-theme',isDark?'dark':'light');
+  document.getElementById('ico-sun').style.display=isDark?'none':'block';
+  document.getElementById('ico-moon').style.display=isDark?'block':'none';
+  if(pieRef){pieRef.data.datasets[0].borderColor=surfaceColor();pieRef.update();}
+  if(sparkRef){sparkRef.options.scales.x.ticks.color=tickColor();sparkRef.update();}
+}
+
+function switchTab(tab,el){
+  document.querySelectorAll('.qtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-resumen').style.display=tab==='resumen'?'block':'none';
+  document.getElementById('tab-senales').style.display=tab==='senales'?'block':'none';
+}
+
+function setWindow(el,label){
+  document.querySelectorAll('.qwt').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('stat-vent').textContent=label;
+}
+
+initCharts();
+</script>
