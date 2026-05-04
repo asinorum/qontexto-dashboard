@@ -11,9 +11,11 @@ Deploy: `https://qontexto.com`
 
 ## Próxima sesión — continuar aquí
 
-**Subfase 13.1 — Proyecto base**
-Estructura de archivos, HTML documento completo, CSS portado, charts con datos mock.
-Docker: `nginx:alpine`. Sin conexión a API todavía.
+**Subfase 13.2 — Conexión API**
+Precondición: habilitar `CORSMiddleware` en `src/api/server.py` del repo `narrative-intelligence`
+para orígenes `https://qontexto.com` y `http://localhost:3000`.
+Luego implementar `js/api.js`: GET /sessions + GET /session/{id}/state, poll 30s,
+stat cards dinámicos, live indicator con hora Lima.
 
 ---
 
@@ -23,8 +25,8 @@ Docker: `nginx:alpine`. Sin conexión a API todavía.
 
 | Subfase | Descripción | Estado |
 |---|---|---|
-| 13.1 | Proyecto base — estructura, CSS, shell estático con Docker | 🔄 Siguiente |
-| 13.2 | Conexión API — sesión activa, poll 30s, stat cards | Pendiente |
+| 13.1 | Proyecto base — estructura, CSS, shell estático con Docker | ✅ 2026-05-04 |
+| 13.2 | Conexión API — sesión activa, poll 30s, stat cards | 🔄 Siguiente |
 | 13.3 | Card Narrativas — pie chart dinámico, veredictos | Pendiente |
 | 13.4 | Card Voces — word cloud dinámico | Pendiente |
 | 13.5 | Card Momento — sparkline dinámico, pill de tendencia | Pendiente |
