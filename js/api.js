@@ -37,6 +37,12 @@ const _WC_SLOTS   = [
 const _WC_SIZES   = [28, 20, 17, 15, 13, 12, 11, 11, 10, 10, 9, 9];
 const _WC_WEIGHTS = [500, 500, 500, 500, 500, 400, 400, 400, 400, 400, 400, 400];
 
+const _TREND_CONFIG = {
+  escalando: { label: 'Escalando', bg: '#FEF2F2', color: '#991B1B', arrow: '<polyline points="18 15 12 9 6 15"/>' },
+  estable:   { label: 'Estable',   bg: '#FFFBEB', color: '#B45309', arrow: '<line x1="5" y1="12" x2="19" y2="12"/>' },
+  cediendo:  { label: 'Cediendo',  bg: '#F0FBF1', color: '#2E7D32', arrow: '<polyline points="6 9 12 15 18 9"/>'  },
+};
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function limaTime(date = new Date()) {
@@ -73,6 +79,13 @@ function _maxUrgency(a, b) {
   const ia = _URGENCY_ORDER.indexOf(a ?? 'low');
   const ib = _URGENCY_ORDER.indexOf(b ?? 'low');
   return ia <= ib ? (a ?? 'low') : (b ?? 'low');
+}
+
+function _hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 // ── Session detection ─────────────────────────────────────────────────────────
@@ -114,8 +127,7 @@ function _buildNarrativeItems(snapshots) {
   return items;
 }
 
-function _updateNarrativasCard(state) {
-  const items = _buildNarrativeItems(state.snapshots);
+function _updateNarrativasCard(state, items) {
   if (!items) return;
 
   if (typeof pieRef !== 'undefined' && pieRef) {
@@ -205,6 +217,91 @@ function _updateVocesCard(state) {
   _setText('card-voces-footer', `${n} emisora${n !== 1 ? 's' : ''} · ${limaTime()} PE`);
 }
 
+// ── Card Momento ─────────────────────────────────────────────────────────────
+
+function _detectTrend(snapshots, narrative) {
+  const series = snapshots
+    .filter(s => s.dominant_narrative === narrative)
+    .sort((a, b) => new Date(a.window_start) - new Date(b.window_start))
+    .map(s => s.correlation_score);
+
+  if (series.length < 2) return 'estable';
+  const last = series[series.length - 1];
+  const avg  = series.slice(0, -1).reduce((s, v) => s + v, 0) / (series.length - 1);
+  if (last > avg * 1.15) return 'escalando';
+  if (last < avg * 0.85) return 'cediendo';
+  return 'estable';
+}
+
+function _buildSparklineData(snapshots, narrativeItems) {
+  if (!snapshots?.length || !narrativeItems?.length) return null;
+
+  const sorted = [...snapshots].sort(
+    (a, b) => new Date(a.window_start) - new Date(b.window_start)
+  );
+  const labels = sorted.map(s => limaTime(new Date(s.window_start)));
+  const top4   = narrativeItems.filter(i => i.urgency !== 'neutral').slice(0, 4);
+
+  const datasets = top4.map((item, idx) => {
+    const data    = sorted.map(s =>
+      s.dominant_narrative === item.label
+        ? Math.round(s.correlation_score * 100) / 10  // 0.0–1.0 → 0.0–10.0
+        : null
+    );
+    const color   = URGENCY[item.urgency]?.color ?? '#9E9E9E';
+    const isTop   = idx < 2;
+    return {
+      label:               item.label,
+      data,
+      spanGaps:            false,
+      borderColor:         isTop ? color : _hexToRgba(color, 0.35),
+      backgroundColor:     idx === 0 ? _hexToRgba(color, 0.07) : 'transparent',
+      fill:                idx === 0,
+      tension:             0.4,
+      borderWidth:         isTop ? 2.5 : 1,
+      pointRadius:         data.map(v => v !== null ? (isTop ? 5 : 3) : 0),
+      pointBackgroundColor: color,
+      pointBorderWidth:    0,
+    };
+  });
+
+  return { labels, datasets };
+}
+
+function _updateMomentoCard(state, narrativeItems) {
+  const snap = state.latest_snapshot;
+  if (!snap || !narrativeItems?.length) return;
+
+  const sparkData = _buildSparklineData(state.snapshots, narrativeItems);
+  if (sparkData && typeof sparkRef !== 'undefined' && sparkRef) {
+    sparkRef.data.labels   = sparkData.labels;
+    sparkRef.data.datasets = sparkData.datasets;
+    sparkRef.update();
+  }
+
+  const trend  = _detectTrend(state.snapshots ?? [], snap.dominant_narrative ?? '');
+  const tConf  = _TREND_CONFIG[trend];
+  const pillEl = document.getElementById('card-momento-pill');
+  if (pillEl && tConf) {
+    pillEl.style.background = tConf.bg;
+    pillEl.style.color      = tConf.color;
+    pillEl.innerHTML =
+      `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${tConf.color}" ` +
+      `stroke-width="2.5" stroke-linecap="round">${tConf.arrow}</svg> ${tConf.label}`;
+  }
+
+  const title = snap.cross_stream_signals?.[0] ?? snap.dominant_narrative ?? '';
+  _setText('card-momento-title', title);
+
+  const n     = state.streams_monitored?.length ?? 0;
+  const start = state.session_start ? limaTime(new Date(state.session_start)) : '';
+  _setText('card-momento-footer',
+    start
+      ? `${n} emisora${n !== 1 ? 's' : ''} · ${start} — ${limaTime()} PE`
+      : `${n} emisora${n !== 1 ? 's' : ''} · ${limaTime()} PE`
+  );
+}
+
 // ── UI update ─────────────────────────────────────────────────────────────────
 
 function _updateUI(state) {
@@ -222,8 +319,10 @@ function _updateUI(state) {
                         : 'inherit';
   }
 
-  _updateNarrativasCard(state);
+  const narrativeItems = _buildNarrativeItems(state.snapshots);
+  _updateNarrativasCard(state, narrativeItems);
   _updateVocesCard(state);
+  _updateMomentoCard(state, narrativeItems);
 }
 
 // ── Poll ──────────────────────────────────────────────────────────────────────
