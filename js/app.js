@@ -1,5 +1,6 @@
 let isDark = false;
 let pieRef, sparkRef;
+let _pieVerdicts = ['Alerta máxima', 'Señal temprana', 'Emergiendo', 'Estable'];
 
 function surfaceColor() { return isDark ? '#1C1C1A' : '#FAFAF7'; }
 function tickColor()    { return isDark ? 'rgba(154,152,144,0.45)' : 'rgba(90,88,80,0.4)'; }
@@ -27,10 +28,7 @@ function initCharts() {
         legend: { display: false },
         tooltip: {
           callbacks: {
-            label: (c) => {
-              const veredictos = ['Alerta máxima', 'Señal temprana', 'Emergiendo', 'Estable'];
-              return ` ${c.label}: ${veredictos[c.dataIndex]}`;
-            }
+            label: (c) => ` ${c.label}: ${_pieVerdicts[c.dataIndex] ?? ''}`
           }
         }
       }

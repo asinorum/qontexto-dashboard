@@ -11,11 +11,10 @@ Deploy: `https://qontexto.com`
 
 ## Próxima sesión — continuar aquí
 
-**Subfase 13.2 — Conexión API**
-Precondición: habilitar `CORSMiddleware` en `src/api/server.py` del repo `narrative-intelligence`
-para orígenes `https://qontexto.com` y `http://localhost:3000`.
-Luego implementar `js/api.js`: GET /sessions + GET /session/{id}/state, poll 30s,
-stat cards dinámicos, live indicator con hora Lima.
+**Subfase 13.4 — Card Voces dinámico**
+Reemplazar el word cloud estático con palabras reales desde `latest_snapshot.per_stream[*].top_keywords`.
+Peso visual por frecuencia entre streams. Colores del semáforo según urgencia de la narrativa dominante
+de cada stream.
 
 ---
 
@@ -26,8 +25,8 @@ stat cards dinámicos, live indicator con hora Lima.
 | Subfase | Descripción | Estado |
 |---|---|---|
 | 13.1 | Proyecto base — estructura, CSS, shell estático con Docker | ✅ 2026-05-04 |
-| 13.2 | Conexión API — sesión activa, poll 30s, stat cards | 🔄 Siguiente |
-| 13.3 | Card Narrativas — pie chart dinámico, veredictos | Pendiente |
+| 13.2 | Conexión API — sesión activa, poll 30s, stat cards | ✅ 2026-05-04 |
+| 13.3 | Card Narrativas — pie chart dinámico, veredictos | ✅ 2026-05-04 |
 | 13.4 | Card Voces — word cloud dinámico | Pendiente |
 | 13.5 | Card Momento — sparkline dinámico, pill de tendencia | Pendiente |
 | 13.6 | Tab Señales — timeline, análisis narrativo, emisoras | Pendiente |
@@ -51,8 +50,8 @@ nginx (host, 64.176.16.172)
 Cada repo tiene su propio `docker-compose.yml`. Se despliegan de forma independiente.
 
 ### CORS
-La API (`narrative-intelligence`) debe tener `CORSMiddleware` habilitado para
-el origen `https://qontexto.com`. Pendiente de implementar antes de 13.2.
+`CORSMiddleware` habilitado en `narrative-intelligence/src/api/server.py`
+para `https://qontexto.com` y `http://localhost:3000`. Implementado en 13.2.
 
 ### Snapshot PDF
 El botón "Snapshot PDF" queda visible pero deshabilitado hasta que el backend
