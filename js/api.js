@@ -323,6 +323,168 @@ function _updateUI(state) {
   _updateNarrativasCard(state, narrativeItems);
   _updateVocesCard(state);
   _updateMomentoCard(state, narrativeItems);
+  _updateSenalesTab(state);
+}
+
+// ── Tab Señales ───────────────────────────────────────────────────────────────
+
+const _SEV_COLOR = { critical: '#991B1B', high: '#EF4444', medium: '#F59E0B', low: 'var(--text3)' };
+const _SEV_ORDER = ['critical', 'high', 'medium', 'low'];
+
+function _streamStatus(sev) {
+  if (sev === 'critical') return { label: 'Vigilancia crítica', color: '#991B1B' };
+  if (sev === 'high')     return { label: 'Vigilancia',         color: '#EF4444' };
+  if (sev === 'medium')   return { label: 'Atención',           color: '#F59E0B' };
+  return                         { label: 'Normal',             color: '#4CAF50' };
+}
+
+function _renderTimeline(state, alerts, streams) {
+  const el = document.getElementById('senales-timeline');
+  if (!el) return;
+
+  const sorted = [...alerts].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  const rows   = [];
+
+  const startTime = state.session_start ? limaTime(new Date(state.session_start)) : null;
+  if (startTime) {
+    const n = streams.length;
+    rows.push(
+      `<div class="qtevent"><div class="qtl-left">` +
+      `<div class="qtl-time">${startTime}</div>` +
+      `<div class="qtl-dot" style="background:#4CAF50"></div><div class="qtl-line"></div></div>` +
+      `<div><div class="qtl-title">Inicio de monitoreo</div>` +
+      `<div class="qtl-sub">${n} stream${n !== 1 ? 's' : ''} activos</div></div></div>`
+    );
+  }
+
+  for (const ev of sorted) {
+    const sev      = ev.alert?.severity ?? 'low';
+    const color    = _SEV_COLOR[sev] ?? 'var(--text3)';
+    const isUrgent = sev === 'critical' || sev === 'high';
+    const time     = limaTime(new Date(ev.timestamp));
+    const summary  = _esc(ev.alert?.summary ?? '');
+    const sub      = [ev.radio_id, ev.region].filter(Boolean).map(_esc).join(' · ');
+    const raw      = ev.text ?? '';
+    const quote    = raw.length > 0 && raw.length <= 150
+      ? _esc(raw.length > 120 ? raw.slice(0, 119) + '…' : raw)
+      : '';
+
+    const wrap  = isUrgent
+      ? `style="background:rgba(153,27,27,0.05);border-radius:12px;padding:10px;margin:0 -4px"`
+      : '';
+    const tSty  = isUrgent ? ` style="color:${color};font-weight:500"` : '';
+    const hdSty = isUrgent ? ` style="color:${color}"` : '';
+
+    rows.push(
+      `<div class="qtevent" ${wrap}><div class="qtl-left">` +
+      `<div class="qtl-time"${tSty}>${time}</div>` +
+      `<div class="qtl-dot" style="background:${color}"></div><div class="qtl-line"></div></div>` +
+      `<div><div class="qtl-title"${hdSty}>${summary}</div>` +
+      (sub   ? `<div class="qtl-sub">${sub}</div>` : '') +
+      (quote ? `<div class="qtl-quote">"${quote}"</div>` : '') +
+      `</div></div>`
+    );
+  }
+
+  rows.push(
+    `<div class="qtevent"><div class="qtl-left">` +
+    `<div class="qtl-time">${limaTime()}</div>` +
+    `<div class="qtl-dot" style="background:#4CAF50;box-shadow:0 0 0 3px rgba(76,175,80,0.2)"></div>` +
+    `</div><div><div class="qtl-title" style="color:var(--text2);font-style:italic">Ahora — monitoreo activo</div></div></div>`
+  );
+
+  el.innerHTML = rows.join('');
+}
+
+function _renderAnalisis(state, snap, alerts) {
+  const el = document.getElementById('senales-analisis');
+  if (!el) return;
+
+  const n     = alerts.length;
+  const start = state.session_start ? limaTime(new Date(state.session_start)) : '';
+
+  if (!snap) {
+    el.innerHTML = n > 0
+      ? `<p>${n} alerta${n !== 1 ? 's' : ''} registrada${n !== 1 ? 's' : ''}. Análisis disponible con el próximo ciclo.</p>`
+      : '';
+    return;
+  }
+
+  const narrative = _esc(snap.dominant_narrative ?? '');
+  const color     = URGENCY[snap.institutional_relevance ?? 'low']?.color ?? 'var(--text2)';
+  const sinceTxt  = start ? ` desde las ${start}` : '';
+
+  let html =
+    `<p style="margin-bottom:12px">Se registraron ` +
+    `<span style="font-weight:500;color:var(--text1)">${n} alerta${n !== 1 ? 's' : ''}</span>${sinceTxt}. ` +
+    `Narrativa dominante: <span style="font-weight:500;color:${color}">${narrative}</span>.</p>`;
+
+  if (snap.cross_stream_signals?.length) {
+    html += `<p style="margin-bottom:12px">` +
+      snap.cross_stream_signals.map(s =>
+        `<span style="display:block;margin-bottom:4px">— ${_esc(s)}</span>`
+      ).join('') +
+      `</p>`;
+  }
+
+  if (snap.recommended_focus) {
+    html +=
+      `<div style="background:var(--surface2);border-radius:10px;padding:10px 12px">` +
+      `<div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;` +
+      `color:var(--text3);margin-bottom:6px">Recomendación</div>` +
+      `<div style="font-size:12px;color:var(--text1);line-height:1.5">${_esc(snap.recommended_focus)}</div>` +
+      `</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function _renderStreams(streams, alerts) {
+  const el = document.getElementById('senales-streams');
+  if (!el || !streams.length) return;
+
+  const alertCount = {};
+  const maxSev     = {};
+
+  for (const ev of alerts) {
+    const sid = ev.stream_id;
+    if (!sid) continue;
+    alertCount[sid] = (alertCount[sid] ?? 0) + 1;
+    const sev = ev.alert?.severity ?? 'low';
+    if (!maxSev[sid] || _SEV_ORDER.indexOf(sev) < _SEV_ORDER.indexOf(maxSev[sid])) {
+      maxSev[sid] = sev;
+    }
+  }
+
+  el.innerHTML = streams.map(s => {
+    const sid    = s.stream_id;
+    const name   = _esc(s.radio_id || s.city || sid);
+    const region = _esc(s.region ?? '');
+    const cnt    = alertCount[sid] ?? 0;
+    const status = _streamStatus(maxSev[sid]);
+    const urgent = maxSev[sid] === 'critical' || maxSev[sid] === 'high';
+    const border = urgent ? ` style="border-color:${_hexToRgba(status.color, 0.2)}"` : '';
+    const cntSty = cnt > 0 ? ` style="color:${status.color}"` : '';
+
+    return `<div class="qstream"${border}>` +
+      `<div class="qstream-name">` +
+      `<div style="width:8px;height:8px;border-radius:50%;background:${status.color};flex-shrink:0"></div>` +
+      `${name}</div>` +
+      `<div class="qstream-region">${region}</div>` +
+      `<div class="qstream-row"><span class="qstream-key">Alertas</span>` +
+      `<span class="qstream-val"${cntSty}>${cnt}</span></div>` +
+      `<div class="qstream-row"><span class="qstream-key">Estado</span>` +
+      `<span class="qstream-val" style="color:${status.color}">${status.label}</span></div>` +
+      `</div>`;
+  }).join('');
+}
+
+function _updateSenalesTab(state) {
+  const alerts  = state.alerts            ?? [];
+  const streams = state.streams_monitored ?? [];
+  _renderTimeline(state, alerts, streams);
+  _renderAnalisis(state, state.latest_snapshot, alerts);
+  _renderStreams(streams, alerts);
 }
 
 // ── Poll ──────────────────────────────────────────────────────────────────────

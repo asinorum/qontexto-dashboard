@@ -11,10 +11,11 @@ Deploy: `https://qontexto.com`
 
 ## Próxima sesión — continuar aquí
 
-**Subfase 13.6 — Tab Señales dinámico**
-Línea de tiempo desde `state.alerts` (hora Lima, label, texto de cita si existe).
-Análisis narrativo desde `latest_snapshot` (cross_stream_signals, recommended_focus).
-Resumen por emisora desde `streams_monitored` + conteo de alertas por stream.
+**Subfase 13.7 — Deploy en qontexto.com**
+1. En Vultr: `git pull && docker compose up -d --build`
+2. Verificar que nginx host enruta correctamente qontexto.com → contenedor :3000
+3. Probar con sesión activa en la API: confirmar que el poll llega a datos reales
+4. Configurar `API_KEY` en `js/api.js` antes del deploy (o via variable de entorno)
 
 ---
 
@@ -29,6 +30,7 @@ Resumen por emisora desde `streams_monitored` + conteo de alertas por stream.
 | 13.3 | Card Narrativas — pie chart dinámico, veredictos | ✅ 2026-05-04 |
 | 13.4 | Card Voces — word cloud dinámico | ✅ 2026-05-04 |
 | 13.5 | Card Momento — sparkline dinámico, pill de tendencia | ✅ 2026-05-04 |
+| 13.6 | Tab Señales — timeline, análisis narrativo, emisoras | ✅ 2026-05-04 |
 | 13.5 | Card Momento — sparkline dinámico, pill de tendencia | Pendiente |
 | 13.6 | Tab Señales — timeline, análisis narrativo, emisoras | Pendiente |
 | 13.7 | Deploy en qontexto.com | Pendiente |
