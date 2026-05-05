@@ -11,11 +11,11 @@ Deploy: `https://qontexto.com`
 
 ## Próxima sesión — continuar aquí
 
-**Subfase 13.7 — Deploy en qontexto.com**
-1. En Vultr: `git pull && docker compose up -d --build`
-2. Verificar que nginx host enruta correctamente qontexto.com → contenedor :3000
-3. Probar con sesión activa en la API: confirmar que el poll llega a datos reales
-4. Configurar `API_KEY` en `js/api.js` antes del deploy (o via variable de entorno)
+**Fase 13 completada ✅**
+Dashboard en producción: `https://qontexto.com`
+API en producción: `https://api.qontexto.com`
+
+Próximo: probar con sesión activa real (correr `level1_test.py` apuntando a la API en producción y verificar que el dashboard muestra datos en vivo).
 
 ---
 
@@ -31,7 +31,7 @@ Deploy: `https://qontexto.com`
 | 13.4 | Card Voces — word cloud dinámico | ✅ 2026-05-04 |
 | 13.5 | Card Momento — sparkline dinámico, pill de tendencia | ✅ 2026-05-04 |
 | 13.6 | Tab Señales — timeline, análisis narrativo, emisoras | ✅ 2026-05-04 |
-| 13.7 | Deploy en qontexto.com | Pendiente |
+| 13.7 | Deploy en qontexto.com | ✅ 2026-05-05 |
 
 ---
 
