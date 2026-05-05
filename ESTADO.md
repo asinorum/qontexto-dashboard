@@ -35,20 +35,12 @@ Deploy: `https://qontexto.com`
 
 ---
 
-## Revisiones pendientes en narrative-intelligence
+## Correcciones aplicadas en narrative-intelligence
 
-### `label` faltante en streams_monitored
-El campo `label` (nombre legible de la emisora, ej. "Nova Chimbote") se guarda en el
-dict de la sesión al hacer `POST /session/stream/add`, pero **no se incluye** en el
-`streams_metadata` que se pasa al `ReportEngine` (ver `src/api/routers/reports.py`,
-función `_engine_for_session`).
-
-Como resultado, `GET /session/{id}/state` devuelve `streams_monitored` sin `label`,
-y el Tab Señales del dashboard muestra `radio_id` como fallback (ej. `"nova_am_980"`)
-en lugar del nombre legible.
-
-**Corrección**: añadir `"label": s.get("label", "")` al dict de `streams_metadata`
-en `_engine_for_session` y en `start_session_pipeline`.
+### `label` faltante en streams_monitored ✅ (2026-05-05)
+Añadido `"label": s.get("label", "")` al dict de `streams_metadata` en
+`_engine_for_session` (`src/api/routers/reports.py`).
+El Tab Señales ahora muestra el nombre legible de la emisora.
 
 ---
 
