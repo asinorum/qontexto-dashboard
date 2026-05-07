@@ -7,6 +7,7 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
 const API_KEY = '';  // configurar antes del deploy
 
 let _sessionId  = null;
+let _readToken  = '';
 let _pollTimer  = null;
 
 // ── Urgency mapping (institutional_relevance → color semáforo) ───────────────
@@ -94,6 +95,7 @@ async function _detectSession() {
   const sessions = await _apiFetch('/sessions');
   const list     = Array.isArray(sessions) ? sessions : [sessions];
   const active   = list.find(s => s.status === 'active') ?? null;
+  if (active) _readToken = active.read_token ?? '';
   return active?.session_id ?? null;
 }
 
@@ -491,10 +493,38 @@ function _updateSenalesTab(state) {
 
 async function _poll() {
   try {
-    const state = await _apiFetch(`/session/${_sessionId}/state`);
+    const state = await _apiFetch(
+      `/session/${_sessionId}/state?token=${encodeURIComponent(_readToken)}`
+    );
     _updateUI(state);
   } catch (err) {
-    console.warn('[Qontexto] poll fallido:', err.message);
+    if (err.message.startsWith('403')) {
+      console.warn('[Qontexto] token inválido — acceso denegado al estado de sesión');
+    } else {
+      console.warn('[Qontexto] poll fallido:', err.message);
+    }
+  }
+}
+
+async function downloadSnapshotPDF() {
+  if (!_sessionId || !_readToken) return;
+  try {
+    const hdrs = {};
+    if (API_KEY) hdrs['X-API-Key'] = API_KEY;
+    const r = await fetch(
+      `${API_BASE}/session/${_sessionId}/report.pdf?token=${encodeURIComponent(_readToken)}`,
+      { headers: hdrs }
+    );
+    if (!r.ok) throw new Error(r.status);
+    const blob = await r.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${_sessionId}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('[Qontexto] PDF download fallido:', err.message);
   }
 }
 
@@ -516,6 +546,8 @@ async function startPolling() {
   }
 
   if (_sessionId) {
+    const pdfBtn = document.getElementById('btn-pdf');
+    if (pdfBtn) { pdfBtn.disabled = false; pdfBtn.title = 'Descargar PDF del período actual'; }
     await _poll();
     _pollTimer = setInterval(_poll, 30_000);
   } else {
