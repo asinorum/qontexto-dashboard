@@ -11,11 +11,23 @@ Deploy: `https://qontexto.com`
 
 ## Próxima sesión — continuar aquí
 
+> ⚠️ **BREAKING CHANGE — arreglar antes de cualquier prueba en producción**
+>
+> `GET /session/{id}/state` ahora requiere `?token=<read_token>` (commit `62a769e` en narrative-intelligence).
+> El dashboard devuelve **422** en todos los polls hasta que se actualice.
+>
+> **Dos cambios requeridos en `app.js` (o donde esté el polling):**
+> 1. Al crear la sesión: guardar `read_token` del response de `POST /session/start` en `localStorage`.
+> 2. En cada poll: añadir `?token=${localStorage.getItem("read_token")}` a `GET /session/{id}/state`.
+> 3. Manejar 403 explícitamente (token inválido) — mostrar mensaje en lugar de loading infinito.
+
+---
+
 **Fase 13 completada ✅**
 Dashboard en producción: `https://qontexto.com`
 API en producción: `https://api.qontexto.com`
 
-Próximo: probar con sesión activa real (correr `level1_test.py` apuntando a la API en producción y verificar que el dashboard muestra datos en vivo).
+Próximo: arreglar el breaking change del `read_token` (ver arriba), luego probar con sesión activa real.
 
 ---
 
