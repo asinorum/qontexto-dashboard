@@ -16,6 +16,7 @@
       <button class="qtab" onclick="switchTab('senales',this)">Señales</button>
     </div>
     <div class="qnav-right">
+      <span id="hist-badge" style="display:none;font-size:11px;color:var(--text3);background:var(--surface2);border-radius:6px;padding:2px 8px"><span id="hist-count">0</span> en historial</span>
       <div class="qlive"><div class="qlive-dot"></div><span id="live-label">3 streams · 14:32 PE</span></div>
       <button class="qbtn" onclick="toggleTheme()" title="Cambiar modo">
         <svg id="ico-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -36,6 +37,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:12px">
       <span class="qrange" id="time-range">13:32 — 14:32 PE</span>
+      <span id="wh-bar" title="" style="display:none;font-size:10px;color:var(--text3);border:.5px solid var(--border);border-radius:6px;padding:2px 7px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">↗ <span id="wh-val"></span></span>
       <button class="qsnap" id="btn-pdf" onclick="downloadSnapshotPDF()" disabled title="Sin sesión activa">
         <div class="qsnap-dot"></div>Snapshot PDF
       </button>
@@ -65,6 +67,11 @@
         <div class="qstat-lbl">Actualizado</div>
         <div class="qstat-val">~30s</div>
         <div class="qstat-sub">recálculo automático</div>
+      </div>
+      <div class="qstat">
+        <div class="qstat-lbl">Costos</div>
+        <div class="qstat-val" id="stat-costo">—</div>
+        <div class="qstat-sub" id="stat-costo-sub">sin sesión</div>
       </div>
     </div>
 

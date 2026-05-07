@@ -11,7 +11,7 @@ Deploy: `https://qontexto.com`
 
 ## Próxima sesión — continuar aquí
 
-**1. Deploy de los cambios acumulados (Fases 16–17 + 12 + 7b + TTL + test fixes):**
+**1. Deploy de los cambios acumulados (Fases D1–D3 + anteriores):**
 ```bash
 # En Vultr — actualizar ambos repos:
 cd /opt/narrative-intelligence && git pull && docker compose up -d --build
@@ -27,14 +27,14 @@ docker compose up -d --build
 ```
 
 **3. Probar flujo completo en producción:**
-- Crear sesión con webhook_url (si hay endpoint del cliente)
-- Verificar que el poll funciona con read_token
+- Crear sesión con webhook_url → verificar chip en timebar
+- Verificar stat card Costos tras primer poll
+- Reiniciar el contenedor y confirmar badge "N en historial" en navbar
 - Descargar PDF con botón "Snapshot PDF"
-- Reiniciar el contenedor y confirmar que las sesiones sobreviven (Redis hydration)
 
 ---
 
-## Cambios aplicados en esta sesión (2026-05-06)
+## Cambios aplicados en esta sesión (2026-05-07)
 
 ### read_token fix ✅
 `GET /session/{id}/state` requería `?token=` desde commit `62a769e` (Fase 14).
@@ -49,39 +49,37 @@ Se habilita automáticamente cuando se detecta una sesión activa.
 Llama a `GET /session/{id}/report.pdf?token=` (Fase 7b del backend).
 Descarga el PDF directamente desde el navegador (blob → `<a download>`).
 
+### Fase D1 — Panel de costos ✅
+Nueva stat card "Costos" en el grid de stats (5ª columna).
+`_fetchCosts()` llama `GET /session/{id}/costs?token=` en cada poll (paralelo, silencioso si falla).
+Muestra `$X.XX` (costo total) y `$X.XX precio s.` (precio sugerido) — `totals.total_usd` + `totals.suggested_price_usd`.
+
+### Fase D2 — Webhook URL ✅
+`_detectSession()` extrae `active.webhook_url` de `GET /sessions`.
+Chip sutil en la timebar (zona derecha), visible solo si hay webhook configurado.
+URL truncada a 28 chars con tooltip completo en `title`.
+
+### Fase D3 — Indicador sesiones anteriores (Redis) ✅
+`_detectSession()` cuenta sesiones con `status !== 'active'` en `GET /sessions`.
+Badge "N en historial" en el navbar (qnav-right), visible si count > 0.
+Aparece tanto si hay sesión activa como si no (útil tras reinicio del contenedor).
+
 ---
 
 ## Backlog — próximas fases del dashboard
 
 | Prioridad | Fase | Descripción | Depende de |
 |---|---|---|---|
-| 1 | **Fase D1** | Costos en vivo: panel con `GET /session/{id}/costs?token=` | Backend Fase 16 ✅ |
-| 2 | **Fase D2** | Campo webhook_url en UI de nueva sesión | Backend Fase 12 ✅ |
-| 3 | **Fase D3** | Indicador de sesiones anteriores recuperadas desde Redis | Backend Fase 17 ✅ |
-| 4 | **Fase D4** | Multi-tenancy: login + aislar sesiones por cliente | Backend Fase 21 (pendiente) |
-| 5 | **Fase D5** | Página de creación de sesión (sector, emisoras, webhook) | — |
+| ✅ | **Fase D1** | Costos en vivo: panel con `GET /session/{id}/costs?token=` | Backend Fase 16 ✅ |
+| ✅ | **Fase D2** | Campo webhook_url en UI de nueva sesión | Backend Fase 12 ✅ |
+| ✅ | **Fase D3** | Indicador de sesiones anteriores recuperadas desde Redis | Backend Fase 17 ✅ |
+| 1 | **Fase D4** | Multi-tenancy: login + aislar sesiones por cliente | Backend Fase 21 (pendiente) |
+| 2 | **Fase D5** | Página de creación de sesión (sector, emisoras, webhook) | — |
 
-### Fase D1 — Panel de costos (estimado: 2 h)
+### Fase D4 — Multi-tenancy (pendiente backend Fase 21)
 
-`GET /session/{id}/costs?token=` devuelve:
-```json
-{
-  "assemblyai": { "total_usd": 0.57, "streams": {...} },
-  "anthropic": {
-    "haiku": { "cost_usd": 0.012, "calls": 320 },
-    "sonnet": { "cost_usd": 0.045, "calls": 4 }
-  },
-  "totals": { "total_usd": 0.63, "suggested_price_usd": 1.57 }
-}
-```
-Mostrar como stat cards debajo de Streams/Alertas: `$0.63 costo · $1.57 precio sugerido`.
-Poll junto con el estado (30s). Sin dependencias nuevas.
-
-### Fase D2 — Campo webhook_url (estimado: 1 h)
-
-`POST /session/start` acepta `webhook_url: ""`.
-Si hay UI de creación de sesión: añadir campo de texto para la URL del webhook.
-Si no hay UI (sesiones creadas externamente): mostrar la URL configurada en la info de sesión.
+Login por cliente + sesiones aisladas. Requiere que el backend implemente autenticación por cliente.
+⚠️ Al implementar: excluir `read_token` de `GET /sessions` público y requerir auth por cliente.
 
 ---
 

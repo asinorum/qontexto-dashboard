@@ -25,7 +25,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 
 /* Layout */
 .qcontent { padding:14px 20px 24px; }
-.qstats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+.qstats { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
 .qgrid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
 
 /* Stat cards */

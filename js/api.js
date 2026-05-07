@@ -6,9 +6,11 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
 
 const API_KEY = '';  // configurar antes del deploy
 
-let _sessionId  = null;
-let _readToken  = '';
-let _pollTimer  = null;
+let _sessionId            = null;
+let _readToken            = '';
+let _webhookUrl           = '';
+let _previousSessionCount = 0;
+let _pollTimer            = null;
 
 // ── Urgency mapping (institutional_relevance → color semáforo) ───────────────
 
@@ -95,7 +97,11 @@ async function _detectSession() {
   const sessions = await _apiFetch('/sessions');
   const list     = Array.isArray(sessions) ? sessions : [sessions];
   const active   = list.find(s => s.status === 'active') ?? null;
-  if (active) _readToken = active.read_token ?? '';
+  if (active) {
+    _readToken  = active.read_token  ?? '';
+    _webhookUrl = active.webhook_url ?? '';
+  }
+  _previousSessionCount = list.filter(s => s.status !== 'active').length;
   return active?.session_id ?? null;
 }
 
@@ -489,6 +495,49 @@ function _updateSenalesTab(state) {
   _renderStreams(streams, alerts);
 }
 
+// ── D1: Costos ────────────────────────────────────────────────────────────────
+
+async function _fetchCosts() {
+  try {
+    const costs     = await _apiFetch(
+      `/session/${_sessionId}/costs?token=${encodeURIComponent(_readToken)}`
+    );
+    const total     = costs?.totals?.total_usd;
+    const suggested = costs?.totals?.suggested_price_usd;
+    if (total     != null) _setText('stat-costo',     `$${total.toFixed(2)}`);
+    if (suggested != null) _setText('stat-costo-sub', `$${suggested.toFixed(2)} precio s.`);
+  } catch { /* silencioso — endpoint puede no estar disponible aún */ }
+}
+
+// ── D2: Webhook URL ───────────────────────────────────────────────────────────
+
+function _updateWebhookUI() {
+  const bar = document.getElementById('wh-bar');
+  const val = document.getElementById('wh-val');
+  if (!bar || !val) return;
+  if (_webhookUrl) {
+    bar.title       = _webhookUrl;
+    val.textContent = _webhookUrl.length > 28
+      ? _webhookUrl.slice(0, 27) + '…'
+      : _webhookUrl;
+    bar.style.display = '';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+// ── D3: Historial sesiones (Redis) ────────────────────────────────────────────
+
+function _updateHistorialUI() {
+  const badge = document.getElementById('hist-badge');
+  const count = document.getElementById('hist-count');
+  if (!badge || !count) return;
+  if (_previousSessionCount > 0) {
+    count.textContent   = _previousSessionCount;
+    badge.style.display = '';
+  }
+}
+
 // ── Poll ──────────────────────────────────────────────────────────────────────
 
 async function _poll() {
@@ -497,6 +546,7 @@ async function _poll() {
       `/session/${_sessionId}/state?token=${encodeURIComponent(_readToken)}`
     );
     _updateUI(state);
+    _fetchCosts();
   } catch (err) {
     if (err.message.startsWith('403')) {
       console.warn('[Qontexto] token inválido — acceso denegado al estado de sesión');
@@ -548,9 +598,12 @@ async function startPolling() {
   if (_sessionId) {
     const pdfBtn = document.getElementById('btn-pdf');
     if (pdfBtn) { pdfBtn.disabled = false; pdfBtn.title = 'Descargar PDF del período actual'; }
+    _updateWebhookUI();
+    _updateHistorialUI();
     await _poll();
     _pollTimer = setInterval(_poll, 30_000);
   } else {
+    _updateHistorialUI();
     // No session — still keep the live timestamp ticking
     _tickLiveTime();
     _pollTimer = setInterval(_tickLiveTime, 30_000);
