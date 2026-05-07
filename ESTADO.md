@@ -79,7 +79,14 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 ### Fase D4 — Multi-tenancy (pendiente backend Fase 21)
 
 Login por cliente + sesiones aisladas. Requiere que el backend implemente autenticación por cliente.
-⚠️ Al implementar: excluir `read_token` de `GET /sessions` público y requerir auth por cliente.
+
+**Cambios requeridos en el dashboard:**
+- Enviar header de autenticación de cliente en cada request a la API
+- Manejar 401/403: redirigir a pantalla de login si el cliente no está autenticado
+- Pantalla de login mínima (token o usuario/clave por cliente)
+- `GET /sessions` dejará de devolver sesiones de otros clientes — sin cambio de código, pero el comportamiento cambia
+
+⚠️ Al implementar en el backend: excluir `read_token` de `GET /sessions` y requerir auth por cliente (actualmente cualquiera puede leer el token de cualquier sesión).
 
 ---
 
