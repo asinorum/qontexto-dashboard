@@ -11,12 +11,14 @@ Deploy: `https://qontexto.com`
 
 ## Próxima sesión — continuar aquí
 
-**1. Deploy de los cambios de esta sesión:**
+**1. Deploy de los cambios acumulados (Fases 16–17 + 12 + 7b + TTL + test fixes):**
 ```bash
 # En Vultr — actualizar ambos repos:
 cd /opt/narrative-intelligence && git pull && docker compose up -d --build
 cd /opt/qontexto-dashboard && git pull && docker compose up -d --build
 ```
+> El `docker compose up` levantará el servicio Redis automáticamente (ya configurado en docker-compose.yml).
+> La primera vez: Redis vacío → sin sesiones anteriores (comportamiento correcto).
 
 **2. Activar Sentry DSN** (5 min — cuenta pendiente en sentry.io):
 ```bash
@@ -26,8 +28,9 @@ docker compose up -d --build
 
 **3. Probar flujo completo en producción:**
 - Crear sesión con webhook_url (si hay endpoint del cliente)
-- Verificar que el poll funciona con read_token (fix aplicado en esta sesión)
-- Descargar PDF con botón "Snapshot PDF" (nuevo)
+- Verificar que el poll funciona con read_token
+- Descargar PDF con botón "Snapshot PDF"
+- Reiniciar el contenedor y confirmar que las sesiones sobreviven (Redis hydration)
 
 ---
 
@@ -108,6 +111,8 @@ Si no hay UI (sesiones creadas externamente): mostrar la URL configurada en la i
 | 2026-05-06 | `8d4948b` | Webhook saliente por sesión | → Fase D2 |
 | 2026-05-06 | `5010ba8` | PDF renderer: `GET /session/{id}/report.pdf` | ✅ Aplicado en api.js + index.html |
 | 2026-05-06 | `1853b80` | Redis state backend | — transparente |
+| 2026-05-06 | `0a85d92` | Redis TTL: sesiones stopped expiran en SESSION_RETAIN_DAYS días | — transparente |
+| 2026-05-06 | (este commit) | Fix RuntimeWarning tests + `_KILL_TIMEOUT_S` constant | — no impacta dashboard |
 
 ---
 
