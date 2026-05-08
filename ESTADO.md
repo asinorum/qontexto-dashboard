@@ -76,17 +76,30 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | 1 | **Fase D4** | Multi-tenancy: login + aislar sesiones por cliente | Backend Fase 21 (pendiente) |
 | 2 | **Fase D5** | Página de creación de sesión (sector, emisoras, webhook) | — |
 
-### Fase D4 — Multi-tenancy (pendiente backend Fase 21)
+### Fase D4 — Multi-tenancy con Auth0 (Fase 21 del backend)
 
-Login por cliente + sesiones aisladas. Requiere que el backend implemente autenticación por cliente.
+Login por cliente vía **Auth0** (free tier — hasta 7,500 usuarios activos/mes).
+Auth0 maneja rotación de tokens, refresh automático y MFA futuro sin código adicional.
 
-**Cambios requeridos en el dashboard:**
-- Enviar header de autenticación de cliente en cada request a la API
-- Manejar 401/403: redirigir a pantalla de login si el cliente no está autenticado
-- Pantalla de login mínima (token o usuario/clave por cliente)
-- `GET /sessions` dejará de devolver sesiones de otros clientes — sin cambio de código, pero el comportamiento cambia
+**Etapas (alineadas con Fases 21.1–21.6 del backend):**
 
-⚠️ Al implementar en el backend: excluir `read_token` de `GET /sessions` y requerir auth por cliente (actualmente cualquiera puede leer el token de cualquier sesión).
+| Etapa | Descripción | Depende de |
+|---|---|---|
+| 21.1 | `client_id` en sesiones + filtrado `GET /sessions` | Solo backend |
+| 21.2 | Auth0: tenant + aplicación + usuarios por cliente | Cuenta Auth0 |
+| 21.3 | Backend: middleware JWT Auth0 | 21.2 |
+| 21.4 | Aislamiento estricto en backend | 21.3 |
+| 21.5 | Gestión de clientes + Redis | 21.4 |
+| **21.6** | **Dashboard: Auth0 SDK — login flow, token en headers, expiración** | 21.3 |
+
+**Cambios en el dashboard (Fase 21.6):**
+- Integrar Auth0 Vanilla JS SDK
+- Login flow: redirect → Auth0 → callback → token almacenado
+- Token JWT enviado en `Authorization: Bearer` en cada request a la API
+- Manejo de expiración: refresh automático vía Auth0 SDK
+- 401/403 → redirigir a login
+
+⚠️ Al activar 21.4: excluir `read_token` de `GET /sessions` público — actualmente cualquiera puede leerlo.
 
 ---
 
