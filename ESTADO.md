@@ -11,6 +11,28 @@ Deploy: `https://qontexto.com`
 
 ## Próxima sesión — continuar aquí
 
+**Prerequisitos antes de implementar Fase 21.6 (hacer primero en Vultr):**
+
+1. **`ADMIN_API_KEY`** — agregar al `.env` del backend:
+   ```bash
+   echo "ADMIN_API_KEY=<valor-secreto>" >> /opt/narrative-intelligence/.env
+   docker compose up -d --build
+   ```
+   Sin esta variable, `/admin/clients` devuelve 503.
+
+2. **Auth0 Action** — inyectar `client_id` en el JWT:
+   Panel Auth0 → Actions → Flows → Login → añadir action:
+   ```javascript
+   exports.onExecutePostLogin = async (event, api) => {
+     const clientId = event.user.user_metadata?.client_id || event.user.email;
+     api.idToken.setCustomClaim("https://api.qontexto.com/client_id", clientId);
+     api.accessToken.setCustomClaim("https://api.qontexto.com/client_id", clientId);
+   };
+   ```
+   Sin esta Action, `client_id` no llega al backend y el aislamiento por cliente no funciona.
+
+---
+
 **1. Deploy de los cambios acumulados (Fases D1–D3 + anteriores):**
 ```bash
 # En Vultr — actualizar ambos repos:
