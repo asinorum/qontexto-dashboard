@@ -30,12 +30,13 @@ function _showLogin() {
 async function _showDashboard() {
   document.getElementById('login-overlay').style.display = 'none';
 
+  const chip = document.getElementById('user-chip');
+  if (chip) chip.style.display = 'flex';
+
   const user = await _auth0Client.getUser();
   if (user) {
     const nameEl = document.getElementById('user-name');
-    if (nameEl) nameEl.textContent = user.name || user.email;
-    const chip = document.getElementById('user-chip');
-    if (chip) chip.style.display = 'flex';
+    if (nameEl) nameEl.textContent = user.name || user.nickname || user.email || '';
   }
 
   startPolling();
