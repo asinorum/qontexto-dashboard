@@ -120,7 +120,21 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D2** | Campo webhook_url en UI de nueva sesión | Backend Fase 12 ✅ |
 | ✅ | **Fase D3** | Indicador de sesiones anteriores recuperadas desde Redis | Backend Fase 17 ✅ |
 | ✅ | **Fase D4** | Multi-tenancy: login + aislar sesiones por cliente | Backend Fase 21 ✅ |
-| 2 | **Fase D5** | Página de creación de sesión (sector, emisoras, webhook) | — |
+| 2 | **Fase D5** | Página de creación de sesión (sector, emisoras, webhook) | ⚠️ bloqueada — ver nota abajo |
+
+---
+
+### Fase D5 — Creación de sesión ⚠️ BLOQUEADA — requiere decisiones de producto
+
+Antes de implementar el formulario, hay una sesión de diseño de producto pendiente. Preguntas sin responder:
+
+- **¿Quién crea la sesión?** ¿El admin configura y el cliente lanza? ¿Self-service con límites por tier? ¿Híbrido (admin define contrato, cliente opera dentro)?
+- **¿Qué es un "contrato"?** Horas de monitoreo/mes, emisoras permitidas, tier de precio.
+- **¿Cómo se relaciona con el precio?** El backend ya calcula `suggested_price_usd` — ¿es el precio del tier o solo referencia interna?
+- **¿Una sesión = franja horaria fija o corre hasta que el cliente la detiene?**
+- **¿El cliente elige las emisoras o el admin las pre-configura?**
+
+Mientras tanto: sesiones se crean manualmente vía curl con JWT del usuario autenticado.
 
 ---
 
