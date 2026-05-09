@@ -64,7 +64,8 @@ async function initAuth() {
       _showLogin();
     }
   } catch (err) {
-    console.error('[Auth] initAuth falló:', err.message);
+    console.warn('[Auth] sesión inválida, limpiando caché:', err.message);
+    try { await _auth0Client?.logout({ openUrl: false }); } catch {}
     _showLogin();
   }
 }
