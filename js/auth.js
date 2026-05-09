@@ -3,7 +3,9 @@ let _auth0Client = null;
 async function getToken() {
   if (!_auth0Client) return null;
   try {
-    return await _auth0Client.getTokenSilently();
+    return await _auth0Client.getTokenSilently({
+      authorizationParams: { audience: AUTH0_AUDIENCE },
+    });
   } catch {
     return null;
   }
@@ -43,21 +45,26 @@ async function _showDashboard() {
 }
 
 async function initAuth() {
-  _auth0Client = await auth0.createAuth0Client({
-    domain:   AUTH0_DOMAIN,
-    clientId: AUTH0_CLIENT_ID,
-    authorizationParams: { audience: AUTH0_AUDIENCE },
-  });
+  try {
+    _auth0Client = await auth0.createAuth0Client({
+      domain:   AUTH0_DOMAIN,
+      clientId: AUTH0_CLIENT_ID,
+      authorizationParams: { audience: AUTH0_AUDIENCE },
+    });
 
-  if (location.search.includes('code=') && location.search.includes('state=')) {
-    await _auth0Client.handleRedirectCallback();
-    window.history.replaceState({}, document.title, '/');
-  }
+    if (location.search.includes('code=') && location.search.includes('state=')) {
+      await _auth0Client.handleRedirectCallback();
+      window.history.replaceState({}, document.title, '/');
+    }
 
-  const isAuth = await _auth0Client.isAuthenticated();
-  if (isAuth) {
-    await _showDashboard();
-  } else {
+    const isAuth = await _auth0Client.isAuthenticated();
+    if (isAuth) {
+      await _showDashboard();
+    } else {
+      _showLogin();
+    }
+  } catch (err) {
+    console.error('[Auth] initAuth falló:', err.message);
     _showLogin();
   }
 }
