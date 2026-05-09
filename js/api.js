@@ -60,7 +60,15 @@ function limaTime(date = new Date()) {
 async function _apiFetch(path) {
   const hdrs = {};
   if (API_KEY) hdrs['X-API-Key'] = API_KEY;
+  if (typeof getToken === 'function') {
+    const token = await getToken();
+    if (token) hdrs['Authorization'] = `Bearer ${token}`;
+  }
   const r = await fetch(`${API_BASE}${path}`, { headers: hdrs });
+  if (r.status === 401) {
+    if (typeof login === 'function') login();
+    throw new Error(`401 ${path}`);
+  }
   if (!r.ok) throw new Error(`${r.status} ${path}`);
   return r.json();
 }
@@ -610,4 +618,4 @@ async function startPolling() {
   }
 }
 
-startPolling();
+// startPolling() es llamado por auth.js tras autenticación exitosa

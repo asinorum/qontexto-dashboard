@@ -33,30 +33,54 @@ Deploy: `https://qontexto.com`
 
 ---
 
-**1. Deploy de los cambios acumulados (Fases D1–D3 + anteriores):**
+**Prerequisitos antes del deploy (hacer en Vultr):**
+
+1. **`ADMIN_API_KEY`** — agregar al `.env` del backend si no está:
+   ```bash
+   echo "ADMIN_API_KEY=<valor-secreto>" >> /opt/narrative-intelligence/.env
+   docker compose up -d --build
+   ```
+
+2. **Auth0 Action** — inyectar `client_id` en el JWT (panel Auth0 → Actions → Flows → Login):
+   ```javascript
+   exports.onExecutePostLogin = async (event, api) => {
+     const clientId = event.user.user_metadata?.client_id || event.user.email;
+     api.idToken.setCustomClaim("https://api.qontexto.com/client_id", clientId);
+     api.accessToken.setCustomClaim("https://api.qontexto.com/client_id", clientId);
+   };
+   ```
+
+**Deploy:**
 ```bash
-# En Vultr — actualizar ambos repos:
 cd /opt/narrative-intelligence && git pull && docker compose up -d --build
 cd /opt/qontexto-dashboard && git pull && docker compose up -d --build
 ```
-> El `docker compose up` levantará el servicio Redis automáticamente (ya configurado en docker-compose.yml).
-> La primera vez: Redis vacío → sin sesiones anteriores (comportamiento correcto).
 
-**2. Activar Sentry DSN** (5 min — cuenta pendiente en sentry.io):
-```bash
-echo "SENTRY_DSN=<dsn>" >> /opt/narrative-intelligence/.env
-docker compose up -d --build
-```
-
-**3. Probar flujo completo en producción:**
-- Crear sesión con webhook_url → verificar chip en timebar
-- Verificar stat card Costos tras primer poll
-- Reiniciar el contenedor y confirmar badge "N en historial" en navbar
-- Descargar PDF con botón "Snapshot PDF"
+**Test en producción:**
+- Abrir `https://qontexto.com` → debe mostrar overlay de login
+- Iniciar sesión con usuario Auth0 → dashboard carga, chip con nombre visible
+- Verificar stat card Costos, chip webhook (si hay sesión con webhook_url), badge historial
+- Botón "Salir" → vuelve al overlay de login
 
 ---
 
-## Cambios aplicados en esta sesión (2026-05-07)
+## Cambios aplicados en esta sesión (2026-05-09)
+
+### Fase 21.6 — Auth0 SPA SDK ✅
+
+Archivos nuevos:
+- `js/config.js` — constantes Auth0 (dominio, client_id, audience)
+- `js/auth.js` — `createAuth0Client()`, `getToken()`, `login()`, `logout()`, `initAuth()`
+
+Cambios:
+- `index.html` — overlay de login (position:fixed, z-index:100, diseño Material You); chip usuario + botón Salir en navbar; CDN Auth0 SPA JS 2.1.3; scripts config.js + auth.js
+- `js/api.js` — `_apiFetch()` añade `Authorization: Bearer` en todas las requests; intercepta 401 → `login()`; `startPolling()` ya no se llama automáticamente (lo llama auth.js tras autenticación)
+
+Flujo: al cargar → `initAuth()` → si no autenticado muestra overlay → clic "Iniciar sesión" → Auth0 redirect → callback → `handleRedirectCallback()` → `_showDashboard()` → `startPolling()`.
+
+---
+
+## Cambios aplicados en sesión anterior (2026-05-07)
 
 ### read_token fix ✅
 `GET /session/{id}/state` requería `?token=` desde commit `62a769e` (Fase 14).
@@ -95,7 +119,7 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D1** | Costos en vivo: panel con `GET /session/{id}/costs?token=` | Backend Fase 16 ✅ |
 | ✅ | **Fase D2** | Campo webhook_url en UI de nueva sesión | Backend Fase 12 ✅ |
 | ✅ | **Fase D3** | Indicador de sesiones anteriores recuperadas desde Redis | Backend Fase 17 ✅ |
-| 1 | **Fase D4** | Multi-tenancy: login + aislar sesiones por cliente | Backend Fase 21 ✅ |
+| ✅ | **Fase D4** | Multi-tenancy: login + aislar sesiones por cliente | Backend Fase 21 ✅ |
 | 2 | **Fase D5** | Página de creación de sesión (sector, emisoras, webhook) | — |
 
 ---
@@ -114,7 +138,7 @@ Auth0 maneja rotación de tokens, refresh automático y MFA futuro sin código a
 | ~~21.3~~ ✅ | Backend: `verify_auth()` unificado — JWT RS256 o API_KEY | 2026-05-08 |
 | ~~21.4~~ ✅ | Aislamiento estricto: `GET /sessions` + `/state` filtrados por cliente | 2026-05-08 |
 | ~~21.5~~ ✅ | Gestión de clientes: `POST/GET/PATCH/DELETE /admin/clients` + Redis | 2026-05-09 |
-| **21.6** | **Dashboard: Auth0 SPA SDK — login flow, token en headers** | **Pendiente** |
+| ~~21.6~~ ✅ | Dashboard: Auth0 SPA SDK — login flow, token en headers | 2026-05-09 |
 
 ---
 
