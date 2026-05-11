@@ -569,6 +569,10 @@ async function downloadSnapshotPDF() {
   try {
     const hdrs = {};
     if (API_KEY) hdrs['X-API-Key'] = API_KEY;
+    if (typeof getToken === 'function') {
+      const token = await getToken();
+      if (token) hdrs['Authorization'] = `Bearer ${token}`;
+    }
     const r = await fetch(
       `${API_BASE}/session/${_sessionId}/report.pdf?token=${encodeURIComponent(_readToken)}`,
       { headers: hdrs }
