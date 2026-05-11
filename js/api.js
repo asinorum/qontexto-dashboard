@@ -659,6 +659,14 @@ function _renderContratoTab(contract) {
           `<span style="display:inline-block;background:var(--surface2);color:var(--text2);` +
           `border-radius:6px;padding:2px 8px;font-size:11px;margin:0 3px 4px 0">${_esc(k)}</span>`
         ).join('');
+    if (contract.contract_id) {
+      kwEl.innerHTML +=
+        `<div style="margin-top:14px;padding-top:12px;border-top:.5px solid var(--border)">` +
+        `<div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;` +
+        `color:var(--text3);margin-bottom:4px">ID de contrato</div>` +
+        `<code style="font-size:11px;color:var(--text3);word-break:break-all">${_esc(contract.contract_id)}</code>` +
+        `</div>`;
+    }
   }
 
   const streamEl = document.getElementById('contrato-emisoras');
