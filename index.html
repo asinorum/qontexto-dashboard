@@ -23,6 +23,7 @@
     <div class="qtabs">
       <button class="qtab active" onclick="switchTab('resumen',this)">Resumen</button>
       <button class="qtab" onclick="switchTab('senales',this)">Señales</button>
+      <button class="qtab" onclick="switchTab('contrato',this)">Contrato</button>
     </div>
     <div class="qnav-right">
       <span id="user-chip" style="display:none;font-size:11px;color:var(--text2);align-items:center;gap:8px">
@@ -216,6 +217,25 @@
           <div class="qstream-row"><span class="qstream-key">Alertas</span><span class="qstream-val">1</span></div>
           <div class="qstream-row"><span class="qstream-key">Estado</span><span class="qstream-val" style="color:#4CAF50">Normal</span></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Contrato -->
+  <div id="tab-contrato" class="qcontent" style="display:none">
+    <div class="qstats" id="contrato-stats">
+      <div class="qstat"><div class="qstat-lbl">Cargando…</div></div>
+    </div>
+    <div class="qgrid2">
+      <div class="qcard">
+        <div class="qcard-lbl" style="margin-bottom:12px">Ventanas de monitoreo</div>
+        <div id="contrato-ventanas"></div>
+        <div class="qcard-lbl" style="margin-top:18px;margin-bottom:10px">Keywords configurados</div>
+        <div id="contrato-keywords"></div>
+      </div>
+      <div class="qcard">
+        <div class="qcard-lbl" style="margin-bottom:12px">Emisoras del contrato</div>
+        <div id="contrato-emisoras"></div>
       </div>
     </div>
   </div>

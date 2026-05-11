@@ -598,9 +598,104 @@ function _tickLiveTime() {
   el.textContent = `${n} stream${n !== 1 ? 's' : ''} · ${limaTime()} PE`;
 }
 
+// ── D5: Contrato ──────────────────────────────────────────────────────────────
+
+const _TIER_CONFIG = {
+  pro:        { label: 'Pro',        bg: '#EFF6FF', color: '#1565C0' },
+  enterprise: { label: 'Enterprise', bg: '#FFFBEB', color: '#B45309' },
+  basic:      { label: 'Básico',     bg: 'var(--surface2)', color: 'var(--text2)' },
+};
+
+const _DAYS_ES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+function _formatDays(days) {
+  if (!days?.length) return '—';
+  if (days.length === 7) return 'Todos los días';
+  const sorted = [...days].sort((a, b) => a - b);
+  if (JSON.stringify(sorted) === JSON.stringify([0, 1, 2, 3, 4])) return 'Lun – Vie';
+  return sorted.map(d => _DAYS_ES[d] ?? '?').join(', ');
+}
+
+function _renderContratoTab(contract) {
+  const tier = _TIER_CONFIG[contract.tier] ?? _TIER_CONFIG.basic;
+
+  const statsEl = document.getElementById('contrato-stats');
+  if (statsEl) {
+    statsEl.innerHTML =
+      `<div class="qstat"><div class="qstat-lbl">Institución</div>` +
+      `<div class="qstat-val" style="font-size:16px">${_esc(contract.institution || '—')}</div></div>` +
+      `<div class="qstat"><div class="qstat-lbl">Sector</div>` +
+      `<div class="qstat-val" style="font-size:16px">${_esc(contract.sector || '—')}</div></div>` +
+      `<div class="qstat"><div class="qstat-lbl">Tier</div><div class="qstat-val">` +
+      `<span style="background:${tier.bg};color:${tier.color};border-radius:8px;padding:3px 12px;font-size:13px;font-weight:500">${tier.label}</span>` +
+      `</div></div>` +
+      `<div class="qstat"><div class="qstat-lbl">Vigencia desde</div>` +
+      `<div class="qstat-val" style="font-size:16px">${_esc((contract.start_date ?? '').slice(0, 10) || '—')}</div></div>`;
+  }
+
+  const winEl = document.getElementById('contrato-ventanas');
+  if (winEl) {
+    const windows = contract.windows ?? [];
+    winEl.innerHTML = !windows.length
+      ? '<p style="font-size:13px;color:var(--text3)">Sin ventanas configuradas.</p>'
+      : windows.map(w =>
+          `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;` +
+          `background:var(--surface2);border-radius:10px;margin-bottom:8px">` +
+          `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.8" stroke-linecap="round">` +
+          `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>` +
+          `<span style="font-size:13px;color:var(--text1);font-weight:500">${_esc(w.start_time)} — ${_esc(w.end_time)}</span>` +
+          `<span style="font-size:12px;color:var(--text3)">${_formatDays(w.days_of_week)}</span>` +
+          `<span style="font-size:11px;color:var(--text3);margin-left:auto">${_esc(w.tz ?? 'America/Lima')}</span>` +
+          `</div>`
+        ).join('');
+  }
+
+  const kwEl = document.getElementById('contrato-keywords');
+  if (kwEl) {
+    const kws = contract.keywords_configured ?? [];
+    kwEl.innerHTML = !kws.length
+      ? '<span style="font-size:12px;color:var(--text3)">Sin keywords configurados</span>'
+      : kws.map(k =>
+          `<span style="display:inline-block;background:var(--surface2);color:var(--text2);` +
+          `border-radius:6px;padding:2px 8px;font-size:11px;margin:0 3px 4px 0">${_esc(k)}</span>`
+        ).join('');
+  }
+
+  const streamEl = document.getElementById('contrato-emisoras');
+  if (streamEl) {
+    const streams = contract.streams ?? [];
+    streamEl.innerHTML = !streams.length
+      ? '<p style="font-size:13px;color:var(--text3)">Sin emisoras configuradas.</p>'
+      : `<div class="qstream-grid">` + streams.map(s =>
+          `<div class="qstream">` +
+          `<div class="qstream-name">` +
+          `<div style="width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0"></div>` +
+          `${_esc(s.radio_id || s.label || '—')}</div>` +
+          `<div class="qstream-region">${_esc(s.region || '—')}</div>` +
+          `<div class="qstream-row"><span class="qstream-key">Ciudad</span>` +
+          `<span class="qstream-val">${_esc(s.city || '—')}</span></div>` +
+          `<div class="qstream-row"><span class="qstream-key">Plataforma</span>` +
+          `<span class="qstream-val">${_esc(s.platform || '—')}</span></div>` +
+          `</div>`
+        ).join('') + `</div>`;
+  }
+}
+
+async function _fetchContract() {
+  try {
+    const contract = await _apiFetch('/my/contract');
+    _renderContratoTab(contract);
+  } catch {
+    const el = document.getElementById('contrato-stats');
+    if (el) el.innerHTML = '<p style="font-size:13px;color:var(--text3)">Sin contrato activo.</p>';
+  }
+}
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 async function startPolling() {
+  _fetchContract();
+
   try {
     _sessionId = await _detectSession();
   } catch (err) {
