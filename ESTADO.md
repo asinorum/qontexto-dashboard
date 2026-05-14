@@ -120,7 +120,7 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D2** | Campo webhook_url en UI de nueva sesión | Backend Fase 12 ✅ |
 | ✅ | **Fase D3** | Indicador de sesiones anteriores recuperadas desde Redis | Backend Fase 17 ✅ |
 | ✅ | **Fase D4** | Multi-tenancy: login + aislar sesiones por cliente | Backend Fase 21 ✅ |
-| 2 | **Fase D5** | Página de creación de sesión (sector, emisoras, webhook) | ⚠️ bloqueada — ver nota abajo |
+| ✅ | **Fase D5** | Pestaña Contrato — institución, tier, ventanas, emisoras, keywords | 2026-05-10 |
 
 ---
 

@@ -11,6 +11,7 @@ let _readToken            = '';
 let _webhookUrl           = '';
 let _previousSessionCount = 0;
 let _pollTimer            = null;
+let _sessionIsLive        = false;
 
 // ── Urgency mapping (institutional_relevance → color semáforo) ───────────────
 
@@ -105,12 +106,29 @@ async function _detectSession() {
   const sessions = await _apiFetch('/sessions');
   const list     = Array.isArray(sessions) ? sessions : [sessions];
   const active   = list.find(s => s.status === 'active') ?? null;
+
   if (active) {
-    _readToken  = active.read_token  ?? '';
-    _webhookUrl = active.webhook_url ?? '';
+    _readToken     = active.read_token  ?? '';
+    _webhookUrl    = active.webhook_url ?? '';
+    _sessionIsLive = true;
+    _previousSessionCount = list.filter(s => s.status !== 'active').length;
+    return active.session_id;
   }
-  _previousSessionCount = list.filter(s => s.status !== 'active').length;
-  return active?.session_id ?? null;
+
+  // No active session — use the most recent stopped session so the
+  // dashboard shows historical data after the monitoring window ends.
+  _sessionIsLive = false;
+  const stopped = list
+    .filter(s => s.status === 'stopped' && s.read_token)
+    .sort((a, b) => new Date(b.started_at) - new Date(a.started_at));
+
+  _previousSessionCount = stopped.length;
+  const recent = stopped[0] ?? null;
+  if (recent) {
+    _readToken  = recent.read_token ?? '';
+    _webhookUrl = '';
+  }
+  return recent?.session_id ?? null;
 }
 
 // ── Card Narrativas ───────────────────────────────────────────────────────────
@@ -716,10 +734,13 @@ async function startPolling() {
     _updateWebhookUI();
     _updateHistorialUI();
     await _poll();
-    _pollTimer = setInterval(_poll, 30_000);
+    // Only poll repeatedly for live sessions — stopped sessions don't change.
+    if (_sessionIsLive) {
+      _pollTimer = setInterval(_poll, 30_000);
+    }
   } else {
     _updateHistorialUI();
-    // No session — still keep the live timestamp ticking
+    // No session at all — still keep the live timestamp ticking
     _tickLiveTime();
     _pollTimer = setInterval(_tickLiveTime, 30_000);
   }
