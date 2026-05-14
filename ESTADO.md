@@ -9,62 +9,39 @@ Deploy: `https://qontexto.com`
 
 ---
 
-## Próxima sesión — continuar aquí
+## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**Prerequisitos antes de implementar Fase 21.6 (hacer primero en Vultr):**
+**✅ DEPLOY 14/5 COMPLETADO — dashboard muestra datos históricos post-sesión**
 
-1. **`ADMIN_API_KEY`** — agregar al `.env` del backend:
-   ```bash
-   echo "ADMIN_API_KEY=<valor-secreto>" >> /opt/narrative-intelligence/.env
-   docker compose up -d --build
-   ```
-   Sin esta variable, `/admin/clients` devuelve 503.
+Estado actual:
+- Login Auth0 funcionando ✅
+- Contrato DEMO activo: Lun–Vie 07:00–08:00 Lima ✅
+- Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
 
-2. **Auth0 Action** — inyectar `client_id` en el JWT:
-   Panel Auth0 → Actions → Flows → Login → añadir action:
-   ```javascript
-   exports.onExecutePostLogin = async (event, api) => {
-     const clientId = event.user.user_metadata?.client_id || event.user.email;
-     api.idToken.setCustomClaim("https://api.qontexto.com/client_id", clientId);
-     api.accessToken.setCustomClaim("https://api.qontexto.com/client_id", clientId);
-   };
-   ```
-   Sin esta Action, `client_id` no llega al backend y el aislamiento por cliente no funciona.
-
----
-
-**Prerequisitos antes del deploy (hacer en Vultr):**
-
-1. **`ADMIN_API_KEY`** — agregar al `.env` del backend si no está:
-   ```bash
-   echo "ADMIN_API_KEY=<valor-secreto>" >> /opt/narrative-intelligence/.env
-   docker compose up -d --build
-   ```
-
-2. **Auth0 Action** — inyectar `client_id` en el JWT (panel Auth0 → Actions → Flows → Login):
-   ```javascript
-   exports.onExecutePostLogin = async (event, api) => {
-     const clientId = event.user.user_metadata?.client_id || event.user.email;
-     api.idToken.setCustomClaim("https://api.qontexto.com/client_id", clientId);
-     api.accessToken.setCustomClaim("https://api.qontexto.com/client_id", clientId);
-   };
-   ```
-
-**Deploy:**
+**Deploy del dashboard** (requiere rebuild — los JS están baked en la imagen nginx):
 ```bash
-cd /opt/narrative-intelligence && git pull && docker compose up -d --build
 cd /opt/qontexto-dashboard && git pull && docker compose up -d --build
 ```
 
-**Test en producción:**
-- Abrir `https://qontexto.com` → debe mostrar overlay de login
-- Iniciar sesión con usuario Auth0 → dashboard carga, chip con nombre visible
-- Verificar stat card Costos, chip webhook (si hay sesión con webhook_url), badge historial
-- Botón "Salir" → vuelve al overlay de login
+---
+
+## Cambios aplicados en sesión 14/5 — fix dashboard datos históricos
+
+### Bug fix: `_detectSession()` mostraba datos demo hardcodeados post-08:00
+
+**Causa:** `_detectSession()` solo buscaba `status === 'active'`. Después de las 08:00
+no hay sesión activa → `_sessionId = null` → dashboard mostraba datos demo del `app.js`.
+
+**Fix (commit `c3b34e9`):**
+- Si hay sesión activa → comportamiento anterior (polling cada 30s)
+- Si no hay activa → usa la sesión parada más reciente con su `read_token`
+- Para sesiones paradas: fetch único sin polling (los datos no cambian)
+
+Nuevo flag `_sessionIsLive` controla si se activa el `setInterval` de 30s.
 
 ---
 
-## Cambios aplicados en esta sesión (2026-05-09)
+## Cambios aplicados en sesión 2026-05-10 — Fase D5
 
 ### Fase 21.6 — Auth0 SPA SDK ✅
 
