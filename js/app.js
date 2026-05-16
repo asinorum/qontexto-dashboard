@@ -2,6 +2,10 @@ let isDark = false;
 let pieRef, sparkRef;
 let _pieVerdicts = ['Alerta máxima', 'Señal temprana', 'Emergiendo', 'Estable'];
 
+// D6 — estado del navegador de sesiones
+let _sessionList  = [];
+let _sessionIndex = 0;
+
 function surfaceColor() { return isDark ? '#1C1C1A' : '#FAFAF7'; }
 function tickColor()    { return isDark ? 'rgba(154,152,144,0.45)' : 'rgba(90,88,80,0.4)'; }
 
@@ -76,12 +80,18 @@ function switchTab(tab, el) {
   document.getElementById('tab-resumen').style.display  = tab === 'resumen'  ? 'block' : 'none';
   document.getElementById('tab-senales').style.display  = tab === 'senales'  ? 'block' : 'none';
   document.getElementById('tab-contrato').style.display = tab === 'contrato' ? 'block' : 'none';
+  if (tab === 'senales' && !_sessionIsLive && typeof _loadSessionList === 'function') {
+    if (!_sessionList.length) _loadSessionList();
+  }
 }
 
-function setWindow(el, label) {
+function setWindow(el, label, params) {
   document.querySelectorAll('.qwt').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   document.getElementById('stat-vent').textContent = label;
+  if (!_sessionIsLive && typeof _fetchAggregateState === 'function') {
+    _fetchAggregateState(params ?? { days: 30 });
+  }
 }
 
 initCharts();

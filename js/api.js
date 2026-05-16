@@ -616,6 +616,109 @@ function _tickLiveTime() {
   el.textContent = `${n} stream${n !== 1 ? 's' : ''} · ${limaTime()} PE`;
 }
 
+// ── D6: Agregado multi-sesión ─────────────────────────────────────────────────
+
+async function _fetchAggregateState(params = {}) {
+  const qs = new URLSearchParams();
+  if (params.hours != null) qs.set('hours', params.hours);
+  else                      qs.set('days', params.days ?? 30);
+  if (params.from) qs.set('from', params.from);
+  if (params.to)   qs.set('to',   params.to);
+  try {
+    const agg = await _apiFetch(`/my/sessions/aggregate?${qs}`);
+    _updateUI(agg);
+    _updateAggregateRangeLabel(agg);
+  } catch (err) {
+    console.warn('[Qontexto] aggregate fallido:', err.message);
+  }
+}
+
+function _updateAggregateRangeLabel(agg) {
+  const from = agg.from ? new Date(agg.from) : null;
+  const to   = agg.to   ? new Date(agg.to)   : null;
+  if (!from || !to) return;
+  const fmt = d => d.toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' });
+  const limaFmt = d => limaTime(d);
+  const sameDay = from.toDateString() === to.toDateString();
+  const label   = sameDay
+    ? `${limaFmt(from)} — ${limaFmt(to)} PE`
+    : `${fmt(from)} — ${fmt(to)} PE`;
+  _setText('timebar-range', label);
+}
+
+// ── D6: Navegador de sesiones (Tab Señales) ───────────────────────────────────
+
+async function _loadSessionList() {
+  try {
+    _sessionList  = await _apiFetch('/my/sessions');
+    _sessionIndex = 0;
+    _renderSessionNav();
+    if (_sessionList.length) await _loadSessionAtIndex(0);
+  } catch (err) {
+    console.warn('[Qontexto] session list fallido:', err.message);
+  }
+}
+
+async function _loadSessionAtIndex(i) {
+  const s = _sessionList[i];
+  if (!s) return;
+  _sessionIndex = i;
+  _renderSessionNav();
+  try {
+    const sessionState = await _apiFetch(
+      `/session/${s.session_id}/state?token=${encodeURIComponent(s.read_token)}`
+    );
+    _updateSenalesTab(sessionState);
+  } catch (err) {
+    console.warn('[Qontexto] session state fallido:', err.message);
+  }
+}
+
+function _renderSessionNav() {
+  const navEl = document.getElementById('session-nav');
+  if (!navEl) return;
+  if (!_sessionList.length) { navEl.style.display = 'none'; return; }
+
+  const s         = _sessionList[_sessionIndex];
+  const live      = s.status === 'active';
+  const dateLabel = new Date(s.started_at).toLocaleDateString('es-PE', {
+    weekday: 'short', day: 'numeric', month: 'numeric', timeZone: 'America/Lima',
+  });
+  const t0 = limaTime(new Date(s.started_at));
+  const t1 = s.stopped_at ? limaTime(new Date(s.stopped_at)) : '—';
+
+  const prevOk = _sessionIndex < _sessionList.length - 1;
+  const nextOk = _sessionIndex > 0;
+  const btnSty = 'border:none;background:none;cursor:pointer;font-size:18px;color:var(--text2);padding:0 6px;line-height:1';
+  const disabledSty = 'opacity:.3;cursor:default;pointer-events:none';
+
+  const liveTag = live
+    ? `<span style="display:inline-flex;align-items:center;gap:3px;background:#F0FBF1;color:#2E7D32;` +
+      `border-radius:6px;padding:1px 7px;font-size:11px;font-weight:500;margin-right:4px">` +
+      `<span style="width:5px;height:5px;border-radius:50%;background:#4CAF50"></span>En vivo</span>`
+    : '';
+
+  navEl.innerHTML =
+    `<button style="${btnSty}${prevOk ? '' : ';' + disabledSty}" onclick="prevSession()">‹</button>` +
+    `<span style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:6px;flex:1;justify-content:center">` +
+    liveTag +
+    `<span style="font-weight:500;color:var(--text1)">${_esc(dateLabel)}</span>` +
+    `<span>· ${t0}–${t1} ·</span>` +
+    `<span style="color:${s.alerts_total > 0 ? '#F59E0B' : 'var(--text3)'}">${s.alerts_total} alertas</span>` +
+    `</span>` +
+    `<button style="${btnSty}${nextOk ? '' : ';' + disabledSty}" onclick="nextSession()">›</button>`;
+
+  navEl.style.display = 'flex';
+}
+
+function prevSession() {
+  if (_sessionIndex < _sessionList.length - 1) _loadSessionAtIndex(_sessionIndex + 1);
+}
+
+function nextSession() {
+  if (_sessionIndex > 0) _loadSessionAtIndex(_sessionIndex - 1);
+}
+
 // ── D5: Contrato ──────────────────────────────────────────────────────────────
 
 const _TIER_CONFIG = {
@@ -728,20 +831,20 @@ async function startPolling() {
     console.info('[Qontexto] sin sesión activa:', err.message);
   }
 
-  if (_sessionId) {
+  _updateWebhookUI();
+  _updateHistorialUI();
+
+  if (_sessionIsLive) {
+    // Sesión activa: poll cada 30s con datos de la sesión en vivo
     const pdfBtn = document.getElementById('btn-pdf');
     if (pdfBtn) { pdfBtn.disabled = false; pdfBtn.title = 'Descargar PDF del período actual'; }
-    _updateWebhookUI();
-    _updateHistorialUI();
     await _poll();
-    // Only poll repeatedly for live sessions — stopped sessions don't change.
-    if (_sessionIsLive) {
-      _pollTimer = setInterval(_poll, 30_000);
-    }
+    _pollTimer = setInterval(_poll, 30_000);
   } else {
-    _updateHistorialUI();
-    // No session at all — still keep the live timestamp ticking
-    _tickLiveTime();
+    // Sin sesión en vivo: Tab Resumen muestra acumulado 30 días
+    await _fetchAggregateState({ days: 30 });
+    // Tab Señales: precargar lista de sesiones (visible cuando el usuario cambie de tab)
+    _loadSessionList();
     _pollTimer = setInterval(_tickLiveTime, 30_000);
   }
 }

@@ -43,10 +43,10 @@
     <div style="display:flex;align-items:center">
       <span class="qwlabel">Ventana</span>
       <div class="qwindow-tabs">
-        <button class="qwt" onclick="setWindow(this,'30 min')">30 min</button>
-        <button class="qwt active" onclick="setWindow(this,'1 h')">1 h</button>
-        <button class="qwt" onclick="setWindow(this,'3 h')">3 h</button>
-        <button class="qwt" onclick="setWindow(this,'Personalizado')">Personalizado</button>
+        <button class="qwt" onclick="setWindow(this,'30 min',{hours:0.5})">30 min</button>
+        <button class="qwt active" onclick="setWindow(this,'1 h',{hours:1})">1 h</button>
+        <button class="qwt" onclick="setWindow(this,'3 h',{hours:3})">3 h</button>
+        <button class="qwt" onclick="setWindow(this,'30 días',{days:30})">30 días</button>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:12px">
@@ -154,6 +154,11 @@
 
   <!-- Tab: Señales -->
   <div id="tab-senales" class="qcontent" style="display:none">
+
+    <!-- D6: Navegador de sesiones -->
+    <div id="session-nav" style="display:none;align-items:center;gap:8px;background:var(--surface2);
+      border-radius:10px;padding:8px 12px;margin-bottom:14px"></div>
+
     <div class="qgrid2" style="margin-bottom:14px">
 
       <div class="qcard">
