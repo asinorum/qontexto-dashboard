@@ -201,17 +201,23 @@ function _updateNarrativasCard(state, items) {
 
 // ── Card Voces ────────────────────────────────────────────────────────────────
 
-function _buildVocesItems(snapshot) {
-  if (!snapshot?.per_stream) return null;
+function _buildVocesItems(snapshot, allSnapshots) {
+  // En modo agregado usa todos los snapshots para tener keywords y tonos variados.
+  // En modo sesión individual usa solo el snapshot más reciente.
+  const sources = (allSnapshots?.length > 1) ? allSnapshots : (snapshot ? [snapshot] : []);
+  if (!sources.length) return null;
 
   const freq    = {};
   const urgency = {};
 
-  for (const stream of Object.values(snapshot.per_stream)) {
-    const su = _TONE_URGENCY[stream.tone] ?? 'low';
-    for (const kw of (stream.top_keywords ?? [])) {
-      freq[kw]    = (freq[kw] ?? 0) + 1;
-      urgency[kw] = _maxUrgency(urgency[kw], su);
+  for (const snap of sources) {
+    if (!snap?.per_stream) continue;
+    for (const stream of Object.values(snap.per_stream)) {
+      const su = _TONE_URGENCY[stream.tone] ?? 'low';
+      for (const kw of (stream.top_keywords ?? [])) {
+        freq[kw]    = (freq[kw] ?? 0) + 1;
+        urgency[kw] = _maxUrgency(urgency[kw], su);
+      }
     }
   }
 
@@ -226,7 +232,7 @@ function _buildVocesItems(snapshot) {
 }
 
 function _updateVocesCard(state) {
-  const items = _buildVocesItems(state.latest_snapshot);
+  const items = _buildVocesItems(state.latest_snapshot, state.snapshots);
   if (!items) return;
 
   const wcEl = document.getElementById('word-cloud');
