@@ -11,17 +11,38 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**✅ DEPLOY 14/5 COMPLETADO — dashboard muestra datos históricos post-sesión**
+**→ DEPLOY PENDIENTE — commit `a9301c9`**
+
+```bash
+cd /opt/qontexto-dashboard && git pull && docker compose up -d --build
+```
 
 Estado actual:
 - Login Auth0 funcionando ✅
 - Contrato DEMO activo: Lun–Vie 07:00–08:00 Lima ✅
 - Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
 
-**Deploy del dashboard** (requiere rebuild — los JS están baked en la imagen nginx):
-```bash
-cd /opt/qontexto-dashboard && git pull && docker compose up -d --build
-```
+---
+
+## Fase D6 — Vista acumulada (commit `a9301c9`, 2026-05-15)
+
+**F1 — Tab Resumen muestra acumulado 30 días cuando no hay sesión en vivo**
+- `startPolling()` detecta `_sessionIsLive`. Si no hay sesión activa, llama a
+  `GET /my/sessions/aggregate?days=30` en lugar de fetchear la sesión parada.
+- `_fetchAggregateState(params)` actualiza todos los cards (pie, word cloud, sparkline).
+
+**F2 — Botones de ventana filtran el agregado**
+- Botones 30 min / 1h / 3h / 30 días pasan `{hours:0.5}`, `{hours:1}`, `{hours:3}`, `{days:30}` a `_fetchAggregateState()`.
+- `setWindow()` en `app.js` dispara el re-fetch cuando no hay sesión en vivo.
+
+**F3 — Navegador de sesiones en Tab Señales**
+- `_loadSessionList()` llama `GET /my/sessions` al abrir el tab.
+- Navegador `[‹ fecha · HH:MM–HH:MM · N alertas ›]` sobre la timeline.
+- Flechas cargan la sesión adyacente vía `GET /session/{id}/state?token=`.
+- Dot verde y label "En vivo" si la sesión está activa.
+
+**Archivos modificados:** `js/api.js`, `js/app.js`, `index.html`
+**Requiere en backend:** `GET /my/sessions` y `GET /my/sessions/aggregate` — deployados en commit `90380a4`.
 
 ---
 
@@ -98,6 +119,7 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D3** | Indicador de sesiones anteriores recuperadas desde Redis | Backend Fase 17 ✅ |
 | ✅ | **Fase D4** | Multi-tenancy: login + aislar sesiones por cliente | Backend Fase 21 ✅ |
 | ✅ | **Fase D5** | Pestaña Contrato — institución, tier, ventanas, emisoras, keywords | 2026-05-10 |
+| ✅ | **Fase D6** | Vista acumulada: Resumen 30 días + ventana + navegador Señales | 2026-05-15 |
 
 ---
 
