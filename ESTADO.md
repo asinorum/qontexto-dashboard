@@ -11,11 +11,7 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**→ DEPLOY PENDIENTE — commit `a9301c9`**
-
-```bash
-cd /opt/qontexto-dashboard && git pull && docker compose up -d --build
-```
+**✅ DEPLOY 15/5 COMPLETADO — commits `a9301c9` + `486d92e`**
 
 Estado actual:
 - Login Auth0 funcionando ✅
