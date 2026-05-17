@@ -725,6 +725,116 @@ function nextSession() {
   if (_sessionIndex > 0) _loadSessionAtIndex(_sessionIndex - 1);
 }
 
+// ── D7: Arcos narrativos ──────────────────────────────────────────────────────
+
+let _allArcs = [];
+let _arcStatusFilter = null;
+
+const _ARC_STATUS = {
+  escalating: { label: 'Escalando',  bg: '#FEF2F2', color: '#991B1B', dot: '#EF4444' },
+  active:     { label: 'Activo',     bg: '#F0FBF1', color: '#2E7D32', dot: '#4CAF50' },
+  dormant:    { label: 'Dormido',    bg: 'var(--surface2)', color: 'var(--text3)', dot: '#9E9E9E' },
+};
+
+const _ARC_TREND = {
+  escalating:   '↑ Escalando',
+  continuing:   '→ Continúa',
+  reactivation: '↺ Reactivado',
+  new:          '★ Nuevo',
+};
+
+async function _loadNarrativeArcs() {
+  try {
+    _allArcs = await _apiFetch('/my/narrative-arcs?limit=50');
+    _renderNarrativeArcs(_allArcs);
+  } catch (err) {
+    const el = document.getElementById('narrative-arcs-list');
+    if (el) el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">No hay arcos narrativos registrados aún.</div>';
+    console.warn('[Qontexto] narrative-arcs fallido:', err.message);
+  }
+}
+
+function filterArcs(status, btnEl) {
+  _arcStatusFilter = status;
+  document.querySelectorAll('.qarc-filter').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  const filtered = status ? _allArcs.filter(a => a.status === status) : _allArcs;
+  _renderNarrativeArcs(filtered);
+}
+
+function _drawSparkline(history) {
+  if (!history?.length) return '<svg width="120" height="30"></svg>';
+  const scores = history.map(h => h.score);
+  const min = Math.min(...scores);
+  const max = Math.max(...scores);
+  const range = max - min || 0.01;
+  const W = 120, H = 28, pad = 2;
+  const xs = scores.map((_, i) => pad + (i / Math.max(scores.length - 1, 1)) * (W - pad * 2));
+  const ys = scores.map(s => H - pad - ((s - min) / range) * (H - pad * 2));
+  const pts = xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+  const last = scores[scores.length - 1];
+  const color = last >= 0.7 ? '#EF4444' : last >= 0.5 ? '#F59E0B' : '#4CAF50';
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">` +
+    `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>` +
+    `<circle cx="${xs[xs.length-1].toFixed(1)}" cy="${ys[ys.length-1].toFixed(1)}" r="2.5" fill="${color}"/>` +
+    `</svg>`;
+}
+
+function _renderNarrativeArcs(arcs) {
+  const el = document.getElementById('narrative-arcs-list');
+  if (!el) return;
+  if (!arcs?.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">Sin arcos para el filtro seleccionado.</div>';
+    return;
+  }
+  el.innerHTML = arcs.map(arc => {
+    const cfg   = _ARC_STATUS[arc.status] ?? _ARC_STATUS.active;
+    const trend = _ARC_TREND[arc.trend] ?? arc.trend;
+    const kws   = (arc.keywords ?? []).slice(0, 5).map(k => `<span style="font-size:10px;background:var(--surface2);border-radius:4px;padding:1px 6px;color:var(--text2)">${_esc(k)}</span>`).join('');
+    const spark  = _drawSparkline(arc.intensity_history ?? []);
+    const last   = arc.last_seen ? new Date(arc.last_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
+    const first  = arc.first_seen ? new Date(arc.first_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
+    const pts    = (arc.intensity_history ?? []).length;
+    return `<div onclick="_toggleArcDetail('${_esc(arc.arc_id)}')" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:.5px solid var(--border);cursor:pointer" data-arc-id="${_esc(arc.arc_id)}">
+      <div style="width:8px;height:8px;border-radius:50%;background:${cfg.dot};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+          <span style="font-size:13px;font-weight:500;color:var(--text1)">${_esc(arc.topic || '—')}</span>
+          <span style="font-size:10px;background:${cfg.bg};color:${cfg.color};border-radius:5px;padding:1px 7px;font-weight:500">${cfg.label}</span>
+          <span style="font-size:11px;color:var(--text3)">${trend}</span>
+        </div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">${kws}</div>
+        <div style="font-size:10px;color:var(--text3)">${first} → ${last} · ${pts} ventana${pts !== 1 ? 's' : ''}</div>
+      </div>
+      <div style="flex-shrink:0;opacity:.8">${spark}</div>
+    </div>
+    <div id="arc-detail-${_esc(arc.arc_id)}" style="display:none;padding:10px 12px;background:var(--surface2);border-radius:10px;margin-bottom:4px;font-size:12px;color:var(--text2);line-height:1.6">
+      ${_renderArcDetail(arc)}
+    </div>`;
+  }).join('');
+}
+
+function _toggleArcDetail(arcId) {
+  const el = document.getElementById(`arc-detail-${arcId}`);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function _renderArcDetail(arc) {
+  const regions = (arc.regions ?? []).join(', ') || '—';
+  const dns     = (arc.dominant_narratives ?? []).map(d => `<span style="display:inline-block;background:var(--surface1,#fff);border-radius:5px;padding:1px 7px;margin:2px;font-size:11px">${_esc(d)}</span>`).join('');
+  const history = arc.intensity_history ?? [];
+  const peak    = history.length ? Math.max(...history.map(h => h.score)).toFixed(2) : '—';
+  const last    = history.length ? history[history.length - 1].score.toFixed(2) : '—';
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">
+    <div><span style="color:var(--text3)">Regiones:</span> ${_esc(regions)}</div>
+    <div><span style="color:var(--text3)">Score actual:</span> ${last} · pico: ${peak}</div>
+    <div><span style="color:var(--text3)">Narrativas detectadas:</span></div>
+    <div></div>
+  </div>
+  <div style="margin-top:6px">${dns || '<span style="color:var(--text3)">—</span>'}</div>`;
+}
+
 // ── D5: Contrato ──────────────────────────────────────────────────────────────
 
 const _TIER_CONFIG = {
@@ -849,8 +959,9 @@ async function startPolling() {
   } else {
     // Sin sesión en vivo: Tab Resumen muestra acumulado 30 días
     await _fetchAggregateState({ days: 30 });
-    // Tab Señales: precargar lista de sesiones (visible cuando el usuario cambie de tab)
+    // Tab Señales: precargar lista de sesiones y arcos narrativos
     _loadSessionList();
+    _loadNarrativeArcs();
     _pollTimer = setInterval(_tickLiveTime, 30_000);
   }
 }

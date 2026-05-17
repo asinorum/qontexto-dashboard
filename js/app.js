@@ -80,8 +80,9 @@ function switchTab(tab, el) {
   document.getElementById('tab-resumen').style.display  = tab === 'resumen'  ? 'block' : 'none';
   document.getElementById('tab-senales').style.display  = tab === 'senales'  ? 'block' : 'none';
   document.getElementById('tab-contrato').style.display = tab === 'contrato' ? 'block' : 'none';
-  if (tab === 'senales' && !_sessionIsLive && typeof _loadSessionList === 'function') {
-    if (!_sessionList.length) _loadSessionList();
+  if (tab === 'senales' && !_sessionIsLive) {
+    if (typeof _loadSessionList === 'function' && !_sessionList.length) _loadSessionList();
+    if (typeof _loadNarrativeArcs === 'function') _loadNarrativeArcs();
   }
 }
 

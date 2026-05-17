@@ -41,6 +41,9 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qcard-note { font-size:10px; color:var(--text3); margin-top:10px; padding:7px 10px; background:var(--surface2); border-radius:8px; line-height:1.5; }
 .qcard-footer { font-size:10px; color:var(--text3); margin-top:10px; padding-top:10px; border-top:.5px solid var(--border); }
 
+/* Arc filter buttons */
+.qarc-filter.active { background:var(--text1); color:var(--surface); font-weight:500; }
+
 /* Veredicto pill */
 .qverdict { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:500; padding:3px 10px; border-radius:20px; }
 
