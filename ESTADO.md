@@ -11,12 +11,29 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**✅ DEPLOY 15/5 COMPLETADO — commits `a9301c9` + `486d92e`**
+**✅ DEPLOY 17/5 COMPLETADO — commit `56db026`**
 
 Estado actual:
 - Login Auth0 funcionando ✅
 - Contrato DEMO activo: Lun–Vie 07:00–08:00 Lima ✅
 - Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
+- Tab Señales muestra arcos narrativos con sparkline y filtros por status ✅
+
+**✅ DEPLOY 15/5 COMPLETADO — commits `a9301c9` + `486d92e`**
+
+---
+
+## Fase D7 — Arcos narrativos en Tab Señales (commit `56db026`, 2026-05-17)
+
+**F1 — Sección "Arcos narrativos" en Tab Señales**
+- `_loadNarrativeArcs()` llama `GET /my/narrative-arcs?limit=50` al entrar en el tab y al iniciar en modo no-live.
+- Cada arco muestra: dot de status, topic, badge status (escalando/activo/dormido), trend, keywords (tags), rango de fechas y número de ventanas.
+- Sparkline SVG inline de `intensity_history[]` — color según last_score (rojo ≥0.7, ámbar ≥0.5, verde).
+- Clic en un arco despliega/colapsa un panel de detalle con regiones, score actual, pico y narrativas dominantes.
+- Filtros por status: Todos / Escalando / Activos / Dormidos.
+
+**Archivos modificados:** `index.html`, `js/api.js`, `js/app.js`, `css/app.css`
+**Requiere en backend:** `GET /my/narrative-arcs` — deployado en commit `dfc8ff1`.
 
 ---
 
@@ -116,6 +133,7 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D4** | Multi-tenancy: login + aislar sesiones por cliente | Backend Fase 21 ✅ |
 | ✅ | **Fase D5** | Pestaña Contrato — institución, tier, ventanas, emisoras, keywords | 2026-05-10 |
 | ✅ | **Fase D6** | Vista acumulada: Resumen 30 días + ventana + navegador Señales | 2026-05-15 |
+| ✅ | **Fase D7** | Arcos narrativos en Tab Señales — sparkline + filtros + detalle expandible | 2026-05-17 |
 
 ---
 
