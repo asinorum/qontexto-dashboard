@@ -11,15 +11,39 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**✅ DEPLOY 17/5 COMPLETADO — commit `56db026`**
+**✅ DEPLOY 19/5 COMPLETADO — commit `4072976`**
 
 Estado actual:
 - Login Auth0 funcionando ✅
 - Contrato DEMO activo: Lun–Vie 07:00–08:00 Lima ✅
 - Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
-- Tab Señales muestra arcos narrativos con sparkline y filtros por status ✅
+- 4 tabs: Resumen | Contexto | Señales | Contrato ✅
+- Tab Contexto: arcos narrativos con sparkline, filtros y detalle expandible ✅
+- Tab Señales: stack vertical — nav sesiones, análisis, timeline, radios ✅
+
+**✅ DEPLOY 17/5 COMPLETADO — commit `56db026`**
 
 **✅ DEPLOY 15/5 COMPLETADO — commits `a9301c9` + `486d92e`**
+
+---
+
+## Fase D8 — Rediseño estructural: tab Contexto + Señales vertical (commit `4072976`, 2026-05-19)
+
+**Motivación:** Tab Señales acumulaba demasiados bloques simultáneos. Se separaron dos intenciones de uso distintas.
+
+**F1 — Nueva tab "Contexto"**
+- Contiene los arcos narrativos (antes en Señales).
+- Carga on-demand al abrir el tab (`_loadNarrativeArcs()` en `switchTab()`).
+- No precarga en `startPolling()`.
+
+**F2 — Tab "Señales" rediseñada**
+- Eliminado el wrapper `.qgrid2`; ahora es un stack vertical de 4 cards full-width.
+- Cards: navegador de sesiones (`#session-nav`), Análisis narrativo, Línea de tiempo · Última hora, Radios.
+- "Resumen por emisora" renombrado a "Radios".
+
+**Orden de tabs:** Resumen | Contexto | Señales | Contrato
+
+**Archivos modificados:** `index.html`, `js/api.js`, `js/app.js`
 
 ---
 
@@ -134,6 +158,7 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D5** | Pestaña Contrato — institución, tier, ventanas, emisoras, keywords | 2026-05-10 |
 | ✅ | **Fase D6** | Vista acumulada: Resumen 30 días + ventana + navegador Señales | 2026-05-15 |
 | ✅ | **Fase D7** | Arcos narrativos en Tab Señales — sparkline + filtros + detalle expandible | 2026-05-17 |
+| ✅ | **Fase D8** | Rediseño estructural — nueva tab Contexto + Señales como stack vertical | 2026-05-19 |
 
 ---
 
