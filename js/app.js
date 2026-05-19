@@ -81,7 +81,7 @@ function switchTab(tab, el) {
   document.getElementById('tab-contexto').style.display = tab === 'contexto' ? 'block' : 'none';
   document.getElementById('tab-senales').style.display  = tab === 'senales'  ? 'block' : 'none';
   document.getElementById('tab-contrato').style.display = tab === 'contrato' ? 'block' : 'none';
-  if (tab === 'contexto' && !_sessionIsLive) {
+  if (tab === 'contexto') {
     if (typeof _loadNarrativeArcs === 'function') _loadNarrativeArcs();
   }
   if (tab === 'senales' && !_sessionIsLive) {
