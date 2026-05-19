@@ -959,9 +959,8 @@ async function startPolling() {
   } else {
     // Sin sesión en vivo: Tab Resumen muestra acumulado 30 días
     await _fetchAggregateState({ days: 30 });
-    // Tab Señales: precargar lista de sesiones y arcos narrativos
+    // Tab Señales: precargar lista de sesiones
     _loadSessionList();
-    _loadNarrativeArcs();
     _pollTimer = setInterval(_tickLiveTime, 30_000);
   }
 }

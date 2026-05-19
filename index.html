@@ -22,6 +22,7 @@
     <div class="qlogo"><div class="qlogo-dot"></div>Qontexto</div>
     <div class="qtabs">
       <button class="qtab active" onclick="switchTab('resumen',this)">Resumen</button>
+      <button class="qtab" onclick="switchTab('contexto',this)">Contexto</button>
       <button class="qtab" onclick="switchTab('senales',this)">Señales</button>
       <button class="qtab" onclick="switchTab('contrato',this)">Contrato</button>
     </div>
@@ -152,15 +153,9 @@
 
   </div>
 
-  <!-- Tab: Señales -->
-  <div id="tab-senales" class="qcontent" style="display:none">
-
-    <!-- D6: Navegador de sesiones -->
-    <div id="session-nav" style="display:none;align-items:center;gap:8px;background:var(--surface2);
-      border-radius:10px;padding:8px 12px;margin-bottom:14px"></div>
-
-    <!-- D7: Arcos narrativos -->
-    <div class="qcard" style="margin-bottom:14px">
+  <!-- Tab: Contexto -->
+  <div id="tab-contexto" class="qcontent" style="display:none">
+    <div class="qcard">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="qcard-lbl">Arcos narrativos</div>
         <div id="arcs-filter" style="display:flex;gap:6px">
@@ -174,51 +169,58 @@
         <div style="font-size:13px;color:var(--text3);padding:12px 0">Cargando arcos…</div>
       </div>
     </div>
+  </div>
 
-    <div class="qgrid2" style="margin-bottom:14px">
+  <!-- Tab: Señales -->
+  <div id="tab-senales" class="qcontent" style="display:none">
 
-      <div class="qcard">
-        <div class="qcard-lbl" style="margin-bottom:14px">Línea de tiempo · Última hora</div>
-        <div class="qtimeline" id="senales-timeline">
-          <div class="qtevent">
-            <div class="qtl-left"><div class="qtl-time">13:32</div><div class="qtl-dot" style="background:#4CAF50"></div><div class="qtl-line"></div></div>
-            <div><div class="qtl-title">Inicio de ventana</div><div class="qtl-sub">3 streams activos</div></div>
-          </div>
-          <div class="qtevent">
-            <div class="qtl-left"><div class="qtl-time">14:08</div><div class="qtl-dot" style="background:var(--text3)"></div><div class="qtl-line"></div></div>
-            <div><div class="qtl-title">Primeras menciones</div><div class="qtl-sub">Reforestación minera · RPP Cajamarca · narrativa aislada</div></div>
-          </div>
-          <div class="qtevent">
-            <div class="qtl-left"><div class="qtl-time">14:21</div><div class="qtl-dot" style="background:#F59E0B"></div><div class="qtl-line"></div></div>
-            <div><div class="qtl-title">Mención a San Marcos</div><div class="qtl-sub">Radio San Marcos · Áncash · tono neutral</div></div>
-          </div>
-          <div class="qtevent" style="background:rgba(153,27,27,0.05);border-radius:12px;padding:10px;margin:0 -4px">
-            <div class="qtl-left"><div class="qtl-time" style="color:#991B1B;font-weight:500">14:28</div><div class="qtl-dot" style="background:#991B1B"></div><div class="qtl-line"></div></div>
-            <div><div class="qtl-title" style="color:#991B1B">Señal de atención — Nova Chimbote</div><div class="qtl-quote">"San Marcos, te vas a acordar de mí"</div></div>
-          </div>
-          <div class="qtevent">
-            <div class="qtl-left"><div class="qtl-time">14:32</div><div class="qtl-dot" style="background:#4CAF50;box-shadow:0 0 0 3px rgba(76,175,80,0.2)"></div></div>
-            <div><div class="qtl-title" style="color:var(--text2);font-style:italic">Ahora — monitoreo activo</div></div>
-          </div>
+    <!-- D6: Navegador de sesiones -->
+    <div id="session-nav" style="display:none;align-items:center;gap:8px;background:var(--surface2);
+      border-radius:10px;padding:8px 12px;margin-bottom:14px"></div>
+
+    <!-- Análisis narrativo — full-width -->
+    <div class="qcard" style="margin-bottom:14px">
+      <div class="qcard-lbl" style="margin-bottom:12px">Análisis narrativo</div>
+      <div id="senales-analisis" style="font-size:13px;color:var(--text2);line-height:1.65">
+        <p style="margin-bottom:12px">Durante la última hora se registraron <span style="font-weight:500;color:var(--text1)">8 alertas</span> con narrativa dominante centrada en <span style="font-weight:500;color:#4CAF50">reforestación minera en Cajamarca</span> y menciones aisladas a San Marcos, sin evidencia de campaña articulada.</p>
+        <p style="margin-bottom:12px">Destaca una <span style="font-weight:500;color:#991B1B">señal de atención en Nova Chimbote</span> (Áncash): la frase <em style="color:#991B1B">"San Marcos, te vas a acordar de mí"</em> podría indicar declaración de dirigente o inicio de movilización.</p>
+        <div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
+          <div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Recomendación</div>
+          <div style="font-size:12px;color:var(--text1);line-height:1.5">Verificar convocatoria de protesta en San Marcos hoy. Monitoreo intensivo de Nova Chimbote próximos 30 minutos.</div>
         </div>
       </div>
-
-      <div class="qcard">
-        <div class="qcard-lbl" style="margin-bottom:12px">Análisis narrativo</div>
-        <div id="senales-analisis" style="font-size:13px;color:var(--text2);line-height:1.65">
-          <p style="margin-bottom:12px">Durante la última hora se registraron <span style="font-weight:500;color:var(--text1)">8 alertas</span> con narrativa dominante centrada en <span style="font-weight:500;color:#4CAF50">reforestación minera en Cajamarca</span> y menciones aisladas a San Marcos, sin evidencia de campaña articulada.</p>
-          <p style="margin-bottom:12px">Destaca una <span style="font-weight:500;color:#991B1B">señal de atención en Nova Chimbote</span> (Áncash): la frase <em style="color:#991B1B">"San Marcos, te vas a acordar de mí"</em> podría indicar declaración de dirigente o inicio de movilización.</p>
-          <div style="background:var(--surface2);border-radius:10px;padding:10px 12px">
-            <div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Recomendación</div>
-            <div style="font-size:12px;color:var(--text1);line-height:1.5">Verificar convocatoria de protesta en San Marcos hoy. Monitoreo intensivo de Nova Chimbote próximos 30 minutos.</div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
+    <!-- Línea de tiempo — full-width -->
+    <div class="qcard" style="margin-bottom:14px">
+      <div class="qcard-lbl" style="margin-bottom:14px">Línea de tiempo · Última hora</div>
+      <div class="qtimeline" id="senales-timeline">
+        <div class="qtevent">
+          <div class="qtl-left"><div class="qtl-time">13:32</div><div class="qtl-dot" style="background:#4CAF50"></div><div class="qtl-line"></div></div>
+          <div><div class="qtl-title">Inicio de ventana</div><div class="qtl-sub">3 streams activos</div></div>
+        </div>
+        <div class="qtevent">
+          <div class="qtl-left"><div class="qtl-time">14:08</div><div class="qtl-dot" style="background:var(--text3)"></div><div class="qtl-line"></div></div>
+          <div><div class="qtl-title">Primeras menciones</div><div class="qtl-sub">Reforestación minera · RPP Cajamarca · narrativa aislada</div></div>
+        </div>
+        <div class="qtevent">
+          <div class="qtl-left"><div class="qtl-time">14:21</div><div class="qtl-dot" style="background:#F59E0B"></div><div class="qtl-line"></div></div>
+          <div><div class="qtl-title">Mención a San Marcos</div><div class="qtl-sub">Radio San Marcos · Áncash · tono neutral</div></div>
+        </div>
+        <div class="qtevent" style="background:rgba(153,27,27,0.05);border-radius:12px;padding:10px;margin:0 -4px">
+          <div class="qtl-left"><div class="qtl-time" style="color:#991B1B;font-weight:500">14:28</div><div class="qtl-dot" style="background:#991B1B"></div><div class="qtl-line"></div></div>
+          <div><div class="qtl-title" style="color:#991B1B">Señal de atención — Nova Chimbote</div><div class="qtl-quote">"San Marcos, te vas a acordar de mí"</div></div>
+        </div>
+        <div class="qtevent">
+          <div class="qtl-left"><div class="qtl-time">14:32</div><div class="qtl-dot" style="background:#4CAF50;box-shadow:0 0 0 3px rgba(76,175,80,0.2)"></div></div>
+          <div><div class="qtl-title" style="color:var(--text2);font-style:italic">Ahora — monitoreo activo</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Radios — full-width -->
     <div class="qcard">
-      <div class="qcard-lbl" style="margin-bottom:12px">Resumen por emisora</div>
+      <div class="qcard-lbl" style="margin-bottom:12px">Radios</div>
       <div class="qstream-grid" id="senales-streams">
         <div class="qstream" style="border-color:rgba(153,27,27,0.2)">
           <div class="qstream-name"><div style="width:8px;height:8px;border-radius:50%;background:#991B1B;flex-shrink:0"></div>Nova Chimbote</div>
