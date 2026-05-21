@@ -12,6 +12,7 @@ let _webhookUrl           = '';
 let _previousSessionCount = 0;
 let _pollTimer            = null;
 let _sessionIsLive        = false;
+let _contractId           = null;
 
 // ── Urgency mapping (institutional_relevance → color semáforo) ───────────────
 
@@ -656,7 +657,8 @@ function _updateAggregateRangeLabel(agg) {
 
 async function _loadSessionList() {
   try {
-    _sessionList  = await _apiFetch('/my/sessions');
+    const qs = _contractId ? `?contract_id=${_contractId}` : '';
+    _sessionList  = await _apiFetch(`/my/sessions${qs}`);
     _sessionIndex = 0;
     _renderSessionNav();
     if (_sessionList.length) await _loadSessionAtIndex(0);
@@ -745,7 +747,8 @@ const _ARC_TREND = {
 
 async function _loadNarrativeArcs() {
   try {
-    _allArcs = await _apiFetch('/my/narrative-arcs?limit=50');
+    const arcQs = _contractId ? `&contract_id=${_contractId}` : '';
+    _allArcs = await _apiFetch(`/my/narrative-arcs?limit=50${arcQs}`);
     _renderNarrativeArcs(_allArcs);
   } catch (err) {
     const el = document.getElementById('narrative-arcs-list');
@@ -929,6 +932,7 @@ function _renderContratoTab(contract) {
 async function _fetchContract() {
   try {
     const contract = await _apiFetch('/my/contract');
+    _contractId = contract.contract_id ?? null;
     _renderContratoTab(contract);
   } catch {
     const el = document.getElementById('contrato-stats');

@@ -11,19 +11,34 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**✅ DEPLOY 19/5 COMPLETADO — commit `4072976`**
+**✅ DEPLOY 20/5 COMPLETADO — commit D9**
 
 Estado actual:
 - Login Auth0 funcionando ✅
 - Contrato DEMO activo: Lun–Vie 07:00–08:00 Lima ✅
 - Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
 - 4 tabs: Resumen | Contexto | Señales | Contrato ✅
-- Tab Contexto: arcos narrativos con sparkline, filtros y detalle expandible ✅
-- Tab Señales: stack vertical — nav sesiones, análisis, timeline, radios ✅
+- Tab Contexto: arcos narrativos filtrados por `contract_id` ✅
+- Tab Señales: sesiones filtradas por `contract_id` ✅
+
+**✅ DEPLOY 19/5 COMPLETADO — commit `4072976`**
 
 **✅ DEPLOY 17/5 COMPLETADO — commit `56db026`**
 
 **✅ DEPLOY 15/5 COMPLETADO — commits `a9301c9` + `486d92e`**
+
+---
+
+## Fase D9 — Filtrado por contract_id (2026-05-20)
+
+- Variable global `_contractId` — seteada en `_fetchContract()` al recibir `GET /my/contract`.
+- `_loadNarrativeArcs()`: pasa `?contract_id=` si está disponible (evita mezclar arcos de contratos distintos bajo el mismo `client_id`).
+- `_loadSessionList()`: ídem para sesiones.
+- Si `_contractId` es null (contrato no cargado aún o error), las llamadas funcionan igual que antes (sin filtro — backward compatible).
+
+**Fase D10 — pendiente:** mostrar `stream_windows` por emisora en tab Contrato — sin urgencia hasta que algún stream tenga ventanas propias configuradas en Postgres.
+
+**Archivos modificados:** `js/api.js`
 
 ---
 
@@ -159,6 +174,8 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D6** | Vista acumulada: Resumen 30 días + ventana + navegador Señales | 2026-05-15 |
 | ✅ | **Fase D7** | Arcos narrativos en Tab Señales — sparkline + filtros + detalle expandible | 2026-05-17 |
 | ✅ | **Fase D8** | Rediseño estructural — nueva tab Contexto + Señales como stack vertical | 2026-05-19 |
+| ✅ | **Fase D9** | Filtrar arcos y sesiones por `contract_id` (Fases backend 26/27/28) | 2026-05-20 |
+| ⏳ | **Fase D10** | Tab Contrato: mostrar `stream_windows` por emisora | Pendiente — sin datos reales en DEMO aún |
 
 ---
 
