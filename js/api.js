@@ -48,6 +48,13 @@ const _TREND_CONFIG = {
   cediendo:  { label: 'Cediendo',  bg: '#F0FBF1', color: '#2E7D32', arrow: '<polyline points="6 9 12 15 18 9"/>'  },
 };
 
+function _scoreToUrgency(score) {
+  if (score >= 0.7) return 'critical';
+  if (score >= 0.5) return 'high';
+  if (score >= 0.3) return 'medium';
+  return 'low';
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function limaTime(date = new Date()) {
@@ -360,10 +367,6 @@ function _updateUI(state) {
                         : 'inherit';
   }
 
-  const narrativeItems = _buildNarrativeItems(state.snapshots);
-  _updateNarrativasCard(state, narrativeItems);
-  _updateVocesCard(state);
-  _updateMomentoCard(state, narrativeItems);
   _updateSenalesTab(state);
 }
 
@@ -745,11 +748,143 @@ const _ARC_TREND = {
   new:          '★ Nuevo',
 };
 
+function _updateResumenFromArcs(arcs) {
+  if (!arcs?.length) return;
+
+  const pool = [...arcs]
+    .filter(a => a.status !== 'dormant')
+    .sort((a, b) => {
+      if (a.status === 'escalating' && b.status !== 'escalating') return -1;
+      if (b.status === 'escalating' && a.status !== 'escalating') return  1;
+      return (b.last_score ?? 0) - (a.last_score ?? 0);
+    });
+  const top4 = (pool.length ? pool : arcs.slice().sort((a, b) => (b.last_score ?? 0) - (a.last_score ?? 0))).slice(0, 4);
+
+  // ── Pie chart (Card Narrativas) ──────────────────────────────────────────
+  const pieItems = top4.map(a => ({
+    label:   a.topic,
+    weight:  Math.round((a.last_score ?? 0) * 100),
+    urgency: _scoreToUrgency(a.last_score ?? 0),
+  }));
+  if (typeof pieRef !== 'undefined' && pieRef) {
+    pieRef.data.labels                      = pieItems.map(i => i.label);
+    pieRef.data.datasets[0].data            = pieItems.map(i => i.weight);
+    pieRef.data.datasets[0].backgroundColor = pieItems.map(i => URGENCY[i.urgency]?.color ?? '#9E9E9E');
+    _pieVerdicts = pieItems.map(i => URGENCY[i.urgency]?.label ?? 'Otros');
+    pieRef.update();
+  }
+  const legendEl = document.getElementById('pie-legend');
+  if (legendEl) {
+    legendEl.innerHTML = pieItems.map((item, idx) => {
+      const u = URGENCY[item.urgency];
+      const mb = idx === pieItems.length - 1 ? 'margin-bottom:0' : '';
+      return `<div class="qleg-row" style="${mb}">` +
+        `<span style="display:flex;align-items:center;min-width:0;flex:1">` +
+        `<span class="qleg-dot" style="background:${u?.color ?? 'var(--text3)'}"></span>` +
+        `<span class="qleg-name">${_esc(item.label)}</span></span>` +
+        `<span class="qleg-tag" style="background:${u?.bg ?? 'var(--surface2)'};color:${u?.textColor ?? 'var(--text3)'}">${u?.label ?? 'Otros'}</span>` +
+        `</div>`;
+    }).join('');
+  }
+  _setText('card-narrativas-title', top4[0]?.topic ?? '');
+  _setText('card-narrativas-footer', `${top4.length} arco${top4.length !== 1 ? 's' : ''} activos · ${limaTime()} PE`);
+
+  // ── Word cloud (Card Voces) ──────────────────────────────────────────────
+  const kwFreq = {};
+  const kwUrgency = {};
+  for (const arc of (pool.length ? pool : arcs)) {
+    const u = _scoreToUrgency(arc.last_score ?? 0);
+    for (const kw of (arc.keywords ?? [])) {
+      kwFreq[kw]    = (kwFreq[kw] ?? 0) + 1;
+      kwUrgency[kw] = _maxUrgency(kwUrgency[kw], u);
+    }
+  }
+  const kwSorted = Object.keys(kwFreq).sort((a, b) => kwFreq[b] - kwFreq[a]);
+  if (kwSorted.length) {
+    const wcItems = kwSorted.slice(0, _WC_SLOTS.length).map(kw => ({
+      label: kw, count: kwFreq[kw], urgency: kwUrgency[kw] ?? 'low',
+    }));
+    const wcEl = document.getElementById('word-cloud');
+    if (wcEl) {
+      wcEl.innerHTML = wcItems.map((item, i) => {
+        const slot = _WC_SLOTS[i];
+        const color = URGENCY[item.urgency]?.color ?? 'var(--text3)';
+        return `<span style="font-size:${_WC_SIZES[i] ?? 9}px;font-weight:${_WC_WEIGHTS[i] ?? 400};` +
+          `color:${color};top:${slot.top}px;left:${slot.left}px">${_esc(item.label)}</span>`;
+      }).join('');
+    }
+    if (wcItems.length >= 2) _setText('card-voces-title', `${wcItems[0].label} y ${wcItems[1].label} dominan el centro`);
+    else if (wcItems.length === 1) _setText('card-voces-title', `${wcItems[0].label} domina el centro`);
+  }
+  _setText('card-voces-footer', `${(pool.length ? pool : arcs).length} arco${(pool.length ? pool : arcs).length !== 1 ? 's' : ''} · ${limaTime()} PE`);
+
+  // ── Sparkline (Card Momento) — últimos 15 días ───────────────────────────
+  const today = new Date();
+  const days  = Array.from({ length: 15 }, (_, i) => {
+    const d = new Date(today);
+    d.setUTCDate(d.getUTCDate() - (14 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  const months = ['', 'ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const sparkLabels = days.map(d => {
+    const [, m, dd] = d.split('-');
+    return `${parseInt(dd)} ${months[parseInt(m)]}`;
+  });
+
+  const sparkDatasets = top4.map((arc, idx) => {
+    const urgency = _scoreToUrgency(arc.last_score ?? 0);
+    const color   = URGENCY[urgency]?.color ?? '#9E9E9E';
+    const isTop   = idx < 2;
+    const byDay   = {};
+    for (const e of (arc.intensity_history ?? [])) {
+      const day = (e.window_end ?? '').slice(0, 10);
+      if (day && (byDay[day] == null || e.score > byDay[day])) byDay[day] = e.score;
+    }
+    const data = days.map(d => byDay[d] != null ? Math.round(byDay[d] * 100) / 10 : null);
+    return {
+      label:               arc.topic,
+      data,
+      spanGaps:            false,
+      borderColor:         isTop ? color : _hexToRgba(color, 0.35),
+      backgroundColor:     idx === 0 ? _hexToRgba(color, 0.07) : 'transparent',
+      fill:                idx === 0,
+      tension:             0.4,
+      borderWidth:         isTop ? 2.5 : 1,
+      pointRadius:         data.map(v => v !== null ? (isTop ? 5 : 3) : 0),
+      pointBackgroundColor: color,
+      pointBorderWidth:    0,
+    };
+  });
+
+  if (typeof sparkRef !== 'undefined' && sparkRef) {
+    sparkRef.data.labels   = sparkLabels;
+    sparkRef.data.datasets = sparkDatasets;
+    sparkRef.update();
+  }
+
+  const arcTrend = top4[0]?.trend;
+  const trend    = arcTrend === 'escalating' ? 'escalando'
+                 : arcTrend === 'declining'  ? 'cediendo'
+                 : 'estable';
+  const tConf    = _TREND_CONFIG[trend];
+  const pillEl   = document.getElementById('card-momento-pill');
+  if (pillEl && tConf) {
+    pillEl.style.background = tConf.bg;
+    pillEl.style.color      = tConf.color;
+    pillEl.innerHTML =
+      `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${tConf.color}" ` +
+      `stroke-width="2.5" stroke-linecap="round">${tConf.arrow}</svg> ${tConf.label}`;
+  }
+  _setText('card-momento-title', top4[0]?.topic ?? '');
+  _setText('card-momento-footer', `Últimos 15 días · ${limaTime()} PE`);
+}
+
 async function _loadNarrativeArcs() {
   try {
     const arcQs = _contractId ? `&contract_id=${_contractId}` : '';
     _allArcs = await _apiFetch(`/my/narrative-arcs?limit=50${arcQs}`);
     _renderNarrativeArcs(_allArcs);
+    _updateResumenFromArcs(_allArcs);
   } catch (err) {
     const el = document.getElementById('narrative-arcs-list');
     if (el) el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">No hay arcos narrativos registrados aún.</div>';
@@ -958,12 +1093,14 @@ async function startPolling() {
     // Sesión activa: poll cada 30s con datos de la sesión en vivo
     const pdfBtn = document.getElementById('btn-pdf');
     if (pdfBtn) { pdfBtn.disabled = false; pdfBtn.title = 'Descargar PDF del período actual'; }
+    _loadNarrativeArcs();
     await _poll();
     _pollTimer = setInterval(_poll, 30_000);
   } else {
     // Sin sesión en vivo: Tab Resumen muestra acumulado 30 días
     await _fetchAggregateState({ days: 30 });
     // Tab Señales: precargar lista de sesiones
+    _loadNarrativeArcs();
     _loadSessionList();
     _pollTimer = setInterval(_tickLiveTime, 30_000);
   }
