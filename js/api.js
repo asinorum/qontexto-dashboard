@@ -763,7 +763,7 @@ function _updateResumenFromArcs(arcs) {
   // ── Pie chart (Card Narrativas) ──────────────────────────────────────────
   const pieItems = top4.map(a => ({
     label:   a.topic,
-    weight:  Math.round((a.last_score ?? 0) * 100),
+    weight:  Math.max(1, Math.round((a.last_score ?? 0) * 100)),
     urgency: _scoreToUrgency(a.last_score ?? 0),
   }));
   if (typeof pieRef !== 'undefined' && pieRef) {
