@@ -11,21 +11,41 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**✅ DEPLOY 20/5 COMPLETADO — commit D9**
+**✅ DEPLOY 21/5 COMPLETADO — commits `cb9a7f8` + `193570b`**
 
 Estado actual:
 - Login Auth0 funcionando ✅
 - Contrato DEMO activo: Lun–Vie 07:00–08:00 Lima ✅
 - Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
 - 4 tabs: Resumen | Contexto | Señales | Contrato ✅
+- Tab Resumen: pie chart, word cloud y sparkline alimentados desde arcos narrativos ✅
 - Tab Contexto: arcos narrativos filtrados por `contract_id` ✅
 - Tab Señales: sesiones filtradas por `contract_id` ✅
+
+**✅ DEPLOY 20/5 COMPLETADO — commit D9**
 
 **✅ DEPLOY 19/5 COMPLETADO — commit `4072976`**
 
 **✅ DEPLOY 17/5 COMPLETADO — commit `56db026`**
 
 **✅ DEPLOY 15/5 COMPLETADO — commits `a9301c9` + `486d92e`**
+
+---
+
+## Fase D10 — Tab Resumen desde arcos narrativos (commits `cb9a7f8` + `193570b`, 2026-05-21)
+
+**Motivación:** el Resumen es la representación ejecutiva del sistema — debe hablar en veredictos (arcos), no en métricas de sesión.
+
+**Cambios:**
+- Los tres visuals (pie chart, word cloud, sparkline) ahora consumen `GET /my/narrative-arcs` en lugar de datos de sesión.
+- `_updateResumenFromArcs(arcs)`: nueva función que actualiza los tres cards desde arcos.
+- **Pie chart:** top 4 arcos activos/escalando ordenados por `last_score`, coloreados por veredicto. Peso mínimo 1 para evitar pie vacío con arcos nuevos de score cero.
+- **Word cloud:** keywords agregadas de todos los arcos activos, ponderadas por urgency del arco.
+- **Sparkline:** últimos 15 días en eje X, una línea por arco (max 4). Agrupa `intensity_history[].window_end` por día UTC, toma el score máximo del día.
+- `_updateUI()` ya no actualiza los tres cards de Resumen — solo stats y tab Señales.
+- `startPolling()`: llama `_loadNarrativeArcs()` en ambos paths (vivo y no-vivo).
+
+**Archivos modificados:** `js/api.js`
 
 ---
 
@@ -175,7 +195,8 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D7** | Arcos narrativos en Tab Señales — sparkline + filtros + detalle expandible | 2026-05-17 |
 | ✅ | **Fase D8** | Rediseño estructural — nueva tab Contexto + Señales como stack vertical | 2026-05-19 |
 | ✅ | **Fase D9** | Filtrar arcos y sesiones por `contract_id` (Fases backend 26/27/28) | 2026-05-20 |
-| ⏳ | **Fase D10** | Tab Contrato: mostrar `stream_windows` por emisora | Pendiente — sin datos reales en DEMO aún |
+| ✅ | **Fase D10** | Tab Resumen: pie chart, word cloud y sparkline desde arcos narrativos | 2026-05-21 |
+| ⏳ | **Fase D11** | Tab Contrato: mostrar `stream_windows` por emisora | Pendiente — sin datos reales en DEMO aún |
 
 ---
 
