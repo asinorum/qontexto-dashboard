@@ -13,6 +13,7 @@ let _previousSessionCount = 0;
 let _pollTimer            = null;
 let _sessionIsLive        = false;
 let _contractId           = null;
+let _contractStreamCount  = null;
 
 // ── Urgency mapping (institutional_relevance → color semáforo) ───────────────
 
@@ -353,8 +354,10 @@ function _updateMomentoCard(state, narrativeItems) {
 // ── UI update ─────────────────────────────────────────────────────────────────
 
 function _updateUI(state) {
-  const streamCount = state.streams_monitored?.length ?? 0;
-  const alertCount  = state.summary?.alerts_total    ?? 0;
+  const streamCount = _sessionIsLive
+    ? (state.streams_monitored?.length ?? 0)
+    : (_contractStreamCount ?? state.streams_monitored?.length ?? 0);
+  const alertCount  = state.summary?.alerts_total ?? 0;
 
   _setText('stat-streams', streamCount);
   _setText('stat-alertas', alertCount);
@@ -1067,7 +1070,8 @@ function _renderContratoTab(contract) {
 async function _fetchContract() {
   try {
     const contract = await _apiFetch('/my/contract');
-    _contractId = contract.contract_id ?? null;
+    _contractId          = contract.contract_id ?? null;
+    _contractStreamCount = contract.streams?.length ?? null;
     _renderContratoTab(contract);
   } catch {
     const el = document.getElementById('contrato-stats');
