@@ -11,7 +11,7 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**✅ DEPLOY 21/5 COMPLETADO — commits `cb9a7f8` + `193570b`**
+**✅ DEPLOY 22/5 COMPLETADO — commit `fa15079`**
 
 Estado actual:
 - Login Auth0 funcionando ✅
@@ -19,8 +19,11 @@ Estado actual:
 - Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
 - 4 tabs: Resumen | Contexto | Señales | Contrato ✅
 - Tab Resumen: pie chart, word cloud y sparkline alimentados desde arcos narrativos ✅
+- Stat "Streams": muestra emisoras del contrato en modo no-live (no el agregado) ✅
 - Tab Contexto: arcos narrativos filtrados por `contract_id` ✅
 - Tab Señales: sesiones filtradas por `contract_id` ✅
+
+**✅ DEPLOY 21/5 COMPLETADO — commits `cb9a7f8` + `193570b`**
 
 **✅ DEPLOY 20/5 COMPLETADO — commit D9**
 
@@ -29,6 +32,14 @@ Estado actual:
 **✅ DEPLOY 17/5 COMPLETADO — commit `56db026`**
 
 **✅ DEPLOY 15/5 COMPLETADO — commits `a9301c9` + `486d92e`**
+
+---
+
+## Fix — Stat streams en modo no-live (commit `fa15079`, 2026-05-22)
+
+El endpoint `/my/sessions/aggregate` acumula `streams_monitored` de todos los snapshots sin deduplicar (9 sesiones × 3 streams = 27). En modo no-live se usa `_contractStreamCount` (guardado al cargar `GET /my/contract`) en lugar del dato del agregado. En sesión en vivo sigue usando el dato real de la sesión.
+
+**Archivos modificados:** `js/api.js`
 
 ---
 
@@ -196,6 +207,7 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D8** | Rediseño estructural — nueva tab Contexto + Señales como stack vertical | 2026-05-19 |
 | ✅ | **Fase D9** | Filtrar arcos y sesiones por `contract_id` (Fases backend 26/27/28) | 2026-05-20 |
 | ✅ | **Fase D10** | Tab Resumen: pie chart, word cloud y sparkline desde arcos narrativos | 2026-05-21 |
+| ✅ | **Fix** | Stat streams muestra emisoras del contrato en modo no-live | 2026-05-22 |
 | ⏳ | **Fase D11** | Tab Contrato: mostrar `stream_windows` por emisora | Pendiente — sin datos reales en DEMO aún |
 
 ---
