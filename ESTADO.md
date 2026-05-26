@@ -11,24 +11,38 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**✅ DEPLOY 22/5 COMPLETADO — commit `fa15079`**
-**⏳ DEPLOY 26/5 PENDIENTE — commits `ec758ad` (D11) · `c0f4f63` · `8b5cca2` · `c38e470` (fix _arcScore)**
+**⏳ DEPLOY 26/5 PENDIENTE — D11 + D12 + fixes**
 
-Estado actual:
+| Commit | Qué hace |
+|--------|----------|
+| `ec758ad` | D11: nuevo diseño visual Resumen (topbar + veredicto + barras) |
+| `c0f4f63` | fix: correlation_score como fallback en narrativas |
+| `8b5cca2` | fix: card Narrativas usa `_allArcs` en lugar de snapshots |
+| `c38e470` | fix: `_arcScore()` lee `intensity_history` cuando `last_score` no existe |
+| `6ff919d` | D12: Tab Resumen desde `GET /my/summary` — F1-F5 |
+
+**Comandos de deploy:**
+```bash
+cd /opt/narrative-intelligence && git pull && docker compose up -d --build
+cd /opt/qontexto-dashboard    && git pull && docker compose up -d --build
+```
+
+⚠️ Backend también pendiente de deploy (ver `narrative-intelligence/ESTADO.md`). Deployar backend primero.
+
+**⚠️ Riesgo conocido post-deploy:** si `sparkRef` no está inicializado cuando llega la primera respuesta de `/my/summary`, el sparkline queda en blanco hasta el próximo poll (30s). Verificar en browser tras deploy.
+
+Estado actual (en producción, previo a este deploy):
 - Login Auth0 funcionando ✅
 - Contrato DEMO activo: Lun–Vie 07:00–08:00 Lima ✅
 - Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
 - 4 tabs: Resumen | Contexto | Señales | Contrato ✅
-- Tab Resumen: topbar comprimido + veredicto + barras Narrativas + grid 50/50 Voces/Momento ✅ (D11)
-- Stat "Streams": muestra emisoras del contrato en modo no-live (no el agregado) ✅
+- Tab Resumen: diseño D11 con lógica client-side ✅
 - Tab Contexto: arcos narrativos filtrados por `contract_id` ✅
 - Tab Señales: sesiones filtradas por `contract_id` ✅
 
-**Próxima fase: D12 — Resumen desde `GET /my/summary`** (ver plan completo abajo)
-
 ---
 
-## Fase D12 — Pestaña Resumen desde `GET /my/summary` — PENDIENTE
+## Fase D12 — Pestaña Resumen desde `GET /my/summary` — ✅ COMPLETADO (pendiente deploy)
 
 **Contexto:** D11 implementó el nuevo diseño visual (topbar + veredicto + barras) pero con lógica client-side. D12 mueve esa lógica al backend (endpoint `GET /my/summary`, Fase 29 del backend) y actualiza Voces + Momento con los datos reales de clusters.
 
@@ -44,35 +58,15 @@ Estado actual:
 | Voces (word cloud) | Keywords en verde fijo | Tamaño = nº arcos; color = severidad más grave |
 | Momento (sparkline) | Una línea por arco, max score/día, 15 días | Una línea por cluster-topic, sum score/día, 7 días |
 
-**Subfases frontend:**
+**Subfases frontend — commit `6ff919d`:**
 
-**F1 — API call a `GET /my/summary`**
-- Nueva función `_loadSummary()` en `js/api.js`
-- JWT en header (igual que el resto de llamadas)
-- Reemplaza las llamadas dispersas a `/my/narrative-arcs` + `/my/contract` en el tab Resumen
-- Se llama al abrir el tab Resumen y en cada poll
-
-**F2 — Topbar + Veredicto**
-- Eliminar `_buildVeredicto()` client-side
-- Render desde `summary.topbar` y `summary.veredicto`
-- Cambio menor — el HTML ya existe
-
-**F3 — Narrativas (barras)**
-- Actualizar `_updateNarrativasCard()` para consumir `summary.narrativas`
-- Fill = `score_normalized`; color = `trend`; label = `topic + "· N arcos"` si N > 1
-- Última fila: "N arcos adicionales · Estable" colapsados
-
-**F4 — Voces (word cloud)**
-- Actualizar para consumir `summary.voces`
-- Tamaño proporcional a `count` (no frecuencia hardcodeada)
-- Color según `max_severity`: `critical`→`#991B1B`, `high`→`#EF4444`, `medium`→`#F59E0B`, `low/stable`→`var(--text3)`
-
-**F5 — Momento (sparkline)**
-- Reemplazar sparkline actual por multi-línea desde `summary.momento.clusters`
-- Una línea por cluster, color por `trend`
-- Gaps donde no hay datos → lifecycle visible (línea aparece/desaparece)
-- Línea gris punteada para "N adicionales"
-- Eje X: últimos 7 días en hora Lima
+| Subfase | Estado |
+|---------|--------|
+| F1 — `_loadSummary()` + polling | ✅ |
+| F2 — Topbar desde `summary.topbar`; veredicto desde `summary.veredicto` | ✅ |
+| F3 — Barras desde `summary.narrativas` (clusters, `score_normalized`, `severity`) | ✅ |
+| F4 — Word cloud desde `summary.voces` (tamaño=count, color=max_severity) | ✅ |
+| F5 — Sparkline multi-línea desde `summary.momento.clusters` (7 días, gaps=lifecycle) | ✅ |
 
 **✅ DEPLOY 21/5 COMPLETADO — commits `cb9a7f8` + `193570b`**
 
