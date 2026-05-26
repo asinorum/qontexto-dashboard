@@ -12,7 +12,7 @@ Deploy: `https://qontexto.com`
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
 **✅ DEPLOY 22/5 COMPLETADO — commit `fa15079`**
-**⏳ DEPLOY 26/5 PENDIENTE — commits `ec758ad` (D11) · `c0f4f63` (fix urgencia) · `8b5cca2` (fix fuente datos Narrativas)**
+**⏳ DEPLOY 26/5 PENDIENTE — commits `ec758ad` (D11) · `c0f4f63` · `8b5cca2` · `c38e470` (fix _arcScore)**
 
 Estado actual:
 - Login Auth0 funcionando ✅
@@ -41,6 +41,16 @@ Estado actual:
 El endpoint `/my/sessions/aggregate` acumula `streams_monitored` de todos los snapshots sin deduplicar (9 sesiones × 3 streams = 27). En modo no-live se usa `_contractStreamCount` (guardado al cargar `GET /my/contract`) en lugar del dato del agregado. En sesión en vivo sigue usando el dato real de la sesión.
 
 **Archivos modificados:** `js/api.js`
+
+---
+
+## Fix — _arcScore: lee intensity_history cuando last_score no viene en la API (commit `c38e470`, 2026-05-26)
+
+**Problema:** el backend nunca serializa `last_score` al nivel raíz del arco. El campo real está en `intensity_history[last].score`. Todos los cálculos de urgencia y peso de barras daban 0.
+
+**Fix:** helper `_arcScore(arc)` — prueba `arc.last_score` primero (forward-compatible si el backend lo agrega), cae a `arc.intensity_history[last].score` si no existe. Tres puntos de uso actualizados: `_buildNarrativeItemsFromArcs`, `pieItems` en `_updateResumenFromArcs`, y el sort de `_buildNarrativeItemsFromArcs`.
+
+**Archivos modificados:** `js/api.js` (helper `_arcScore` nuevo)
 
 ---
 
