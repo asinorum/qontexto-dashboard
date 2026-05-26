@@ -14,6 +14,7 @@ let _pollTimer            = null;
 let _sessionIsLive        = false;
 let _contractId           = null;
 let _contractStreamCount  = null;
+let _summary              = null;
 
 // ── Urgency mapping (institutional_relevance → color semáforo) ───────────────
 
@@ -424,21 +425,6 @@ function _updateUI(state) {
   _setText('stat-alertas', alertCount);
   _setText('live-label', `${streamCount} stream${streamCount !== 1 ? 's' : ''} · ${limaTime()} PE`);
   _setText('stat-actualizado', limaTime());
-
-  const alertEl = document.getElementById('stat-alertas');
-  if (alertEl) {
-    alertEl.style.color = alertCount >= 5 ? '#EF4444'
-                        : alertCount >= 1 ? '#F59E0B'
-                        : 'inherit';
-    if (alertCount >= 5) alertEl.classList.add('alert');
-    else alertEl.classList.remove('alert');
-  }
-
-  const narrativeItems = (_allArcs?.length > 0)
-    ? _buildNarrativeItemsFromArcs(_allArcs)
-    : _buildNarrativeItems(state.snapshots);
-  _buildVeredicto(state, narrativeItems);
-  _updateNarrativasCard(state, narrativeItems);
 
   _updateSenalesTab(state);
 }
@@ -945,7 +931,6 @@ async function _loadNarrativeArcs() {
     const arcQs = _contractId ? `&contract_id=${_contractId}` : '';
     _allArcs = await _apiFetch(`/my/narrative-arcs?limit=50${arcQs}`);
     _renderNarrativeArcs(_allArcs);
-    _updateResumenFromArcs(_allArcs);
   } catch (err) {
     const el = document.getElementById('narrative-arcs-list');
     if (el) el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">No hay arcos narrativos registrados aún.</div>';
@@ -1137,6 +1122,193 @@ async function _fetchContract() {
   }
 }
 
+// ── D12: Summary ─────────────────────────────────────────────────────────────
+
+const _TREND_TO_COLOR = {
+  escalating:   '#991B1B',
+  reactivation: '#EF4444',
+  new:          '#EF4444',
+  continuing:   '#F59E0B',
+  dormant:      '#9C9A90',
+};
+
+const _SEV_TO_URGENCY = { critical: 'critical', high: 'high', medium: 'medium', stable: 'low' };
+
+async function _loadSummary() {
+  try {
+    const summary = await _apiFetch('/my/summary');
+    _summary = summary;
+    _updateResumenFromSummary(summary);
+  } catch (err) {
+    console.warn('[Qontexto] summary fallido:', err.message);
+  }
+}
+
+function _updateResumenFromSummary(summary) {
+  // F2a — Topbar
+  if (summary.topbar) {
+    const tb = summary.topbar;
+    _setText('stat-vent',        tb.ventana    || '—');
+    _setText('stat-streams',     tb.radios     ?? '—');
+    _setText('stat-alertas',     tb.alertas    ?? 0);
+    _setText('stat-actualizado', tb.actualizado || limaTime());
+    const alertEl = document.getElementById('stat-alertas');
+    if (alertEl) {
+      const n = tb.alertas ?? 0;
+      alertEl.style.color = n >= 5 ? '#EF4444' : n >= 1 ? '#F59E0B' : 'inherit';
+      n >= 5 ? alertEl.classList.add('alert') : alertEl.classList.remove('alert');
+    }
+  }
+
+  // F2b — Veredicto
+  const verdEl   = document.getElementById('veredicto-text');
+  const verdCard = document.getElementById('veredicto-card');
+  if (verdEl) verdEl.textContent = summary.veredicto || '—';
+  if (verdCard && summary.narrativas?.length) {
+    const sev = summary.narrativas[0]?.severity ?? 'stable';
+    const clr = { critical: '#991B1B', high: '#EF4444', medium: '#F59E0B', stable: '#4CAF50' }[sev] ?? '#4CAF50';
+    verdCard.style.borderLeftColor = clr;
+    verdCard.style.borderLeftWidth = '3px';
+  }
+
+  // F3 — Narrativas
+  _updateNarrativasFromSummary(summary.narrativas ?? [], summary.narrativas_adicionales ?? 0);
+
+  // F4 — Voces
+  _updateVocesFromSummary(summary.voces ?? []);
+
+  // F5 — Momento
+  _updateMomentoFromSummary(summary.momento);
+}
+
+function _updateNarrativasFromSummary(narrativas, adicionales) {
+  const barsEl = document.getElementById('narrativas-bars');
+  if (!barsEl) return;
+
+  if (!narrativas.length) {
+    barsEl.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">Sin narrativas activas.</div>';
+    _setText('card-narrativas-title', '—');
+    return;
+  }
+
+  const rows = narrativas.map(n => {
+    const urgKey  = _SEV_TO_URGENCY[n.severity] ?? 'low';
+    const u       = URGENCY[urgKey];
+    const pct     = Math.round((n.score_normalized ?? 0) * 100);
+    const label   = n.arc_count > 1 ? `${n.topic} · ${n.arc_count} arcos` : n.topic;
+    const chip    = n.is_new ? 'Nuevo' : (u?.label ?? 'Estable');
+    return `<div class="qbar-row">` +
+      `<div class="qbar-top">` +
+      `<span class="qbar-name">${_esc(label)}</span>` +
+      `<div class="qbar-chips"><span class="qbar-chip" style="background:${u?.bg ?? 'var(--surface2)'};color:${u?.textColor ?? 'var(--text3)'}">${chip}</span></div>` +
+      `</div>` +
+      `<div class="qbar-track"><div class="qbar-fill" style="width:${pct}%;background:${u?.color ?? 'var(--text3)'}"></div></div>` +
+      `</div>`;
+  });
+
+  if (adicionales > 0) {
+    rows.push(
+      `<div class="qbar-sep"></div>` +
+      `<div class="qbar-row">` +
+      `<div class="qbar-top">` +
+      `<span class="qbar-name muted">${adicionales} arco${adicionales !== 1 ? 's' : ''} adicionales</span>` +
+      `<div class="qbar-chips"><span class="qbar-chip" style="background:var(--surface2);color:var(--text3)">Estable</span></div>` +
+      `</div>` +
+      `<div class="qbar-track"><div class="qbar-fill" style="width:38%;background:var(--text3)"></div></div>` +
+      `</div>`
+    );
+  }
+
+  barsEl.className = 'qbars';
+  barsEl.innerHTML = rows.join('');
+
+  const top  = narrativas[0];
+  const topU = URGENCY[_SEV_TO_URGENCY[top?.severity] ?? 'low'];
+  _setText('card-narrativas-title', top ? `${topU?.label ?? ''}: ${top.topic.toLowerCase()}.` : '—');
+  _setText('card-narrativas-footer', `${narrativas.length} cluster${narrativas.length !== 1 ? 's' : ''} · ${limaTime()} PE`);
+}
+
+function _updateVocesFromSummary(voces) {
+  const wcEl = document.getElementById('word-cloud');
+  if (!wcEl || !voces.length) return;
+
+  const top      = voces.slice(0, _WC_SLOTS.length);
+  const counts   = top.map(w => w.count);
+  const maxCount = Math.max(...counts, 1);
+  const minCount = Math.min(...counts);
+  const range    = maxCount - minCount || 1;
+
+  const _sev2color = { critical: '#991B1B', high: '#EF4444', medium: '#F59E0B', stable: 'var(--text3)', low: 'var(--text3)' };
+
+  wcEl.innerHTML = top.map((w, i) => {
+    const slot   = _WC_SLOTS[i];
+    const ratio  = (w.count - minCount) / range;
+    const size   = Math.round(9 + ratio * 19);
+    const weight = size >= 20 ? 600 : size >= 14 ? 500 : 400;
+    const color  = _sev2color[w.max_severity] ?? 'var(--text3)';
+    return `<span style="font-size:${size}px;font-weight:${weight};color:${color};` +
+      `top:${slot.top}px;left:${slot.left}px">${_esc(w.word)}</span>`;
+  }).join('');
+
+  if (top.length >= 2) _setText('card-voces-title', `${top[0].word} y ${top[1].word} concentran el léxico`);
+  else if (top.length === 1) _setText('card-voces-title', `${top[0].word} domina el espacio narrativo`);
+  _setText('card-voces-footer', `${voces.length} término${voces.length !== 1 ? 's' : ''} · ${limaTime()} PE`);
+}
+
+function _updateMomentoFromSummary(momento) {
+  if (!momento?.clusters?.length || typeof sparkRef === 'undefined' || !sparkRef) return;
+
+  const clusters = momento.clusters;
+  const series0  = clusters[0]?.series ?? [];
+  const labels   = series0.map(e => {
+    const [, m, d] = (e.date ?? '').split('-');
+    return `${parseInt(d)}/${parseInt(m)}`;
+  });
+
+  const allScores = [];
+  const datasets  = clusters.slice(0, 4).map((cl, idx) => {
+    const color = _TREND_TO_COLOR[cl.trend] ?? '#9C9A90';
+    const isTop = idx < 2;
+    const data  = cl.series.map(e => (e.score != null && e.score > 0) ? e.score : null);
+    data.forEach(v => { if (v != null) allScores.push(v); });
+    return {
+      label:                cl.label,
+      data,
+      spanGaps:             false,
+      borderColor:          isTop ? color : _hexToRgba(color, 0.35),
+      backgroundColor:      idx === 0 ? _hexToRgba(color, 0.07) : 'transparent',
+      fill:                 idx === 0,
+      tension:              0.4,
+      borderWidth:          isTop ? 2.5 : 1,
+      pointRadius:          data.map(v => v != null ? (isTop ? 5 : 3) : 0),
+      pointBackgroundColor: color,
+      pointBorderWidth:     0,
+    };
+  });
+
+  sparkRef.data.labels   = labels;
+  sparkRef.data.datasets = datasets;
+  const yMax = allScores.length ? Math.max(...allScores) * 1.25 : 1;
+  sparkRef.options.scales.y.max = yMax > 0 ? yMax : 1;
+  sparkRef.update();
+
+  const topTrend = clusters[0]?.trend ?? 'continuing';
+  const pillTrend = (topTrend === 'escalating' || topTrend === 'new' || topTrend === 'reactivation')
+    ? 'escalando' : topTrend === 'dormant' ? 'cediendo' : 'estable';
+  const tConf = _TREND_CONFIG[pillTrend];
+  const pillEl = document.getElementById('card-momento-pill');
+  if (pillEl && tConf) {
+    pillEl.style.background = tConf.bg;
+    pillEl.style.color      = tConf.color;
+    pillEl.innerHTML =
+      `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="${tConf.color}" ` +
+      `stroke-width="2.5" stroke-linecap="round">${tConf.arrow}</svg> ${tConf.label}`;
+  }
+
+  _setText('card-momento-title', clusters[0]?.label ?? '');
+  _setText('card-momento-footer', `${momento.days ?? 7} días de historial · ${limaTime()} PE`);
+}
+
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 async function startPolling() {
@@ -1151,20 +1323,22 @@ async function startPolling() {
   _updateWebhookUI();
   _updateHistorialUI();
 
+  // Summary para Tab Resumen — siempre, independiente del modo
+  _loadSummary();
+
   if (_sessionIsLive) {
     // Sesión activa: poll cada 30s con datos de la sesión en vivo
     const pdfBtn = document.getElementById('btn-pdf');
     if (pdfBtn) { pdfBtn.disabled = false; pdfBtn.title = 'Descargar PDF del período actual'; }
     _loadNarrativeArcs();
     await _poll();
-    _pollTimer = setInterval(_poll, 30_000);
+    _pollTimer = setInterval(() => { _poll(); _loadSummary(); }, 30_000);
   } else {
-    // Sin sesión en vivo: Tab Resumen muestra acumulado 30 días
+    // Sin sesión en vivo: Tab Señales muestra acumulado 30 días
     await _fetchAggregateState({ days: 30 });
-    // Tab Señales: precargar lista de sesiones
     _loadNarrativeArcs();
     _loadSessionList();
-    _pollTimer = setInterval(_tickLiveTime, 30_000);
+    _pollTimer = setInterval(() => { _tickLiveTime(); _loadSummary(); }, 30_000);
   }
 }
 
