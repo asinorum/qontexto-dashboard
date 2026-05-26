@@ -1,6 +1,5 @@
 let isDark = false;
-let pieRef, sparkRef;
-let _pieVerdicts = ['Alerta máxima', 'Señal temprana', 'Emergiendo', 'Estable'];
+let sparkRef;
 
 // D6 — estado del navegador de sesiones
 let _sessionList  = [];
@@ -10,34 +9,7 @@ function surfaceColor() { return isDark ? '#1C1C1A' : '#FAFAF7'; }
 function tickColor()    { return isDark ? 'rgba(154,152,144,0.45)' : 'rgba(90,88,80,0.4)'; }
 
 function initCharts() {
-  if (pieRef)   pieRef.destroy();
   if (sparkRef) sparkRef.destroy();
-
-  pieRef = new Chart(document.getElementById('pieChart'), {
-    type: 'pie',
-    data: {
-      labels: ['Paro regional Áncash', 'Conflicto Antamina', 'Tensión social San Marcos', 'Reforestación minera'],
-      datasets: [{
-        data: [40, 30, 20, 10],
-        backgroundColor: ['#991B1B', '#EF4444', '#F59E0B', '#4CAF50'],
-        borderWidth: 3,
-        borderColor: surfaceColor(),
-        hoverOffset: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (c) => ` ${c.label}: ${_pieVerdicts[c.dataIndex] ?? ''}`
-          }
-        }
-      }
-    }
-  });
 
   sparkRef = new Chart(document.getElementById('sparkline'), {
     type: 'line',
@@ -70,7 +42,6 @@ function toggleTheme() {
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
   document.getElementById('ico-sun').style.display  = isDark ? 'none'  : 'block';
   document.getElementById('ico-moon').style.display = isDark ? 'block' : 'none';
-  if (pieRef)   { pieRef.data.datasets[0].borderColor = surfaceColor(); pieRef.update(); }
   if (sparkRef) { sparkRef.options.scales.x.ticks.color = tickColor(); sparkRef.update(); }
 }
 

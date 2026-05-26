@@ -172,40 +172,68 @@ function _buildNarrativeItems(snapshots) {
 
 function _updateNarrativasCard(state, items) {
   if (!items) return;
-
-  if (typeof pieRef !== 'undefined' && pieRef) {
-    pieRef.data.labels                      = items.map(i => i.label);
-    pieRef.data.datasets[0].data            = items.map(i => i.weight);
-    pieRef.data.datasets[0].backgroundColor = items.map(i =>
-      URGENCY[i.urgency]?.color ?? '#9E9E9E'
-    );
-    _pieVerdicts = items.map(i => URGENCY[i.urgency]?.label ?? 'Otros');
-    pieRef.update();
-  }
-
-  const legendEl = document.getElementById('pie-legend');
-  if (legendEl) {
-    legendEl.innerHTML = items.map((item, idx) => {
-      const u        = URGENCY[item.urgency];
-      const dotColor = u?.color     ?? 'var(--text3)';
-      const tagBg    = u?.bg        ?? 'var(--surface2)';
-      const tagColor = u?.textColor ?? 'var(--text3)';
-      const tagLabel = u?.label     ?? 'Otros';
-      const mb       = idx === items.length - 1 ? 'margin-bottom:0' : '';
-      return `<div class="qleg-row" style="${mb}">` +
-        `<span style="display:flex;align-items:center;min-width:0;flex:1">` +
-        `<span class="qleg-dot" style="background:${dotColor}"></span>` +
-        `<span class="qleg-name">${_esc(item.label)}</span></span>` +
-        `<span class="qleg-tag" style="background:${tagBg};color:${tagColor}">${tagLabel}</span>` +
-        `</div>`;
-    }).join('');
-  }
-
-  const title = state.latest_snapshot?.dominant_narrative ?? items[0]?.label ?? '';
-  _setText('card-narrativas-title', title);
-
+  const barsEl = document.getElementById('narrativas-bars');
+  if (!barsEl) return;
+  const colored   = items.filter(i => i.urgency !== 'neutral');
+  const maxWeight = Math.max(...colored.map(i => i.weight), 1);
+  const hasOtros  = items[items.length - 1]?.urgency === 'neutral';
+  barsEl.className = 'qbars';
+  barsEl.innerHTML = items.map((item, idx) => {
+    const u         = URGENCY[item.urgency];
+    const isNeutral = item.urgency === 'neutral';
+    const barColor  = u?.color     ?? 'var(--text3)';
+    const chipBg    = u?.bg        ?? 'var(--surface2)';
+    const chipColor = u?.textColor ?? 'var(--text3)';
+    const chipLabel = u?.label     ?? 'Estable';
+    const pct       = isNeutral ? 38 : Math.round((item.weight / maxWeight) * 100);
+    const nameClass = isNeutral ? 'qbar-name muted' : 'qbar-name';
+    const sepBefore = hasOtros && idx === items.length - 1 ? '<div class="qbar-sep"></div>' : '';
+    return sepBefore +
+      '<div class="qbar-row">' +
+        '<div class="qbar-top">' +
+          '<span class="' + nameClass + '">' + _esc(item.label) + '</span>' +
+          '<div class="qbar-chips">' +
+            '<span class="qbar-chip" style="background:' + chipBg + ';color:' + chipColor + '">' + chipLabel + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="qbar-track">' +
+          '<div class="qbar-fill" style="width:' + pct + '%;background:' + barColor + '"></div>' +
+        '</div>' +
+      '</div>';
+  }).join('');
+  const top  = items[0];
+  const topU = URGENCY[top?.urgency];
+  _setText('card-narrativas-title',
+    top ? (topU?.label ?? '') + ': ' + top.label.toLowerCase() + '.' : '—');
   const n = state.streams_monitored?.length ?? 0;
-  _setText('card-narrativas-footer', `${n} emisora${n !== 1 ? 's' : ''} · ${limaTime()} PE`);
+  _setText('card-narrativas-footer',
+    n + ' emisora' + (n !== 1 ? 's' : '') + ' · ' + limaTime() + ' PE');
+}
+
+function _buildVeredicto(state, items) {
+  const el   = document.getElementById('veredicto-text');
+  const card = document.getElementById('veredicto-card');
+  if (!el) return;
+  if (!items?.length) {
+    el.innerHTML = 'Sin sesión activa.';
+    return;
+  }
+  const top         = items[0];
+  const u           = URGENCY[top.urgency];
+  const verdictTxt  = (u?.label ?? 'Narrativa activa').toLowerCase();
+  const borderColor = u?.color ?? '#4CAF50';
+  const colored     = items.filter(i => i.urgency !== 'neutral');
+  const otrosItem   = items.find(i => i.urgency === 'neutral');
+  const extraCount  = otrosItem ? parseInt(otrosItem.label.match(/\d+/)?.[0] ?? '0', 10) : 0;
+  const arcCount    = colored.length + extraCount;
+  el.innerHTML =
+    '<span style="color:' + borderColor + ';font-weight:500">' +
+    _esc(top.label) + '</span> lidera con ' + verdictTxt +
+    '. ' + arcCount + ' arcos activos en esta ventana.';
+  if (card) {
+    card.style.borderLeftColor = borderColor;
+    card.style.borderLeftWidth = '3px';
+  }
 }
 
 // ── Card Voces ────────────────────────────────────────────────────────────────
@@ -362,13 +390,20 @@ function _updateUI(state) {
   _setText('stat-streams', streamCount);
   _setText('stat-alertas', alertCount);
   _setText('live-label', `${streamCount} stream${streamCount !== 1 ? 's' : ''} · ${limaTime()} PE`);
+  _setText('stat-actualizado', limaTime());
 
   const alertEl = document.getElementById('stat-alertas');
   if (alertEl) {
     alertEl.style.color = alertCount >= 5 ? '#EF4444'
                         : alertCount >= 1 ? '#F59E0B'
                         : 'inherit';
+    if (alertCount >= 5) alertEl.classList.add('alert');
+    else alertEl.classList.remove('alert');
   }
+
+  const narrativeItems = _buildNarrativeItems(state.snapshots);
+  _buildVeredicto(state, narrativeItems);
+  _updateNarrativasCard(state, narrativeItems);
 
   _updateSenalesTab(state);
 }
@@ -763,33 +798,14 @@ function _updateResumenFromArcs(arcs) {
     });
   const top4 = (pool.length ? pool : arcs.slice().sort((a, b) => (b.last_score ?? 0) - (a.last_score ?? 0))).slice(0, 4);
 
-  // ── Pie chart (Card Narrativas) ──────────────────────────────────────────
+  // ── Barras (Card Narrativas) ─────────────────────────────────────────────
   const pieItems = top4.map(a => ({
     label:   a.topic,
     weight:  Math.max(1, Math.round((a.last_score ?? 0) * 100)),
     urgency: _scoreToUrgency(a.last_score ?? 0),
   }));
-  if (typeof pieRef !== 'undefined' && pieRef) {
-    pieRef.data.labels                      = pieItems.map(i => i.label);
-    pieRef.data.datasets[0].data            = pieItems.map(i => i.weight);
-    pieRef.data.datasets[0].backgroundColor = pieItems.map(i => URGENCY[i.urgency]?.color ?? '#9E9E9E');
-    _pieVerdicts = pieItems.map(i => URGENCY[i.urgency]?.label ?? 'Otros');
-    pieRef.update();
-  }
-  const legendEl = document.getElementById('pie-legend');
-  if (legendEl) {
-    legendEl.innerHTML = pieItems.map((item, idx) => {
-      const u = URGENCY[item.urgency];
-      const mb = idx === pieItems.length - 1 ? 'margin-bottom:0' : '';
-      return `<div class="qleg-row" style="${mb}">` +
-        `<span style="display:flex;align-items:center;min-width:0;flex:1">` +
-        `<span class="qleg-dot" style="background:${u?.color ?? 'var(--text3)'}"></span>` +
-        `<span class="qleg-name">${_esc(item.label)}</span></span>` +
-        `<span class="qleg-tag" style="background:${u?.bg ?? 'var(--surface2)'};color:${u?.textColor ?? 'var(--text3)'}">${u?.label ?? 'Otros'}</span>` +
-        `</div>`;
-    }).join('');
-  }
-  _setText('card-narrativas-title', top4[0]?.topic ?? '');
+  _buildVeredicto({}, pieItems);
+  _updateNarrativasCard({}, pieItems);
   _setText('card-narrativas-footer', `${top4.length} arco${top4.length !== 1 ? 's' : ''} activos · ${limaTime()} PE`);
 
   // ── Word cloud (Card Voces) ──────────────────────────────────────────────

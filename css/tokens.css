@@ -11,6 +11,7 @@
   --text2:   #5C5A52;
   --text3:   #9C9A90;
   --font:    'Google Sans Flex', sans-serif;
+  --mono:    'JetBrains Mono', ui-monospace, monospace;
 }
 
 [data-theme="dark"] {

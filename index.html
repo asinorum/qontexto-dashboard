@@ -62,52 +62,35 @@
   <!-- Tab: Resumen -->
   <div id="tab-resumen" class="qcontent">
 
-    <div class="qstats">
-      <div class="qstat">
-        <div class="qstat-lbl">Ventana</div>
-        <div class="qstat-val" id="stat-vent">1 h</div>
-        <div class="qstat-sub">deslizante · en vivo</div>
-      </div>
-      <div class="qstat">
-        <div class="qstat-lbl">Streams</div>
-        <div class="qstat-val" id="stat-streams">3</div>
-        <div class="qstat-sub">activos ahora</div>
-      </div>
-      <div class="qstat">
-        <div class="qstat-lbl">Alertas</div>
-        <div class="qstat-val" id="stat-alertas" style="color:#EF4444">8</div>
-        <div class="qstat-sub">en esta ventana</div>
-      </div>
-      <div class="qstat">
-        <div class="qstat-lbl">Actualizado</div>
-        <div class="qstat-val">~30s</div>
-        <div class="qstat-sub">recálculo automático</div>
-      </div>
-      <div class="qstat">
-        <div class="qstat-lbl">Costos</div>
-        <div class="qstat-val" id="stat-costo">—</div>
-        <div class="qstat-sub" id="stat-costo-sub">sin sesión</div>
-      </div>
+    <!-- Topbar comprimido -->
+    <div class="qtopbar">
+      <span class="qtopbar-item"><span class="qtopbar-lbl">Ventana</span><span class="qtopbar-val" id="stat-vent">1 h</span></span>
+      <span class="qtopbar-sep"></span>
+      <span class="qtopbar-item"><span class="qtopbar-lbl">Streams</span><span class="qtopbar-val" id="stat-streams">3</span></span>
+      <span class="qtopbar-sep"></span>
+      <span class="qtopbar-item"><span class="qtopbar-lbl">Alertas</span><span class="qtopbar-val" id="stat-alertas">8</span></span>
+      <span class="qtopbar-sep"></span>
+      <span class="qtopbar-item"><span class="qtopbar-lbl">Actualizado</span><span class="qtopbar-val" id="stat-actualizado">—</span></span>
+      <span class="qtopbar-sep"></span>
+      <span class="qtopbar-item"><span class="qtopbar-lbl">Costo</span><span class="qtopbar-val" id="stat-costo">—</span><span class="qtopbar-sub" id="stat-costo-sub">sin sesión</span></span>
     </div>
 
-    <div class="qgrid2">
+    <!-- Veredicto global -->
+    <div class="qcard qveredicto" id="veredicto-card">
+      <div class="qcard-lbl">Veredicto</div>
+      <div class="qcard-title" id="veredicto-text">Sin sesión activa.</div>
+    </div>
 
-      <!-- Card Narrativas -->
-      <div class="qcard">
-        <div class="qcard-lbl">Narrativas</div>
-        <div class="qcard-title" id="card-narrativas-title">Paro regional Áncash requiere atención inmediata</div>
-        <div style="position:relative;width:100%;height:155px">
-          <canvas id="pieChart" role="img" aria-label="Pie chart de urgencia narrativa"></canvas>
-        </div>
-        <div style="margin-top:14px" id="pie-legend">
-          <div class="qleg-row"><span style="display:flex;align-items:center;min-width:0;flex:1"><span class="qleg-dot" style="background:#991B1B"></span><span class="qleg-name">Paro regional Áncash</span></span><span class="qleg-tag" style="background:#FEF2F2;color:#991B1B">Alerta máxima</span></div>
-          <div class="qleg-row"><span style="display:flex;align-items:center;min-width:0;flex:1"><span class="qleg-dot" style="background:#EF4444"></span><span class="qleg-name">Conflicto Antamina</span></span><span class="qleg-tag" style="background:#FEF2F2;color:#B91C1C">Señal temprana</span></div>
-          <div class="qleg-row"><span style="display:flex;align-items:center;min-width:0;flex:1"><span class="qleg-dot" style="background:#F59E0B"></span><span class="qleg-name">Tensión social San Marcos</span></span><span class="qleg-tag" style="background:#FFFBEB;color:#B45309">Emergiendo</span></div>
-          <div class="qleg-row" style="margin-bottom:0"><span style="display:flex;align-items:center;min-width:0;flex:1"><span class="qleg-dot" style="background:#4CAF50"></span><span class="qleg-name">Reforestación minera</span></span><span class="qleg-tag" style="background:#F0FBF1;color:#2E7D32">Estable</span></div>
-        </div>
-        <div class="qcard-note">Tamaño + color = urgencia.</div>
-        <div class="qcard-footer" id="card-narrativas-footer">3 emisoras · 14:32 PE</div>
-      </div>
+    <!-- Card Narrativas (ancho completo) -->
+    <div class="qcard" style="margin-bottom:14px">
+      <div class="qcard-lbl">Narrativas</div>
+      <div class="qcard-title" id="card-narrativas-title">—</div>
+      <div id="narrativas-bars" class="qbars"></div>
+      <div class="qcard-footer" id="card-narrativas-footer">— emisoras · — PE</div>
+    </div>
+
+    <!-- Grid 50/50: Voces + Momento -->
+    <div class="qgrid2">
 
       <!-- Card Voces -->
       <div class="qcard">
@@ -130,25 +113,25 @@
         <div class="qcard-footer" id="card-voces-footer">3 emisoras · 14:32 PE</div>
       </div>
 
-    </div>
+      <!-- Card Momento -->
+      <div class="qcard">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
+          <div>
+            <div class="qcard-lbl">Momento</div>
+            <div class="qcard-title" id="card-momento-title" style="margin-bottom:0">Paro regional Áncash irrumpió a las 14:15 — conflicto Antamina escala de fondo desde el inicio</div>
+          </div>
+          <div class="qverdict" id="card-momento-pill" style="background:#FEF2F2;color:#991B1B;flex-shrink:0;margin-top:18px">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#991B1B" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+            Escalando
+          </div>
+        </div>
+        <div style="position:relative;width:100%;height:160px;margin-top:14px">
+          <canvas id="sparkline" role="img" aria-label="Línea temporal multi-narrativa"></canvas>
+        </div>
+        <div class="qcard-note">Líneas gruesas = narrativas urgentes. Líneas tenues = contexto. El color es el mismo en los tres cards.</div>
+        <div class="qcard-footer" id="card-momento-footer">3 emisoras · 13:32 — 14:32 PE</div>
+      </div>
 
-    <!-- Card Momento -->
-    <div class="qcard">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px">
-        <div>
-          <div class="qcard-lbl">Momento</div>
-          <div class="qcard-title" id="card-momento-title" style="margin-bottom:0">Paro regional Áncash irrumpió a las 14:15 — conflicto Antamina escala de fondo desde el inicio</div>
-        </div>
-        <div class="qverdict" id="card-momento-pill" style="background:#FEF2F2;color:#991B1B;flex-shrink:0;margin-top:18px">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#991B1B" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
-          Escalando
-        </div>
-      </div>
-      <div style="position:relative;width:100%;height:160px;margin-top:14px">
-        <canvas id="sparkline" role="img" aria-label="Línea temporal multi-narrativa"></canvas>
-      </div>
-      <div class="qcard-note">Líneas gruesas = narrativas urgentes. Líneas tenues = contexto. El color es el mismo en los tres cards.</div>
-      <div class="qcard-footer" id="card-momento-footer">3 emisoras · 13:32 — 14:32 PE</div>
     </div>
 
   </div>
