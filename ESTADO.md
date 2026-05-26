@@ -24,6 +24,56 @@ Estado actual:
 - Tab Contexto: arcos narrativos filtrados por `contract_id` ✅
 - Tab Señales: sesiones filtradas por `contract_id` ✅
 
+**Próxima fase: D12 — Resumen desde `GET /my/summary`** (ver plan completo abajo)
+
+---
+
+## Fase D12 — Pestaña Resumen desde `GET /my/summary` — PENDIENTE
+
+**Contexto:** D11 implementó el nuevo diseño visual (topbar + veredicto + barras) pero con lógica client-side. D12 mueve esa lógica al backend (endpoint `GET /my/summary`, Fase 29 del backend) y actualiza Voces + Momento con los datos reales de clusters.
+
+**Dependencia:** backend Fase 29 debe estar deployado antes de iniciar D12.
+
+**Estado de lo que ya existe vs lo que cambia:**
+
+| Card | Estado actual (D11) | Cambio en D12 |
+|------|---------------------|---------------|
+| Topbar | Compuesto client-side desde contract + arcos | Viene de `summary.topbar` |
+| Veredicto | Generado por `_buildVeredicto()` client-side | Viene de `summary.veredicto` |
+| Narrativas (barras) | Arcos individuales ordenados por `last_score` | Clusters por `topic`, intensidad = sum de scores |
+| Voces (word cloud) | Keywords en verde fijo | Tamaño = nº arcos; color = severidad más grave |
+| Momento (sparkline) | Una línea por arco, max score/día, 15 días | Una línea por cluster-topic, sum score/día, 7 días |
+
+**Subfases frontend:**
+
+**F1 — API call a `GET /my/summary`**
+- Nueva función `_loadSummary()` en `js/api.js`
+- JWT en header (igual que el resto de llamadas)
+- Reemplaza las llamadas dispersas a `/my/narrative-arcs` + `/my/contract` en el tab Resumen
+- Se llama al abrir el tab Resumen y en cada poll
+
+**F2 — Topbar + Veredicto**
+- Eliminar `_buildVeredicto()` client-side
+- Render desde `summary.topbar` y `summary.veredicto`
+- Cambio menor — el HTML ya existe
+
+**F3 — Narrativas (barras)**
+- Actualizar `_updateNarrativasCard()` para consumir `summary.narrativas`
+- Fill = `score_normalized`; color = `trend`; label = `topic + "· N arcos"` si N > 1
+- Última fila: "N arcos adicionales · Estable" colapsados
+
+**F4 — Voces (word cloud)**
+- Actualizar para consumir `summary.voces`
+- Tamaño proporcional a `count` (no frecuencia hardcodeada)
+- Color según `max_severity`: `critical`→`#991B1B`, `high`→`#EF4444`, `medium`→`#F59E0B`, `low/stable`→`var(--text3)`
+
+**F5 — Momento (sparkline)**
+- Reemplazar sparkline actual por multi-línea desde `summary.momento.clusters`
+- Una línea por cluster, color por `trend`
+- Gaps donde no hay datos → lifecycle visible (línea aparece/desaparece)
+- Línea gris punteada para "N adicionales"
+- Eje X: últimos 7 días en hora Lima
+
 **✅ DEPLOY 21/5 COMPLETADO — commits `cb9a7f8` + `193570b`**
 
 **✅ DEPLOY 20/5 COMPLETADO — commit D9**
