@@ -11,38 +11,94 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**⏳ DEPLOY 26/5 PENDIENTE — D11 + D12 + fixes**
+### ⚠️ D12 tiene bugs visuales — DISEÑAR ANTES DE CORREGIR
 
-| Commit | Qué hace |
-|--------|----------|
-| `ec758ad` | D11: nuevo diseño visual Resumen (topbar + veredicto + barras) |
-| `c0f4f63` | fix: correlation_score como fallback en narrativas |
-| `8b5cca2` | fix: card Narrativas usa `_allArcs` en lugar de snapshots |
-| `c38e470` | fix: `_arcScore()` lee `intensity_history` cuando `last_score` no existe |
-| `6ff919d` | D12: Tab Resumen desde `GET /my/summary` — F1-F5 |
-
-**Comandos de deploy:**
-```bash
-cd /opt/narrative-intelligence && git pull && docker compose up -d --build
-cd /opt/qontexto-dashboard    && git pull && docker compose up -d --build
-```
-
-⚠️ Backend también pendiente de deploy (ver `narrative-intelligence/ESTADO.md`). Deployar backend primero.
-
-**⚠️ Riesgo conocido post-deploy:** si `sparkRef` no está inicializado cuando llega la primera respuesta de `/my/summary`, el sparkline queda en blanco hasta el próximo poll (30s). Verificar en browser tras deploy.
-
-Estado actual (en producción, previo a este deploy):
-- Login Auth0 funcionando ✅
-- Contrato DEMO activo: Lun–Vie 07:00–08:00 Lima ✅
-- Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
-- 4 tabs: Resumen | Contexto | Señales | Contrato ✅
-- Tab Resumen: diseño D11 con lógica client-side ✅
-- Tab Contexto: arcos narrativos filtrados por `contract_id` ✅
-- Tab Señales: sesiones filtradas por `contract_id` ✅
+D12 está deployado pero con problemas de lógica. **No parchear más — rediseñar primero.**
 
 ---
 
-## Fase D12 — Pestaña Resumen desde `GET /my/summary` — ✅ COMPLETADO (pendiente deploy)
+### Problema raíz de D12
+
+D12 confundió **tendencia** (`trend`: new/escalating/continuing) con **urgencia visual**.
+Son dimensiones ortogonales:
+
+| | Score alto | Score bajo |
+|---|---|---|
+| trend: new | Urgente — hay que verlo | Informativo |
+| trend: escalating | Muy urgente | Extraño — revisar |
+| trend: continuing | Activo sostenido | Normal |
+
+D12 coloreó barras solo por `severity` (derivada de `trend`):
+- Todos `new` → todos ámbar → sin diferenciación
+- Antes (D11): coloreaba por score numérico → diferenciación real
+
+**La regla correcta: el color refleja score, el chip refleja tendencia.**
+
+---
+
+### Bugs conocidos a resolver en D13
+
+| Bug | Síntoma | Causa |
+|-----|---------|-------|
+| Barras monocromo | Todos los arcos tienen el mismo color | Color = severity(trend), no score |
+| Contexto: score alto pero no "escalando" | Arco con score > 0.65 aparece como "Activo" en verde | `_ARC_STATUS` lee `arc.status`, ignora `arc.trend` y score |
+| Sparkline sin lifecycle | Una sola barra en 26/5 | Corregido en backend (`e86d0a1`) pero requiere re-deploy |
+
+---
+
+### Diseño de D13 — qué debe verse en Resumen
+
+**Pregunta central:** el cliente abre el tab — ¿hay algo urgente ahora mismo?
+
+**Cada elemento responde una pregunta:**
+
+| Card | Pregunta | Lógica de color |
+|------|----------|-----------------|
+| Topbar | ¿Cuándo, cuántas radios, cuántas alertas? | Alertas ≥1 → naranja; ≥5 → rojo |
+| Veredicto | ¿Qué está pasando en una frase? | Borde izquierdo = color del cluster dominante |
+| Narrativas (barras) | ¿Qué tan intenso es cada cluster? | **Fill = score_normalized → color por score** |
+| Chip de tendencia | ¿Está creciendo, es nuevo, continúa? | Chip secundario: label de `trend`, color leve |
+| Voces | ¿Qué palabras dominan? | Tamaño = frecuencia; color = score máximo del arco que la contiene |
+| Momento (sparkline) | ¿Cómo ha evolucionado en 7 días? | Color de línea = score promedio del cluster |
+
+**Escala de colores para barras (por score_normalized):**
+
+```
+>= 0.70 → critical  #991B1B (rojo oscuro) — actuar ahora
+>= 0.50 → high      #EF4444 (rojo)        — señal temprana  
+>= 0.30 → medium    #F59E0B (ámbar)       — emergiendo
+<  0.30 → low       #4CAF50 (verde)       — estable
+```
+
+**Chip de tendencia (secundario, sobre el color de barra):**
+- `escalating` → "↑ Escalando"
+- `new` → "★ Nuevo"
+- `reactivation` → "↺ Reactivado"
+- `continuing` → (sin chip — es el estado normal)
+- `dormant` → (no aparece — filtrado)
+
+**Tab Contexto:**
+- Un arco es "escalando" si `arc.trend === 'escalating'` O `score >= 0.65`
+- No depender solo de `arc.status`
+
+---
+
+### Commits deployados (estado actual en producción)
+
+| Commit | Qué hace |
+|--------|----------|
+| `ec758ad` | D11: diseño visual Resumen |
+| `c0f4f63` | fix: correlation_score fallback |
+| `8b5cca2` | fix: card Narrativas usa `_allArcs` |
+| `c38e470` | fix: `_arcScore()` lee intensity_history |
+| `6ff919d` | D12: Tab Resumen desde `GET /my/summary` (**con bugs visuales**) |
+
+Backend pendiente de deploy (ver `narrative-intelligence/ESTADO.md`):
+```bash
+cd /opt/narrative-intelligence && git pull && docker compose up -d --build
+```
+
+---
 
 **Contexto:** D11 implementó el nuevo diseño visual (topbar + veredicto + barras) pero con lógica client-side. D12 mueve esa lógica al backend (endpoint `GET /my/summary`, Fase 29 del backend) y actualiza Voces + Momento con los datos reales de clusters.
 
