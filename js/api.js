@@ -177,12 +177,38 @@ function _buildNarrativeItems(snapshots) {
   return items;
 }
 
+function _buildNarrativeItemsFromArcs(arcs) {
+  if (!arcs?.length) return null;
+
+  const active = arcs
+    .filter(a => a.status !== 'dormant')
+    .sort((a, b) => (b.last_score ?? 0) - (a.last_score ?? 0));
+
+  if (!active.length) return null;
+
+  const top4 = active.slice(0, 4).map(a => {
+    const score   = a.last_score ?? 0;
+    const urgency = a.status === 'escalating' || score >= 0.65 ? 'critical'
+                  : score >= 0.50                               ? 'high'
+                  : score >= 0.35                               ? 'medium'
+                  :                                               'low';
+    return { label: a.topic, weight: score, urgency, trend: a.trend ?? 'continuing' };
+  });
+
+  const otrosCount = active.length - top4.length;
+  if (otrosCount > 0) {
+    top4.push({ label: otrosCount + ' arcos adicionales', weight: 0, urgency: 'neutral', trend: null });
+  }
+
+  return top4;
+}
+
 function _updateNarrativasCard(state, items) {
   if (!items) return;
   const barsEl = document.getElementById('narrativas-bars');
   if (!barsEl) return;
   const colored   = items.filter(i => i.urgency !== 'neutral');
-  const maxWeight = Math.max(...colored.map(i => i.weight), 1);
+  const maxWeight = Math.max(...colored.map(i => i.weight), 0.01);
   const hasOtros  = items[items.length - 1]?.urgency === 'neutral';
   barsEl.className = 'qbars';
   barsEl.innerHTML = items.map((item, idx) => {
@@ -408,7 +434,9 @@ function _updateUI(state) {
     else alertEl.classList.remove('alert');
   }
 
-  const narrativeItems = _buildNarrativeItems(state.snapshots);
+  const narrativeItems = (_allArcs?.length > 0)
+    ? _buildNarrativeItemsFromArcs(_allArcs)
+    : _buildNarrativeItems(state.snapshots);
   _buildVeredicto(state, narrativeItems);
   _updateNarrativasCard(state, narrativeItems);
 
