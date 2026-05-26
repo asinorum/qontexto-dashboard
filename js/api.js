@@ -187,7 +187,7 @@ function _buildNarrativeItemsFromArcs(arcs) {
   if (!active.length) return null;
 
   const top4 = active.slice(0, 4).map(a => {
-    const score   = a.last_score ?? 0;
+    const score   = _arcScore(a);
     const urgency = a.status === 'escalating' || score >= 0.65 ? 'critical'
                   : score >= 0.50                               ? 'high'
                   : score >= 0.35                               ? 'medium'
@@ -821,6 +821,13 @@ const _ARC_TREND = {
   new:          '★ Nuevo',
 };
 
+function _arcScore(arc) {
+  if (arc.last_score != null) return arc.last_score;
+  const h = arc.intensity_history;
+  if (!h?.length) return 0;
+  return h[h.length - 1].score ?? 0;
+}
+
 function _updateResumenFromArcs(arcs) {
   if (!arcs?.length) return;
 
@@ -836,8 +843,8 @@ function _updateResumenFromArcs(arcs) {
   // ── Barras (Card Narrativas) ─────────────────────────────────────────────
   const pieItems = top4.map(a => ({
     label:   a.topic,
-    weight:  Math.max(1, Math.round((a.last_score ?? 0) * 100)),
-    urgency: _scoreToUrgency(a.last_score ?? 0),
+    weight:  Math.max(1, Math.round((_arcScore(a)) * 100)),
+    urgency: _scoreToUrgency(_arcScore(a)),
   }));
   _buildVeredicto({}, pieItems);
   _updateNarrativasCard({}, pieItems);
