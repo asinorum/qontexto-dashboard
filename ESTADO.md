@@ -12,7 +12,7 @@ Deploy: `https://qontexto.com`
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
 **✅ DEPLOY 22/5 COMPLETADO — commit `fa15079`**
-**⏳ DEPLOY 26/5 PENDIENTE — commit `ec758ad` (D11 rediseño tab Resumen)**
+**⏳ DEPLOY 26/5 PENDIENTE — commits `ec758ad` (D11 rediseño tab Resumen) + `c0f4f63` (fix urgencia narrativas)**
 
 Estado actual:
 - Login Auth0 funcionando ✅
@@ -41,6 +41,16 @@ Estado actual:
 El endpoint `/my/sessions/aggregate` acumula `streams_monitored` de todos los snapshots sin deduplicar (9 sesiones × 3 streams = 27). En modo no-live se usa `_contractStreamCount` (guardado al cargar `GET /my/contract`) en lugar del dato del agregado. En sesión en vivo sigue usando el dato real de la sesión.
 
 **Archivos modificados:** `js/api.js`
+
+---
+
+## Fix — Urgencia de narrativas combina correlation_score + institutional_relevance (commit `c0f4f63`, 2026-05-26)
+
+**Problema:** `_buildNarrativeItems()` determinaba la urgencia solo desde `snap.institutional_relevance`, que el backend devuelve como `'low'`/`'informativo'` para todas las narrativas independientemente del score real. Con el pie chart esto pasaba desapercibido (cuatro slices verdes parecían intencionales). Las barras horizontales del D11 lo delataron inmediatamente.
+
+**Fix:** dentro del loop de snapshots, se acumula también `snap.correlation_score` (máximo por narrativa). En el `.map` que construye el array `items`, la urgencia final resulta del máximo entre `institutional_relevance` y el nivel derivado del score: `≥0.65 → critical`, `≥0.50 → high`, `≥0.35 → medium`, `< 0.35 → low`. Ninguna señal se descarta — se toma el peor de los dos.
+
+**Archivos modificados:** `js/api.js` (`_buildNarrativeItems`)
 
 ---
 
