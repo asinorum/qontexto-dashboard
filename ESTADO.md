@@ -12,7 +12,7 @@ Deploy: `https://qontexto.com`
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
 **✅ DEPLOY 22/5 COMPLETADO — commit `fa15079`**
-**⏳ DEPLOY 26/5 PENDIENTE — commits `ec758ad` (D11 rediseño tab Resumen) + `c0f4f63` (fix urgencia narrativas)**
+**⏳ DEPLOY 26/5 PENDIENTE — commits `ec758ad` (D11) · `c0f4f63` (fix urgencia) · `8b5cca2` (fix fuente datos Narrativas)**
 
 Estado actual:
 - Login Auth0 funcionando ✅
@@ -41,6 +41,22 @@ Estado actual:
 El endpoint `/my/sessions/aggregate` acumula `streams_monitored` de todos los snapshots sin deduplicar (9 sesiones × 3 streams = 27). En modo no-live se usa `_contractStreamCount` (guardado al cargar `GET /my/contract`) en lugar del dato del agregado. En sesión en vivo sigue usando el dato real de la sesión.
 
 **Archivos modificados:** `js/api.js`
+
+---
+
+## Fix — Card Narrativas lee _allArcs en lugar de session snapshots (commit `8b5cca2`, 2026-05-26)
+
+**Diagnóstico raíz:** el problema de urgencia no era un bug de cálculo sino una fuente de datos equivocada. `_updateUI` construía los items desde `state.snapshots` → `institutional_relevance` (siempre `'informativo'`). Los scores reales (`last_score: 0.72`, etc.) estaban en `_allArcs`, que ya se cargaba vía `GET /my/narrative-arcs`, pero nadie lo conectaba al card Narrativas del Resumen.
+
+**Fix:**
+- Nueva función `_buildNarrativeItemsFromArcs(arcs)`: filtra arcos no-dormant, ordena por `last_score`, deriva urgencia desde score + status (`escalating` fuerza `critical`; `≥0.65 → critical`, `≥0.50 → high`, `≥0.35 → medium`). Usa `last_score` directamente como `weight` (0.0–1.0).
+- `_updateUI` prioriza `_buildNarrativeItemsFromArcs(_allArcs)` si `_allArcs` está poblado; cae a `_buildNarrativeItems(state.snapshots)` solo si no hay arcos.
+- `maxWeight` ajustado a `0.01` (antes `1`) para evitar división por cero con weights decimales.
+- `startPolling` ya llamaba `_loadNarrativeArcs()` en ambos paths — no requirió cambio.
+
+**El fix anterior** (`c0f4f63`, `correlation_score`) queda obsoleto en la práctica: `_buildNarrativeItems` ya no es la ruta principal cuando hay arcos. Se deja como fallback defensivo.
+
+**Archivos modificados:** `js/api.js` (`_buildNarrativeItemsFromArcs` nueva, `_updateNarrativasCard`, `_updateUI`)
 
 ---
 
