@@ -12,13 +12,14 @@ Deploy: `https://qontexto.com`
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
 **✅ DEPLOY 22/5 COMPLETADO — commit `fa15079`**
+**⏳ DEPLOY 26/5 PENDIENTE — commit `ec758ad` (D11 rediseño tab Resumen)**
 
 Estado actual:
 - Login Auth0 funcionando ✅
 - Contrato DEMO activo: Lun–Vie 07:00–08:00 Lima ✅
 - Dashboard muestra datos de la sesión más reciente (activa o parada) ✅
 - 4 tabs: Resumen | Contexto | Señales | Contrato ✅
-- Tab Resumen: pie chart, word cloud y sparkline alimentados desde arcos narrativos ✅
+- Tab Resumen: topbar comprimido + veredicto + barras Narrativas + grid 50/50 Voces/Momento ✅ (D11)
 - Stat "Streams": muestra emisoras del contrato en modo no-live (no el agregado) ✅
 - Tab Contexto: arcos narrativos filtrados por `contract_id` ✅
 - Tab Señales: sesiones filtradas por `contract_id` ✅
@@ -40,6 +41,21 @@ Estado actual:
 El endpoint `/my/sessions/aggregate` acumula `streams_monitored` de todos los snapshots sin deduplicar (9 sesiones × 3 streams = 27). En modo no-live se usa `_contractStreamCount` (guardado al cargar `GET /my/contract`) en lugar del dato del agregado. En sesión en vivo sigue usando el dato real de la sesión.
 
 **Archivos modificados:** `js/api.js`
+
+---
+
+## Fase D11 — Rediseño tab Resumen: topbar + veredicto + barras (commit `ec758ad`, 2026-05-26)
+
+**Motivación:** El tab Resumen tenía demasiada densidad visual (5 stat cards grandes + pie chart). El pie chart no era pantallazo-amigable y las stat cards ocupaban espacio sin añadir legibilidad ejecutiva.
+
+**Cambios:**
+- **Topbar comprimido:** sustituye las 5 stat cards por una barra horizontal con Ventana / Streams / Alertas / Actualizado / Costo. Token `id="stat-actualizado"` actualizado en cada poll.
+- **Veredicto global:** card de ancho completo con borde izquierdo de color semáforo y texto generado por `_buildVeredicto()`. Muestra la narrativa líder con su veredicto y el conteo de arcos activos.
+- **Card Narrativas — barras horizontales:** reemplaza el pie chart + leyenda por barras horizontales CSS con chip de veredicto. `_updateNarrativasCard()` completamente reescrita. Pie chart (`pieRef`, `_pieVerdicts`) eliminado de `js/app.js`.
+- **Grid 50/50:** Voces + Momento ahora comparten el espacio a la mitad. Sin cambios en su lógica.
+- `_buildVeredicto()`: nueva función en `js/api.js`. Llamada tanto desde `_updateUI()` (modo snapshot) como desde `_updateResumenFromArcs()` (modo arcos).
+
+**Archivos modificados:** `index.html`, `css/app.css`, `js/api.js`, `js/app.js`, `css/tokens.css`
 
 ---
 
