@@ -147,12 +147,14 @@ function _buildNarrativeItems(snapshots) {
 
   const counts    = {};
   const urgencies = {};
+  const scores    = {};
 
   for (const snap of snapshots) {
     const n = snap.dominant_narrative;
     if (!n) continue;
     counts[n]    = (counts[n] ?? 0) + 1;
     urgencies[n] = _maxUrgency(urgencies[n], snap.institutional_relevance);
+    scores[n]    = Math.max(scores[n] ?? 0, snap.correlation_score ?? 0);
   }
 
   const sorted = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
@@ -161,7 +163,12 @@ function _buildNarrativeItems(snapshots) {
   const items = sorted.slice(0, 4).map(n => ({
     label:   n,
     weight:  counts[n],
-    urgency: urgencies[n] ?? 'low',
+    urgency: (function(u, s) {
+      const fromScore = s >= 0.65 ? 'critical'
+                      : s >= 0.50 ? 'high'
+                      : s >= 0.35 ? 'medium' : 'low';
+      return _maxUrgency(u ?? 'low', fromScore);
+    })(urgencies[n], scores[n] ?? 0),
   }));
 
   const otrosWeight = sorted.slice(4).reduce((s, n) => s + counts[n], 0);
