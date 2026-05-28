@@ -1210,12 +1210,16 @@ function _updateNarrativasFromSummary(narrativas, adicionales) {
     const chipHtml = chip
       ? `<span class="qbar-chip" style="background:${chip.bg};color:${chip.color}">${chip.label}</span>`
       : '';
+    const rationaleHtml = n.rationale
+      ? `<div class="qbar-rationale">${_esc(n.rationale)}</div>`
+      : '';
     return `<div class="qbar-row">` +
       `<div class="qbar-top">` +
       `<span class="qbar-name">${_esc(label)}</span>` +
       `<div class="qbar-chips">${chipHtml}</div>` +
       `</div>` +
       `<div class="qbar-track"><div class="qbar-fill" style="width:${pct}%;background:${u?.color ?? 'var(--text3)'}"></div></div>` +
+      rationaleHtml +
       `</div>`;
   });
 
