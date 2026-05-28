@@ -972,8 +972,10 @@ function _renderNarrativeArcs(arcs) {
     return;
   }
   el.innerHTML = arcs.map(arc => {
-    const cfg   = _ARC_STATUS[arc.status] ?? _ARC_STATUS.active;
-    const trend = _ARC_TREND[arc.trend] ?? arc.trend;
+    const score  = _arcScore(arc);
+    const isEsc  = arc.trend === 'escalating' || score >= 0.65;
+    const cfg    = isEsc ? _ARC_STATUS.escalating : (_ARC_STATUS[arc.status] ?? _ARC_STATUS.active);
+    const trend  = _ARC_TREND[arc.trend] ?? arc.trend;
     const kws   = (arc.keywords ?? []).slice(0, 5).map(k => `<span style="font-size:10px;background:var(--surface2);border-radius:4px;padding:1px 6px;color:var(--text2)">${_esc(k)}</span>`).join('');
     const spark  = _drawSparkline(arc.intensity_history ?? []);
     const last   = arc.last_seen ? new Date(arc.last_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
@@ -1165,8 +1167,8 @@ function _updateResumenFromSummary(summary) {
   const verdCard = document.getElementById('veredicto-card');
   if (verdEl) verdEl.textContent = summary.veredicto || '—';
   if (verdCard && summary.narrativas?.length) {
-    const sev = summary.narrativas[0]?.severity ?? 'stable';
-    const clr = { critical: '#991B1B', high: '#EF4444', medium: '#F59E0B', stable: '#4CAF50' }[sev] ?? '#4CAF50';
+    const top = summary.narrativas[0];
+    const clr = URGENCY[_scoreToUrgency(top?.score_normalized ?? 0)]?.color ?? '#4CAF50';
     verdCard.style.borderLeftColor = clr;
     verdCard.style.borderLeftWidth = '3px';
   }
@@ -1181,6 +1183,12 @@ function _updateResumenFromSummary(summary) {
   _updateMomentoFromSummary(summary.momento);
 }
 
+const _TREND_CHIP = {
+  escalating:   { label: '↑ Escalando',  bg: '#FEF2F2', color: '#991B1B' },
+  new:          { label: '★ Nuevo',       bg: '#FFFBEB', color: '#B45309' },
+  reactivation: { label: '↺ Reactivado', bg: '#FFF7ED', color: '#C2410C' },
+};
+
 function _updateNarrativasFromSummary(narrativas, adicionales) {
   const barsEl = document.getElementById('narrativas-bars');
   if (!barsEl) return;
@@ -1192,15 +1200,18 @@ function _updateNarrativasFromSummary(narrativas, adicionales) {
   }
 
   const rows = narrativas.map(n => {
-    const urgKey  = _SEV_TO_URGENCY[n.severity] ?? 'low';
-    const u       = URGENCY[urgKey];
-    const pct     = Math.round((n.score_normalized ?? 0) * 100);
-    const label   = n.arc_count > 1 ? `${n.topic} · ${n.arc_count} arcos` : n.topic;
-    const chip    = n.is_new ? 'Nuevo' : (u?.label ?? 'Estable');
+    const urgKey   = _scoreToUrgency(n.score_normalized ?? 0);
+    const u        = URGENCY[urgKey];
+    const pct      = Math.round((n.score_normalized ?? 0) * 100);
+    const label    = n.arc_count > 1 ? `${n.topic} · ${n.arc_count} arcos` : n.topic;
+    const chip     = _TREND_CHIP[n.trend];
+    const chipHtml = chip
+      ? `<span class="qbar-chip" style="background:${chip.bg};color:${chip.color}">${chip.label}</span>`
+      : '';
     return `<div class="qbar-row">` +
       `<div class="qbar-top">` +
       `<span class="qbar-name">${_esc(label)}</span>` +
-      `<div class="qbar-chips"><span class="qbar-chip" style="background:${u?.bg ?? 'var(--surface2)'};color:${u?.textColor ?? 'var(--text3)'}">${chip}</span></div>` +
+      `<div class="qbar-chips">${chipHtml}</div>` +
       `</div>` +
       `<div class="qbar-track"><div class="qbar-fill" style="width:${pct}%;background:${u?.color ?? 'var(--text3)'}"></div></div>` +
       `</div>`;
@@ -1212,7 +1223,7 @@ function _updateNarrativasFromSummary(narrativas, adicionales) {
       `<div class="qbar-row">` +
       `<div class="qbar-top">` +
       `<span class="qbar-name muted">${adicionales} arco${adicionales !== 1 ? 's' : ''} adicionales</span>` +
-      `<div class="qbar-chips"><span class="qbar-chip" style="background:var(--surface2);color:var(--text3)">Estable</span></div>` +
+      `<div class="qbar-chips"></div>` +
       `</div>` +
       `<div class="qbar-track"><div class="qbar-fill" style="width:38%;background:var(--text3)"></div></div>` +
       `</div>`
@@ -1223,7 +1234,7 @@ function _updateNarrativasFromSummary(narrativas, adicionales) {
   barsEl.innerHTML = rows.join('');
 
   const top  = narrativas[0];
-  const topU = URGENCY[_SEV_TO_URGENCY[top?.severity] ?? 'low'];
+  const topU = URGENCY[_scoreToUrgency(top?.score_normalized ?? 0)];
   _setText('card-narrativas-title', top ? `${topU?.label ?? ''}: ${top.topic.toLowerCase()}.` : '—');
   _setText('card-narrativas-footer', `${narrativas.length} cluster${narrativas.length !== 1 ? 's' : ''} · ${limaTime()} PE`);
 }
@@ -1274,7 +1285,7 @@ function _updateMomentoFromSummary(momento) {
     return {
       label:                cl.label,
       data,
-      spanGaps:             false,
+      spanGaps:             true,
       borderColor:          isTop ? color : _hexToRgba(color, 0.35),
       backgroundColor:      idx === 0 ? _hexToRgba(color, 0.07) : 'transparent',
       fill:                 idx === 0,
