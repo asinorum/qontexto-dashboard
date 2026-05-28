@@ -419,10 +419,12 @@ function _updateUI(state) {
   const streamCount = _sessionIsLive
     ? (state.streams_monitored?.length ?? 0)
     : (_contractStreamCount ?? state.streams_monitored?.length ?? 0);
-  const alertCount  = state.summary?.alerts_total ?? 0;
 
   _setText('stat-streams', streamCount);
-  _setText('stat-alertas', alertCount);
+  // stat-alertas lo gestiona _updateResumenFromSummary (tb.alertas = arcos activos).
+  // Solo lo toca _updateUI si el summary aún no cargó, para no sobrescribir con
+  // alerts_total del agregado (que es acumulado de 30 días, no arcos activos).
+  if (!_summary) _setText('stat-alertas', state.summary?.alerts_total ?? 0);
   _setText('live-label', `${streamCount} stream${streamCount !== 1 ? 's' : ''} · ${limaTime()} PE`);
   _setText('stat-actualizado', limaTime());
 
