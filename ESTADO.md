@@ -361,6 +361,25 @@ Aparece tanto si hay sesión activa como si no (útil tras reinicio del contened
 | ✅ | **Fase D10** | Tab Resumen: pie chart, word cloud y sparkline desde arcos narrativos | 2026-05-21 |
 | ✅ | **Fix** | Stat streams muestra emisoras del contrato en modo no-live | 2026-05-22 |
 | ⏳ | **Fase D11** | Tab Contrato: mostrar `stream_windows` por emisora | Pendiente — sin datos reales en DEMO aún |
+| 🔮 | **Fase D14** | Tab Red — grafo de constelaciones de arcos narrativos | Backend: `GET /my/narrative-graph` (nodos + aristas por Jaccard) |
+
+---
+
+### Fase D14 — Tab Red (grafo de constelaciones)
+
+Visualización de arcos narrativos como nodos conectados por similitud semántica.
+
+**Modelo de datos:**
+- Nodo = arco (`arc_id`, `topic_key`, `current_score`, urgencia)
+- Arista = Jaccard similarity entre `keywords` de dos arcos, si supera un umbral (e.g. 0.2)
+- Tamaño del nodo = `current_score`; color = urgencia (mismo semáforo que barras)
+- Grupos naturales = clusters por `topic_key`
+
+**Backend requerido:** endpoint `GET /my/narrative-graph` que devuelva `{nodes, edges}`.
+Cálculo O(n²) sobre `keywords` — con ~65 arcos son 2080 pares, muy rápido.
+Las conexiones más fuertes son arcos que comparten `snapshot_ids` (co-ocurrencia directa en la misma ventana de monitoreo).
+
+**Frontend:** librería de grafos force-directed (D3, vis.js o Cytoscape.js).
 
 ---
 
