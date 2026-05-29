@@ -1068,7 +1068,7 @@ function _renderArcDetail(arc) {
     const urgencyLabel = cluster.urgency && _CLUSTER_URGENCY[cluster.urgency]
       ? _CLUSTER_URGENCY[cluster.urgency].label
       : '—';
-    gridItems.push(`<div><span style="color:var(--text3)">Cluster semántico:</span> ${_esc(clusterName)}</div>`);
+    gridItems.push(`<div><span style="color:var(--text3)">Narrativa:</span> ${_esc(clusterName)}</div>`);
     gridItems.push(`<div><span style="color:var(--text3)">Urgencia institucional:</span> ${urgencyLabel}</div>`);
   }
 
