@@ -816,6 +816,36 @@ function _arcScore(arc) {
   return h[h.length - 1].score ?? 0;
 }
 
+// ── Cluster semántico helpers ──────────────────────────────────────────────
+
+const _CLUSTER_URGENCY = {
+  critical: { bg: '#FEF2F2', color: '#991B1B', label: 'Alerta máxima' },
+  high:     { bg: '#FEF2F2', color: '#B91C1C', label: 'Señal temprana' },
+  medium:   { bg: '#FFFBEB', color: '#B45309', label: 'Emergiendo' },
+  low:      { bg: '#F0FBF1', color: '#2E7D32', label: 'Estable' },
+};
+
+function _formatClusterData(arc) {
+  const cluster = {
+    name: arc.cluster_name || null,
+    urgency: arc.urgency || null,
+    hasData: Boolean(arc.cluster_name || arc.urgency)
+  };
+
+  if (cluster.urgency && _CLUSTER_URGENCY[cluster.urgency]) {
+    cluster.urgencyConfig = _CLUSTER_URGENCY[cluster.urgency];
+    cluster.urgencyChip = `<span style="font-size:10px;background:${cluster.urgencyConfig.bg};color:${cluster.urgencyConfig.color};border-radius:5px;padding:1px 7px;font-weight:500;margin-left:6px">${cluster.urgencyConfig.label}</span>`;
+  } else {
+    cluster.urgencyChip = '';
+  }
+
+  cluster.nameSpan = cluster.name
+    ? `<span style="font-size:11px;color:var(--text2);font-weight:500">${_esc(cluster.name)}</span>`
+    : '';
+
+  return cluster;
+}
+
 function _updateResumenFromArcs(arcs) {
   if (!arcs?.length) return;
 
@@ -974,15 +1004,24 @@ function _renderNarrativeArcs(arcs) {
     return;
   }
   el.innerHTML = arcs.map(arc => {
-    const score  = _arcScore(arc);
-    const isEsc  = arc.trend === 'escalating' || score >= 0.65;
-    const cfg    = isEsc ? _ARC_STATUS.escalating : (_ARC_STATUS[arc.status] ?? _ARC_STATUS.active);
-    const trend  = _ARC_TREND[arc.trend] ?? arc.trend;
-    const kws   = (arc.keywords ?? []).slice(0, 5).map(k => `<span style="font-size:10px;background:var(--surface2);border-radius:4px;padding:1px 6px;color:var(--text2)">${_esc(k)}</span>`).join('');
-    const spark  = _drawSparkline(arc.intensity_history ?? []);
-    const last   = arc.last_seen ? new Date(arc.last_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
-    const first  = arc.first_seen ? new Date(arc.first_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
-    const pts    = (arc.intensity_history ?? []).length;
+    const score   = _arcScore(arc);
+    const isEsc   = arc.trend === 'escalating' || score >= 0.65;
+    const cfg     = isEsc ? _ARC_STATUS.escalating : (_ARC_STATUS[arc.status] ?? _ARC_STATUS.active);
+    const trend   = _ARC_TREND[arc.trend] ?? arc.trend;
+    const cluster = _formatClusterData(arc);
+    const kws     = (arc.keywords ?? []).slice(0, 5).map(k => `<span style="font-size:10px;background:var(--surface2);border-radius:4px;padding:1px 6px;color:var(--text2)">${_esc(k)}</span>`).join('');
+    const spark   = _drawSparkline(arc.intensity_history ?? []);
+    const last    = arc.last_seen ? new Date(arc.last_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
+    const first   = arc.first_seen ? new Date(arc.first_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
+    const pts     = (arc.intensity_history ?? []).length;
+
+    // Línea de cluster semántico (si hay datos)
+    const clusterLine = cluster.hasData
+      ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+           ${cluster.nameSpan}${cluster.urgencyChip}
+         </div>`
+      : '';
+
     return `<div onclick="_toggleArcDetail('${_esc(arc.arc_id)}')" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:.5px solid var(--border);cursor:pointer" data-arc-id="${_esc(arc.arc_id)}">
       <div style="width:8px;height:8px;border-radius:50%;background:${cfg.dot};flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
@@ -991,6 +1030,7 @@ function _renderNarrativeArcs(arcs) {
           <span style="font-size:10px;background:${cfg.bg};color:${cfg.color};border-radius:5px;padding:1px 7px;font-weight:500">${cfg.label}</span>
           <span style="font-size:11px;color:var(--text3)">${trend}</span>
         </div>
+        ${clusterLine}
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">${kws}</div>
         <div style="font-size:10px;color:var(--text3)">${first} → ${last} · ${pts} ventana${pts !== 1 ? 's' : ''}</div>
       </div>
@@ -1014,11 +1054,29 @@ function _renderArcDetail(arc) {
   const history = arc.intensity_history ?? [];
   const peak    = history.length ? Math.max(...history.map(h => h.score)).toFixed(2) : '—';
   const last    = history.length ? history[history.length - 1].score.toFixed(2) : '—';
+  const cluster = _formatClusterData(arc);
+
+  // Grid items base
+  let gridItems = [
+    `<div><span style="color:var(--text3)">Regiones:</span> ${_esc(regions)}</div>`,
+    `<div><span style="color:var(--text3)">Score actual:</span> ${last} · pico: ${peak}</div>`
+  ];
+
+  // Agregar cluster semántico si existe
+  if (cluster.hasData) {
+    const clusterName = cluster.name || '—';
+    const urgencyLabel = cluster.urgency && _CLUSTER_URGENCY[cluster.urgency]
+      ? _CLUSTER_URGENCY[cluster.urgency].label
+      : '—';
+    gridItems.push(`<div><span style="color:var(--text3)">Cluster semántico:</span> ${_esc(clusterName)}</div>`);
+    gridItems.push(`<div><span style="color:var(--text3)">Urgencia institucional:</span> ${urgencyLabel}</div>`);
+  }
+
+  gridItems.push(`<div><span style="color:var(--text3)">Narrativas detectadas:</span></div>`);
+  gridItems.push(`<div></div>`);
+
   return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">
-    <div><span style="color:var(--text3)">Regiones:</span> ${_esc(regions)}</div>
-    <div><span style="color:var(--text3)">Score actual:</span> ${last} · pico: ${peak}</div>
-    <div><span style="color:var(--text3)">Narrativas detectadas:</span></div>
-    <div></div>
+    ${gridItems.join('')}
   </div>
   <div style="margin-top:6px">${dns || '<span style="color:var(--text3)">—</span>'}</div>`;
 }
