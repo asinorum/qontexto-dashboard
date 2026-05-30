@@ -795,6 +795,11 @@ function nextSession() {
 
 let _allArcs = [];
 let _arcStatusFilter = null;
+// F2: Estado de paginación
+let _currentPage = 1;
+let _pageSize = 20;
+let _totalArcs = 0;
+let _totalPages = 0;
 
 const _ARC_STATUS = {
   escalating: { label: 'Escalando',  bg: '#FEF2F2', color: '#991B1B', dot: '#EF4444' },
@@ -958,11 +963,23 @@ function _updateResumenFromArcs(arcs) {
   _setText('card-momento-footer', `Últimos 15 días · ${limaTime()} PE`);
 }
 
-async function _loadNarrativeArcs() {
+async function _loadNarrativeArcs(page = 1) {
   try {
-    const arcQs = _contractId ? `&contract_id=${_contractId}` : '';
-    _allArcs = await _apiFetch(`/my/narrative-arcs?limit=50${arcQs}`);
+    _currentPage = page;
+    const contractQs = _contractId ? `&contract_id=${_contractId}` : '';
+    const statusQs = _arcStatusFilter ? `&status=${_arcStatusFilter}` : '';
+
+    // F2: Usar paginación del backend
+    const response = await _apiFetch(`/my/narrative-arcs?page=${_currentPage}&page_size=${_pageSize}${contractQs}${statusQs}`);
+
+    // Manejar respuesta paginada
+    _allArcs = response.arcs || [];
+    _totalArcs = response.total || 0;
+    _totalPages = response.pages || 0;
+    _currentPage = response.current_page || 1;
+
     _renderNarrativeArcs(_allArcs);
+    _updatePaginationControls();
   } catch (err) {
     const el = document.getElementById('narrative-arcs-list');
     if (el) el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">No hay arcos narrativos registrados aún.</div>';
@@ -970,12 +987,61 @@ async function _loadNarrativeArcs() {
   }
 }
 
+// F2: Controles de paginación
+function _updatePaginationControls() {
+  const container = document.getElementById('pagination-controls');
+  const indicator = document.getElementById('arcs-indicator');
+
+  if (!container || !indicator) return;
+
+  // Indicador "Mostrando X-Y de Z arcos"
+  const startIdx = (_currentPage - 1) * _pageSize + 1;
+  const endIdx = Math.min(_currentPage * _pageSize, _totalArcs);
+
+  if (_totalArcs > 0) {
+    indicator.textContent = `Mostrando ${startIdx}-${endIdx} de ${_totalArcs} arcos`;
+  } else {
+    indicator.textContent = 'Sin arcos para mostrar';
+  }
+
+  // Controles de navegación
+  const prevDisabled = _currentPage <= 1;
+  const nextDisabled = _currentPage >= _totalPages;
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;justify-content:center">
+      <button onclick="navigateToPage(${_currentPage - 1})"
+              ${prevDisabled ? 'disabled' : ''}
+              style="padding:6px 12px;border:1px solid var(--border);background:${prevDisabled ? 'var(--surface2)' : 'var(--surface)'};border-radius:6px;cursor:${prevDisabled ? 'not-allowed' : 'pointer'};font-size:12px;color:${prevDisabled ? 'var(--text3)' : 'var(--text1)'}">
+        ← Anterior
+      </button>
+
+      <span style="font-size:12px;color:var(--text2);min-width:80px;text-align:center">
+        Página ${_currentPage} de ${_totalPages}
+      </span>
+
+      <button onclick="navigateToPage(${_currentPage + 1})"
+              ${nextDisabled ? 'disabled' : ''}
+              style="padding:6px 12px;border:1px solid var(--border);background:${nextDisabled ? 'var(--surface2)' : 'var(--surface)'};border-radius:6px;cursor:${nextDisabled ? 'not-allowed' : 'pointer'};font-size:12px;color:${nextDisabled ? 'var(--text3)' : 'var(--text1)'}">
+        Siguiente →
+      </button>
+    </div>
+  `;
+}
+
+function navigateToPage(page) {
+  if (page < 1 || page > _totalPages) return;
+  _loadNarrativeArcs(page);
+}
+
 function filterArcs(status, btnEl) {
   _arcStatusFilter = status;
   document.querySelectorAll('.qarc-filter').forEach(b => b.classList.remove('active'));
   if (btnEl) btnEl.classList.add('active');
-  const filtered = status ? _allArcs.filter(a => a.status === status) : _allArcs;
-  _renderNarrativeArcs(filtered);
+
+  // F2: Reiniciar paginación cuando cambie filtro
+  _currentPage = 1;
+  _loadNarrativeArcs(_currentPage);
 }
 
 function _drawSparkline(history) {
