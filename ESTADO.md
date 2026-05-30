@@ -109,6 +109,27 @@ Frontend:  F2 (pag UI)   →   F3 (filtros UI)  →  F1 (diseño)  →  F4 (poli
 | `7e4a243` | feat(F4): polish UX Tab Contexto — empty states + skeleton loading + transiciones |
 | `bbaed52` | fix: F3 problema identificado — cluster_name requiere valores dinámicos |
 | `54876ae` | fix: fallback cluster_names mientras backend implementa GET /my/cluster-names |
+| `5ffe009` | feat: citas en señales — usar ev.alert.quote en lugar de ev.text |
+
+---
+
+## Mejora — Citas precisas en señales (commit `5ffe009`, 2026-05-29)
+
+**Estándar aplicado:** toda señal de inteligencia de medios debe incluir cita semántica precisa.
+
+**Problema previo:**
+- Frontend usaba `ev.text` (turno completo 200-400 chars)  
+- Condición `<= 150` bloqueaba todos los turnos reales → sin citas
+- Truncado mecánico arbitrario perdía contexto
+
+**Solución implementada** (plan 3 cambios):
+1. ✅ **Backend**: `prompts/alert.txt` añade campo `quote` (fragmento 20-50 palabras)
+2. ✅ **Backend**: `max_tokens: 512 → 768` para evitar truncado
+3. ✅ **Frontend**: `ev.text` → `ev.alert?.quote` (línea simplificada)
+
+**Resultado:** Señales en timeline ahora muestran cita precisa extraída por Haiku que justifica la alerta.
+
+**Archivos modificados:** `js/api.js` (frontend), backend ya deployado
 
 ---
 
