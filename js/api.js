@@ -1204,9 +1204,24 @@ function _updateClusterDropdown() {
 
   const options = ['<option value="">Todos los clusters</option>'];
 
-  for (const cluster of _clusterNames) {
-    const escaped = _esc(cluster);
-    options.push(`<option value="${escaped}">${escaped}</option>`);
+  if (_clusterNames.length > 0) {
+    // API dinámicas disponibles
+    for (const cluster of _clusterNames) {
+      const escaped = _esc(cluster);
+      options.push(`<option value="${escaped}">${escaped}</option>`);
+    }
+  } else {
+    // Fallback: valores temporales hasta que backend implemente /my/cluster-names
+    const fallbackClusters = [
+      'Narrativa de fraude electoral',
+      'Narrativa tarifaria',
+      'Narrativa de protesta social',
+      'Narrativa minera',
+      'Narrativa ambiental'
+    ];
+    for (const cluster of fallbackClusters) {
+      options.push(`<option value="${cluster}">${cluster}</option>`);
+    }
   }
 
   select.innerHTML = options.join('');
