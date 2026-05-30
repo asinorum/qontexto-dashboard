@@ -11,20 +11,23 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-### ✅ **RESUELTO**: Filtro cluster_name corregido (29/5) — commit `bbaed52`
+### 🔄 **EN PROGRESO**: Filtro cluster_name — frontend listo, backend pendiente
 
-**PROBLEMA IDENTIFICADO Y SOLUCIONADO**: 
+**PROBLEMA IDENTIFICADO**: 
 - Dropdown cluster_name usaba valores hardcodeados `["político", "social", "económico"]`
 - Esos valores **no existían en BD** → filtros devolvían vacío
 - cluster_names son **dinámicos** de `cluster_assessments`: `"Narrativa de fraude electoral"`, etc.
 
-**SOLUCIÓN IMPLEMENTADA**:
-1. ✅ `_loadClusterNames()`: llama `GET /my/cluster-names?contract_id=X`
-2. ✅ `_updateClusterDropdown()`: pobla con valores reales dinámicos  
-3. ✅ Carga automática: startPolling() + switchTab('contexto')
-4. ✅ Fallback graceful: si endpoint falla, dropdown queda vacío (no error)
+**ESTADO ACTUAL** (commits `bbaed52` + `54876ae`):
+1. ✅ **Frontend**: `_loadClusterNames()` llama `GET /my/cluster-names?contract_id=X`
+2. ✅ **Fallback funcional**: valores temporales realistas si API falla
+3. ❌ **Backend**: endpoint `GET /my/cluster-names` **no implementado aún**
+4. 🔄 **Resultado**: dropdown funciona con fallback, pero necesita API dinámicas
 
-**RESULTADO**: Filtro cluster funciona con datos reales de `cluster_assessments` ✅
+**ACCIÓN PENDIENTE BACKEND**:
+- Implementar `GET /my/cluster-names?contract_id=X`
+- Devolver cluster_names reales de `cluster_assessments` table
+- Frontend automáticamente usará valores dinámicos cuando esté listo
 
 ---
 
@@ -44,23 +47,23 @@ Deploy: `https://qontexto.com`
 - ✅ Backend ya devolvía paginación — solo faltaban elementos DOM
 - ✅ Navegación funcional + estados disabled
 
-#### **F3 — Lógica filtros + API** (3h) — ✅ COMPLETADO (commit `bbaed52`)
+#### **F3 — Lógica filtros + API** (3h) — 🔄 EN PROGRESO (commits `bbaed52` + `54876ae`)
 
-**✅ BACKEND VERIFICADO** (29/5):
-- ✅ Backend acepta todos los parámetros: `from_date`, `to_date`, `cluster_name`, `urgency`
-- ✅ B1-B4 completados y deployados
+**✅ BACKEND PARCIAL** (29/5):
+- ✅ Backend acepta parámetros: `from_date`, `to_date`, `cluster_name`, `urgency`
 - ✅ API funcional: `GET /my/narrative-arcs?page=1&cluster_name=X&urgency=Y&from_date=Z`
+- ❌ **Falta**: endpoint `GET /my/cluster-names` para valores dinámicos
 
-**✅ PROBLEMA FRONTEND RESUELTO** (commit `bbaed52`):
-- ✅ **cluster_name ahora carga dinámicamente**: `_loadClusterNames()` → `GET /my/cluster-names`
-- ✅ **Dropdown poblado con valores reales** de `cluster_assessments`
+**✅ FRONTEND COMPLETO** (commits `bbaed52` + `54876ae`):
+- ✅ **Carga dinámica**: `_loadClusterNames()` → `GET /my/cluster-names`
+- ✅ **Fallback funcional**: valores temporales realistas si API falla
 - ✅ **Carga automática**: startPolling() + Tab Contexto
-- ✅ **Fallback graceful**: si API falla, dropdown queda limpio
+- ✅ **UX continua**: dropdown siempre poblado
 
 **✅ Valores funcionales:**
-- `status`: `["active", "escalating", "dormant"]` (fijos)
-- `urgency`: `["critical", "high", "medium", "low"]` (fijos)  
-- `cluster_name`: `["Narrativa de fraude electoral", ...]` (dinámicos desde API)
+- `status`: `["active", "escalating", "dormant"]` (fijos ✅)
+- `urgency`: `["critical", "high", "medium", "low"]` (fijos ✅)  
+- `cluster_name`: fallback temporal hasta API dinámicas (funcional ✅)
 
 #### **F4 — Polish + responsive** (1.5h) — ✅ COMPLETADO (commit `7e4a243`)
 - ✅ Skeleton loading: 3 placeholders animados durante API calls
@@ -99,6 +102,7 @@ Frontend:  F2 (pag UI)   →   F3 (filtros UI)  →  F1 (diseño)  →  F4 (poli
 | `2ec3525` | feat(F1): barra filtros elaborados Tab Contexto — Material You Enterprise |
 | `7e4a243` | feat(F4): polish UX Tab Contexto — empty states + skeleton loading + transiciones |
 | `bbaed52` | fix: F3 problema identificado — cluster_name requiere valores dinámicos |
+| `54876ae` | fix: fallback cluster_names mientras backend implementa GET /my/cluster-names |
 
 ---
 
