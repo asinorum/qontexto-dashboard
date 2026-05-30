@@ -469,7 +469,10 @@ function _renderTimeline(state, alerts, streams) {
     const time     = limaTime(new Date(ev.timestamp));
     const summary  = _esc(ev.alert?.summary ?? '');
     const sub      = [ev.radio_id, ev.region].filter(Boolean).map(_esc).join(' · ');
-    const quote    = ev.alert?.quote ? _esc(ev.alert.quote) : '';
+    const raw      = ev.text ?? '';
+    const quote    = raw.length > 0 && raw.length <= 150
+      ? _esc(raw.length > 120 ? raw.slice(0, 119) + '…' : raw)
+      : '';
 
     const wrap  = isUrgent
       ? `style="background:rgba(153,27,27,0.05);border-radius:12px;padding:10px;margin:0 -4px"`
