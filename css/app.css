@@ -125,6 +125,32 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qreset-btn { font-size:10px; padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text3); cursor:pointer; display:flex; align-items:center; gap:4px; font-family:var(--font); }
 .qreset-btn:hover { background:var(--surface2); color:var(--text2); }
 
+/* F4: Skeleton loading */
+.qarc-skeleton { background:var(--surface); border-radius:12px; padding:16px; margin-bottom:12px; }
+.qarc-skeleton-header { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.qarc-skeleton-dot { width:10px; height:10px; border-radius:50%; background:var(--surface2); flex-shrink:0; animation:skeleton-pulse 1.5s ease-in-out infinite; }
+.qarc-skeleton-title { height:14px; background:var(--surface2); border-radius:4px; flex:1; animation:skeleton-pulse 1.5s ease-in-out infinite 0.2s; }
+.qarc-skeleton-badge { width:60px; height:12px; background:var(--surface2); border-radius:6px; animation:skeleton-pulse 1.5s ease-in-out infinite 0.4s; }
+.qarc-skeleton-content { height:8px; background:var(--surface2); border-radius:4px; width:75%; animation:skeleton-pulse 1.5s ease-in-out infinite 0.6s; }
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity:1; }
+  50% { opacity:0.4; }
+}
+
+/* F4: Empty states */
+.qarcs-empty { display:flex; flex-direction:column; align-items:center; text-align:center; padding:40px 20px; }
+.qarcs-empty svg { margin-bottom:16px; }
+.qarcs-empty-title { font-size:14px; font-weight:500; color:var(--text2); margin-bottom:6px; }
+.qarcs-empty-text { font-size:12px; color:var(--text3); line-height:1.4; }
+
+.qarcs-error { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text3); padding:16px; justify-content:center; }
+
+/* F4: Transiciones suaves */
+#narrative-arcs-list { transition:opacity .3s ease; }
+#advanced-filters { transition:all .3s ease; overflow:hidden; }
+.qfilters-active { transition:all .2s ease; }
+
 /* Responsive */
 @media (max-width: 768px) {
   .qfilters-row { flex-direction:column; align-items:stretch; }
@@ -132,4 +158,5 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
   .qfilter-date { justify-content:space-between; }
   .qdate-input { width:45%; }
   .qselect { width:100%; }
+  .qarcs-empty { padding:30px 16px; }
 }

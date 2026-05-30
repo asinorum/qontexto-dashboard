@@ -966,6 +966,10 @@ function _updateResumenFromArcs(arcs) {
 async function _loadNarrativeArcs(page = 1) {
   try {
     _currentPage = page;
+
+    // F4: Mostrar skeleton loading
+    _showArcsSkeletonLoading();
+
     const contractQs = _contractId ? `&contract_id=${_contractId}` : '';
     const statusQs = _arcStatusFilter ? `&status=${_arcStatusFilter}` : '';
 
@@ -984,13 +988,67 @@ async function _loadNarrativeArcs(page = 1) {
     _totalPages = response.pages || 0;
     _currentPage = response.current_page || 1;
 
-    _renderNarrativeArcs(_allArcs);
+    // F4: Verificar empty state vs contenido real
+    if (_totalArcs === 0) {
+      _showArcsEmptyState();
+    } else {
+      _renderNarrativeArcs(_allArcs);
+    }
+
     _updatePaginationControls();
   } catch (err) {
     const el = document.getElementById('narrative-arcs-list');
-    if (el) el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">No hay arcos narrativos registrados aún.</div>';
+    if (el) el.innerHTML = '<div class="qarcs-error"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Error al cargar arcos. Intenta nuevamente.</div>';
     console.warn('[Qontexto] narrative-arcs fallido:', err.message);
   }
+}
+
+// F4: Skeleton loading
+function _showArcsSkeletonLoading() {
+  const el = document.getElementById('narrative-arcs-list');
+  if (!el) return;
+
+  const skeletons = Array.from({length: 3}, () =>
+    '<div class="qarc-skeleton">' +
+      '<div class="qarc-skeleton-header">' +
+        '<div class="qarc-skeleton-dot"></div>' +
+        '<div class="qarc-skeleton-title"></div>' +
+        '<div class="qarc-skeleton-badge"></div>' +
+      '</div>' +
+      '<div class="qarc-skeleton-content"></div>' +
+    '</div>'
+  ).join('');
+
+  el.innerHTML = skeletons;
+}
+
+// F4: Empty state
+function _showArcsEmptyState() {
+  const el = document.getElementById('narrative-arcs-list');
+  if (!el) return;
+
+  const hasActiveFilters = _arcStatusFilter ||
+    _advancedFilters.dateFrom ||
+    _advancedFilters.dateTo ||
+    _advancedFilters.cluster ||
+    _advancedFilters.urgency;
+
+  const message = hasActiveFilters
+    ? 'Sin arcos con estos filtros'
+    : 'No hay arcos narrativos registrados aún';
+
+  const suggestion = hasActiveFilters
+    ? 'Intenta ampliar los criterios de búsqueda o <button onclick="resetAllFilters()" style="background:none;border:none;color:var(--text2);text-decoration:underline;cursor:pointer;font-family:var(--font)">limpiar filtros</button>.'
+    : 'Los arcos aparecerán conforme el sistema detecte patrones narrativos.';
+
+  el.innerHTML =
+    '<div class="qarcs-empty">' +
+      '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5">' +
+        '<path d="M9 11H5a2 2 0 0 0-2 2v3c0 1.1.9 2 2 2h4m6-6h4a2 2 0 0 1 2 2v3c0 1.1-.9 2-2 2h-4m-6-6V9a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-6 0h6"/>' +
+      '</svg>' +
+      '<div class="qarcs-empty-title">' + message + '</div>' +
+      '<div class="qarcs-empty-text">' + suggestion + '</div>' +
+    '</div>';
 }
 
 // F2: Controles de paginación
