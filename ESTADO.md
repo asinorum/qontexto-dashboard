@@ -11,18 +11,24 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-### 🔄 **EN PROGRESO**: Filtro cluster_name — frontend listo, backend pendiente
+### ✅ **COMPLETADO**: Filtro cluster_name — frontend + backend listo
 
-**PROBLEMA IDENTIFICADO**: 
-- Dropdown cluster_name usaba valores hardcodeados `["político", "social", "económico"]`
-- Esos valores **no existían en BD** → filtros devolvían vacío
-- cluster_names son **dinámicos** de `cluster_assessments`: `"Narrativa de fraude electoral"`, etc.
+**PROBLEMA RESUELTO** (29/5): 
+- Frontend ahora carga cluster_names dinámicamente de `cluster_assessments` 
+- Backend implementado: `GET /my/cluster-names`
+- Filtros funcionan con datos reales ✅
 
-**ESTADO ACTUAL** (commits `bbaed52` + `54876ae`):
+**ESTADO FINAL** (commits `bbaed52` + `54876ae` + backend `f273930`):
 1. ✅ **Frontend**: `_loadClusterNames()` llama `GET /my/cluster-names?contract_id=X`
-2. ✅ **Fallback funcional**: valores temporales realistas si API falla
-3. ❌ **Backend**: endpoint `GET /my/cluster-names` **no implementado aún**
-4. 🔄 **Resultado**: dropdown funciona con fallback, pero necesita API dinámicas
+2. ✅ **Fallback funcional**: valores temporales si API falla
+3. ✅ **Backend**: endpoint `GET /my/cluster-names` **YA IMPLEMENTADO** ✅
+4. ✅ **Resultado**: dropdown funciona con cluster_names reales de BD
+
+**API disponible:**
+```
+GET /my/cluster-names?contract_id=X
+→ ["Narrativa de fraude electoral", "Narrativa tarifaria", ...]
+```
 
 **ACCIÓN PENDIENTE BACKEND**:
 - Implementar `GET /my/cluster-names?contract_id=X`
