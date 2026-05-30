@@ -11,16 +11,39 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-### Estado actual — 2026-05-27
+### EN CURSO: paginación + filtros elaborados Tab Contexto
 
-D13 deployado y en producción. Los bugs visuales de D12 están resueltos.
+**Problema identificado**: Tab Contexto solo muestra 50 de 86 arcos debido a límite oculto, causando confusión de fechas (muestra desde 25/5 vs 20/5 real).
 
-**Qué observar en las próximas sesiones de monitoreo:**
-- ¿Los arcos nuevos del mismo tema reciben el mismo `topic_key` y se agrupan?
-- ¿El sparkline empieza a mostrar trayectorias de 3-5 días a medida que los clusters acumulan historial?
-- ¿Los "arcos adicionales" bajan de 59 con nuevas sesiones?
+**Plan Frontend** — Tab Contexto → UX profesional con paginación + filtros:
 
-**No hay bugs pendientes conocidos.** Esperar 2-3 sesiones reales antes de decidir próximas fases.
+#### **F1 — Diseño UI filtros** (2h)
+- Barra de filtros siguiendo sistema de diseño Material You Enterprise
+- Controles: date picker (rango), dropdown cluster, dropdown urgency, chips estado
+- Layout: encima de lista arcos, colapsable, chips activos visibles
+- Responsive: mobile-friendly
+
+#### **F2 — Implementar paginación** (2.5h)
+- Controles: "← Anterior | Página X de Y | Siguiente →"  
+- Indicador: "Mostrando 1-20 de 86 arcos"
+- Estado en URL: `?page=2&cluster=fraude` para compartibilidad
+- Loading states durante navegación
+
+#### **F3 — Lógica filtros + API** (3h)
+- Conectar controles → parámetros API backend
+- Estado filtros: persistir en sessionStorage
+- Combinación filtros: multiple urgency, rango fechas
+- Reset filtros, aplicar filtros, validación UX
+
+#### **F4 — Polish + responsive** (1.5h)
+- Animaciones transición página
+- Empty states: "Sin arcos con estos filtros"
+- Skeleton loading durante API calls
+- Mobile breakpoints < 768px
+
+**Total estimado: 9h**
+
+Depende de: backend paginación + filtros (7.5h) — **implementar en paralelo**
 
 ---
 
