@@ -43,7 +43,20 @@ Deploy: `https://qontexto.com`
 
 **Total estimado: 9h**
 
-Depende de: backend paginación + filtros (7.5h) — **implementar en paralelo**
+#### **Dependencias y orden de implementación:**
+```
+Backend: B1 (paginación) → B2 (filtros) → B3 (optimización) → B4 (tests)
+           ↓                 ↓                                  ↑
+Frontend:  F2 (pag UI)   →   F3 (filtros UI)  →  F1 (diseño)  →  F4 (polish)
+```
+
+**Secuencia:** B1 → B2 → B3 → **F2** → **F3** → **F1** → **F4** → B4
+
+#### **Dependencias críticas:**
+- **F2 requiere B1 deployado**: necesita respuesta `{arcs, total, pages, current_page}`
+- **F3 requiere B2 deployado**: necesita parámetros `from_date`, `to_date`, `cluster_name`, `urgency`
+- **F1 independiente**: diseño UI puede hacerse después como polish
+- **F4 independiente**: animaciones y responsive final
 
 ---
 
