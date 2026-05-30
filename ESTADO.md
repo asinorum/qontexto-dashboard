@@ -11,29 +11,21 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-### ✅ **COMPLETADO**: Filtro cluster_name — frontend + backend listo
+**✅ DEPLOY 29/5 COMPLETADO — D15 + citas en señales**
 
-**PROBLEMA RESUELTO** (29/5): 
-- Frontend ahora carga cluster_names dinámicamente de `cluster_assessments` 
-- Backend implementado: `GET /my/cluster-names`
-- Filtros funcionan con datos reales ✅
+Estado actual en producción:
+- ✅ **D15 Tab Contexto**: paginación + filtros elaborados + UX profesional completo
+- ✅ **Citas en señales**: timeline muestra citas precisas extraídas por Haiku (`ev.alert.quote`)
+- ✅ **Filtro cluster_name**: valores dinámicos desde `GET /my/cluster-names` ✅
+- ✅ **Dashboard completo**: login Auth0, 4 tabs funcionales, datos en tiempo real
 
-**ESTADO FINAL** (commits `bbaed52` + `54876ae` + backend `f273930`):
-1. ✅ **Frontend**: `_loadClusterNames()` llama `GET /my/cluster-names?contract_id=X`
-2. ✅ **Fallback funcional**: valores temporales si API falla
-3. ✅ **Backend**: endpoint `GET /my/cluster-names` **YA IMPLEMENTADO** ✅
-4. ✅ **Resultado**: dropdown funciona con cluster_names reales de BD
+**FUNCIONALIDADES DESPLEGADAS**:
+- Tab Resumen: topbar + veredicto + barras + grid 50/50
+- Tab Contexto: paginación 20/página + filtros elaborados + empty states  
+- Tab Señales: timeline con citas precisas (no más truncado)
+- Tab Contrato: información contractual
 
-**API disponible:**
-```
-GET /my/cluster-names?contract_id=X
-→ ["Narrativa de fraude electoral", "Narrativa tarifaria", ...]
-```
-
-**ACCIÓN PENDIENTE BACKEND**:
-- Implementar `GET /my/cluster-names?contract_id=X`
-- Devolver cluster_names reales de `cluster_assessments` table
-- Frontend automáticamente usará valores dinámicos cuando esté listo
+**PRÓXIMO TRABAJO**: Dashboard completo y funcional — sin pendientes críticos
 
 ---
 
@@ -96,7 +88,7 @@ Frontend:  F2 (pag UI)   →   F3 (filtros UI)  →  F1 (diseño)  →  F4 (poli
 
 ---
 
-### Commits deployados (estado actual en producción — 2026-05-27)
+### Commits deployados (estado actual en producción — 2026-05-29)
 
 | Commit | Qué hace |
 |--------|----------|
@@ -104,12 +96,13 @@ Frontend:  F2 (pag UI)   →   F3 (filtros UI)  →  F1 (diseño)  →  F4 (poli
 | `69ecee1` | D13: color barras por `score_normalized`; chip por `trend`; Tab Contexto escalando por score |
 | `edb8cb1` | fix: `stat-alertas` no se sobreescribe con aggregate cuando summary ya cargó |
 | `7684305` | docs: Fase D14 — Tab Red (grafo de constelaciones) en backlog |
-| `7a6d0e9` | feat: paginación Tab Contexto funcional — elementos DOM + lógica completa |
-| `2ec3525` | feat(F1): barra filtros elaborados Tab Contexto — Material You Enterprise |
-| `7e4a243` | feat(F4): polish UX Tab Contexto — empty states + skeleton loading + transiciones |
+| `7a6d0e9` | D15: paginación Tab Contexto funcional — elementos DOM + lógica completa |
+| `2ec3525` | D15: barra filtros elaborados Tab Contexto — Material You Enterprise |
+| `7e4a243` | D15: polish UX Tab Contexto — empty states + skeleton loading + transiciones |
 | `bbaed52` | fix: F3 problema identificado — cluster_name requiere valores dinámicos |
 | `54876ae` | fix: fallback cluster_names mientras backend implementa GET /my/cluster-names |
 | `5ffe009` | feat: citas en señales — usar ev.alert.quote en lugar de ev.text |
+| `a541247` | docs: mejora citas señales documentada — plan 3 cambios completado |
 
 ---
 
