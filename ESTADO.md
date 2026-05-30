@@ -11,9 +11,21 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-### ✅ COMPLETADO: paginación + filtros elaborados Tab Contexto (27/5) — commits `7a6d0e9` + `2ec3525`
+### ⚠️ **URGENTE**: Corregir filtro cluster_name (F3)
 
-**Problema resuelto**: Tab Contexto solo mostraba 50 de 86 arcos. Ahora tiene paginación funcional (20 arcos/página) + barra de filtros elaborados Material You Enterprise.
+**PROBLEMA IDENTIFICADO** (29/5): 
+- Dropdown cluster_name usa valores hardcodeados `["político", "social", "económico"]`
+- Esos valores **no existen en BD** → filtros devuelven vacío
+- cluster_names son **dinámicos** de `cluster_assessments`: `"Narrativa de fraude electoral"`, etc.
+
+**ACCIÓN REQUERIDA**:
+1. ✅ Backend: implementar `GET /my/cluster-names` (falta este endpoint)
+2. 🔧 Frontend: cargar cluster_names dinámicamente en lugar de valores hardcodeados
+3. ✅ Result: filtro cluster funciona correctamente
+
+---
+
+### ✅ COMPLETADO: paginación + filtros elaborados Tab Contexto (27/5) — commits `7a6d0e9` + `2ec3525`
 
 **Implementación Frontend** — Tab Contexto → UX profesional:
 
@@ -29,11 +41,27 @@ Deploy: `https://qontexto.com`
 - ✅ Backend ya devolvía paginación — solo faltaban elementos DOM
 - ✅ Navegación funcional + estados disabled
 
-#### **F3 — Lógica filtros + API** (3h) — 🔄 EN VERIFICACIÓN
-- ✅ Frontend: controles → parámetros API backend
-- ✅ Combinación filtros: status + from_date + to_date + cluster_name + urgency
-- ✅ Reset filtros, chips activos, validación UX
-- ⏳ **Verificar**: ¿backend acepta `from_date`, `to_date`, `cluster_name`, `urgency`?
+#### **F3 — Lógica filtros + API** (3h) — ⚠️ **PROBLEMA IDENTIFICADO**
+
+**✅ BACKEND VERIFICADO** (29/5):
+- ✅ Backend acepta todos los parámetros: `from_date`, `to_date`, `cluster_name`, `urgency`
+- ✅ B1-B4 completados y deployados
+- ✅ API funcional: `GET /my/narrative-arcs?page=1&cluster_name=X&urgency=Y&from_date=Z`
+
+**⚠️ PROBLEMA FRONTEND**:
+- ❌ **cluster_name dropdown usa valores hardcodeados**: `["político", "social", "económico", "minero", "ambiental"]`
+- ❌ **Esos valores NO EXISTEN en BD** → filtros devuelven página vacía
+- ❌ **cluster_names son dinámicos**, generados por Opus: `["Narrativa de fraude electoral", "Narrativa tarifaria", ...]`
+
+**🔧 SOLUCIÓN REQUERIDA**:
+1. **Implementar endpoint**: `GET /my/cluster-names` → devuelve cluster_names dinámicos
+2. **Frontend**: cargar opciones dinámicamente al inicializar página  
+3. **Poblar dropdown** con valores reales de `cluster_assessments`
+4. **Resultado**: filtro cluster funciona con datos reales ✅
+
+**Valores fijos que SÍ funcionan:**
+- `status`: `["active", "escalating", "dormant"]`  
+- `urgency`: `["critical", "high", "medium", "low"]`
 
 #### **F4 — Polish + responsive** (1.5h) — ✅ COMPLETADO (commit `7e4a243`)
 - ✅ Skeleton loading: 3 placeholders animados durante API calls
