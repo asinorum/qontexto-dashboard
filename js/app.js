@@ -56,6 +56,7 @@ function switchTab(tab, el) {
     if (typeof _loadSummary === 'function') _loadSummary();
   }
   if (tab === 'contexto') {
+    if (typeof _loadClusterNames === 'function') _loadClusterNames();
     if (typeof _loadNarrativeArcs === 'function') _loadNarrativeArcs();
   }
   if (tab === 'senales' && !_sessionIsLive) {

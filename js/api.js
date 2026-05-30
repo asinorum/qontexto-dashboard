@@ -1115,6 +1115,7 @@ let _advancedFilters = {
   cluster: '',
   urgency: ''
 };
+let _clusterNames = []; // Dinámico desde API
 
 function toggleAdvancedFilters() {
   const container = document.getElementById('advanced-filters');
@@ -1183,6 +1184,34 @@ function resetAllFilters() {
   _updateActiveFilters();
 }
 
+// F3 FIX: Cargar cluster_names dinámicamente
+async function _loadClusterNames() {
+  try {
+    const contractQs = _contractId ? `?contract_id=${_contractId}` : '';
+    _clusterNames = await _apiFetch(`/my/cluster-names${contractQs}`);
+    _updateClusterDropdown();
+  } catch (err) {
+    console.warn('[Qontexto] cluster-names fallido:', err.message);
+    // Fallback: mantener dropdown vacío
+    _clusterNames = [];
+    _updateClusterDropdown();
+  }
+}
+
+function _updateClusterDropdown() {
+  const select = document.getElementById('cluster-select');
+  if (!select) return;
+
+  const options = ['<option value="">Todos los clusters</option>'];
+
+  for (const cluster of _clusterNames) {
+    const escaped = _esc(cluster);
+    options.push(`<option value="${escaped}">${escaped}</option>`);
+  }
+
+  select.innerHTML = options.join('');
+}
+
 function _updateActiveFilters() {
   const container = document.getElementById('active-filters');
   const chipsContainer = document.getElementById('active-chips');
@@ -1201,7 +1230,11 @@ function _updateActiveFilters() {
   }
 
   if (_advancedFilters.cluster) {
-    activeChips.push(`<span class="qactive-chip">Cluster: ${_advancedFilters.cluster}</span>`);
+    // Mostrar nombre corto en chip
+    const shortName = _advancedFilters.cluster.length > 20
+      ? _advancedFilters.cluster.substring(0, 20) + '...'
+      : _advancedFilters.cluster;
+    activeChips.push(`<span class="qactive-chip">Cluster: ${shortName}</span>`);
   }
 
   if (_advancedFilters.urgency) {
@@ -1645,12 +1678,14 @@ async function startPolling() {
     // Sesión activa: poll cada 30s con datos de la sesión en vivo
     const pdfBtn = document.getElementById('btn-pdf');
     if (pdfBtn) { pdfBtn.disabled = false; pdfBtn.title = 'Descargar PDF del período actual'; }
+    _loadClusterNames(); // F3 FIX: cargar cluster_names dinámicos
     _loadNarrativeArcs();
     await _poll();
     _pollTimer = setInterval(() => { _poll(); _loadSummary(); }, 30_000);
   } else {
     // Sin sesión en vivo: Tab Señales muestra acumulado 30 días
     await _fetchAggregateState({ days: 30 });
+    _loadClusterNames(); // F3 FIX: cargar cluster_names dinámicos
     _loadNarrativeArcs();
     _loadSessionList();
     _pollTimer = setInterval(() => { _tickLiveTime(); _loadSummary(); }, 30_000);
