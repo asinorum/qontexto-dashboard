@@ -969,8 +969,14 @@ async function _loadNarrativeArcs(page = 1) {
     const contractQs = _contractId ? `&contract_id=${_contractId}` : '';
     const statusQs = _arcStatusFilter ? `&status=${_arcStatusFilter}` : '';
 
+    // F3: Filtros elaborados
+    const dateFromQs = _advancedFilters.dateFrom ? `&from_date=${_advancedFilters.dateFrom}` : '';
+    const dateToQs = _advancedFilters.dateTo ? `&to_date=${_advancedFilters.dateTo}` : '';
+    const clusterQs = _advancedFilters.cluster ? `&cluster_name=${_advancedFilters.cluster}` : '';
+    const urgencyQs = _advancedFilters.urgency ? `&urgency=${_advancedFilters.urgency}` : '';
+
     // F2: Usar paginación del backend
-    const response = await _apiFetch(`/my/narrative-arcs?page=${_currentPage}&page_size=${_pageSize}${contractQs}${statusQs}`);
+    const response = await _apiFetch(`/my/narrative-arcs?page=${_currentPage}&page_size=${_pageSize}${contractQs}${statusQs}${dateFromQs}${dateToQs}${clusterQs}${urgencyQs}`);
 
     // Manejar respuesta paginada
     _allArcs = response.arcs || [];
@@ -1042,6 +1048,116 @@ function filterArcs(status, btnEl) {
   // F2: Reiniciar paginación cuando cambie filtro
   _currentPage = 1;
   _loadNarrativeArcs(_currentPage);
+}
+
+// F1: Filtros elaborados
+let _advancedFilters = {
+  dateFrom: '',
+  dateTo: '',
+  cluster: '',
+  urgency: ''
+};
+
+function toggleAdvancedFilters() {
+  const container = document.getElementById('advanced-filters');
+  const isVisible = container.style.display !== 'none';
+  container.style.display = isVisible ? 'none' : 'block';
+
+  // Actualizar icono del botón
+  const btn = document.getElementById('toggle-filters');
+  btn.style.background = isVisible ? 'var(--surface2)' : 'var(--text1)';
+  btn.style.color = isVisible ? 'var(--text2)' : 'var(--surface)';
+}
+
+function toggleStatusChip(chipEl, status) {
+  // Desactivar todos los chips
+  document.querySelectorAll('#status-chips .qchip').forEach(c => c.classList.remove('active'));
+
+  // Activar el chip seleccionado
+  chipEl.classList.add('active');
+
+  // Actualizar filtro y recargar
+  _arcStatusFilter = status || null;
+  _currentPage = 1;
+  _loadNarrativeArcs(_currentPage);
+  _updateActiveFilters();
+}
+
+function updateDateFilter() {
+  _advancedFilters.dateFrom = document.getElementById('date-from').value;
+  _advancedFilters.dateTo = document.getElementById('date-to').value;
+  _currentPage = 1;
+  _loadNarrativeArcs(_currentPage);
+  _updateActiveFilters();
+}
+
+function updateClusterFilter() {
+  _advancedFilters.cluster = document.getElementById('cluster-select').value;
+  _currentPage = 1;
+  _loadNarrativeArcs(_currentPage);
+  _updateActiveFilters();
+}
+
+function updateUrgencyFilter() {
+  _advancedFilters.urgency = document.getElementById('urgency-select').value;
+  _currentPage = 1;
+  _loadNarrativeArcs(_currentPage);
+  _updateActiveFilters();
+}
+
+function resetAllFilters() {
+  // Reset estado
+  _arcStatusFilter = null;
+  _advancedFilters = { dateFrom: '', dateTo: '', cluster: '', urgency: '' };
+
+  // Reset UI
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  document.getElementById('cluster-select').value = '';
+  document.getElementById('urgency-select').value = '';
+
+  document.querySelectorAll('#status-chips .qchip').forEach(c => c.classList.remove('active'));
+  document.querySelector('#status-chips .qchip[data-status=""]').classList.add('active');
+
+  // Recargar
+  _currentPage = 1;
+  _loadNarrativeArcs(_currentPage);
+  _updateActiveFilters();
+}
+
+function _updateActiveFilters() {
+  const container = document.getElementById('active-filters');
+  const chipsContainer = document.getElementById('active-chips');
+  const activeChips = [];
+
+  // Generar chips de filtros activos
+  if (_arcStatusFilter) {
+    const statusLabels = { escalating: 'Escalando', active: 'Activos', dormant: 'Dormidos' };
+    activeChips.push(`<span class="qactive-chip">Estado: ${statusLabels[_arcStatusFilter] || _arcStatusFilter}</span>`);
+  }
+
+  if (_advancedFilters.dateFrom || _advancedFilters.dateTo) {
+    const from = _advancedFilters.dateFrom || '...';
+    const to = _advancedFilters.dateTo || '...';
+    activeChips.push(`<span class="qactive-chip">Período: ${from} — ${to}</span>`);
+  }
+
+  if (_advancedFilters.cluster) {
+    activeChips.push(`<span class="qactive-chip">Cluster: ${_advancedFilters.cluster}</span>`);
+  }
+
+  if (_advancedFilters.urgency) {
+    const urgencyLabels = { critical: 'Crítica', high: 'Alta', medium: 'Media', low: 'Baja' };
+    activeChips.push(`<span class="qactive-chip">Urgencia: ${urgencyLabels[_advancedFilters.urgency] || _advancedFilters.urgency}</span>`);
+  }
+
+  // Mostrar/ocultar sección de filtros activos
+  if (activeChips.length > 0) {
+    chipsContainer.innerHTML = activeChips.join('');
+    container.style.display = 'flex';
+  } else {
+    container.style.display = 'none';
+  }
 }
 
 function _drawSparkline(history) {

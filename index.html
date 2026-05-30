@@ -141,11 +141,74 @@
     <div class="qcard">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="qcard-lbl">Arcos narrativos</div>
-        <div id="arcs-filter" style="display:flex;gap:6px">
-          <button class="qarc-filter active" onclick="filterArcs(null,this)" style="font-size:11px;border:none;background:var(--surface2);border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--text2);font-family:var(--font)">Todos</button>
-          <button class="qarc-filter" onclick="filterArcs('escalating',this)" style="font-size:11px;border:none;background:var(--surface2);border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--text2);font-family:var(--font)">Escalando</button>
-          <button class="qarc-filter" onclick="filterArcs('active',this)" style="font-size:11px;border:none;background:var(--surface2);border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--text2);font-family:var(--font)">Activos</button>
-          <button class="qarc-filter" onclick="filterArcs('dormant',this)" style="font-size:11px;border:none;background:var(--surface2);border-radius:6px;padding:3px 9px;cursor:pointer;color:var(--text2);font-family:var(--font)">Dormidos</button>
+        <button id="toggle-filters" onclick="toggleAdvancedFilters()"
+                style="font-size:11px;border:none;background:var(--surface2);border-radius:6px;padding:6px 12px;cursor:pointer;color:var(--text2);font-family:var(--font);display:flex;align-items:center;gap:4px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18M7 12h10m-7 6h4"/>
+          </svg>
+          Filtros
+        </button>
+      </div>
+
+      <!-- Barra de filtros elaborados (colapsable) -->
+      <div id="advanced-filters" class="qfilters" style="display:none">
+        <div class="qfilters-row">
+          <!-- Filtros estado (chips) -->
+          <div class="qfilter-group">
+            <label class="qfilter-label">Estado</label>
+            <div class="qfilter-chips" id="status-chips">
+              <div class="qchip active" data-status="" onclick="toggleStatusChip(this, '')">Todos</div>
+              <div class="qchip" data-status="escalating" onclick="toggleStatusChip(this, 'escalating')">Escalando</div>
+              <div class="qchip" data-status="active" onclick="toggleStatusChip(this, 'active')">Activos</div>
+              <div class="qchip" data-status="dormant" onclick="toggleStatusChip(this, 'dormant')">Dormidos</div>
+            </div>
+          </div>
+
+          <!-- Rango fechas -->
+          <div class="qfilter-group">
+            <label class="qfilter-label">Período</label>
+            <div class="qfilter-date">
+              <input type="date" id="date-from" class="qdate-input" onchange="updateDateFilter()">
+              <span style="color:var(--text3);font-size:11px;margin:0 6px">—</span>
+              <input type="date" id="date-to" class="qdate-input" onchange="updateDateFilter()">
+            </div>
+          </div>
+
+          <!-- Dropdown cluster -->
+          <div class="qfilter-group">
+            <label class="qfilter-label">Cluster</label>
+            <select id="cluster-select" class="qselect" onchange="updateClusterFilter()">
+              <option value="">Todos los clusters</option>
+              <option value="politico">Político</option>
+              <option value="social">Social</option>
+              <option value="economico">Económico</option>
+              <option value="minero">Minero</option>
+              <option value="ambiental">Ambiental</option>
+            </select>
+          </div>
+
+          <!-- Dropdown urgency -->
+          <div class="qfilter-group">
+            <label class="qfilter-label">Urgencia</label>
+            <select id="urgency-select" class="qselect" onchange="updateUrgencyFilter()">
+              <option value="">Todas las urgencias</option>
+              <option value="critical">Crítica</option>
+              <option value="high">Alta</option>
+              <option value="medium">Media</option>
+              <option value="low">Baja</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Chips activos y reset -->
+        <div class="qfilters-active" id="active-filters" style="display:none">
+          <div class="qactive-chips" id="active-chips"></div>
+          <button onclick="resetAllFilters()" class="qreset-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18m-9 6v6m4-6v6m-8-6v6"/>
+            </svg>
+            Limpiar filtros
+          </button>
         </div>
       </div>
       <div id="arcs-indicator" style="font-size:11px;color:var(--text3);margin-bottom:12px;text-align:center">

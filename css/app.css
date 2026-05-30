@@ -96,3 +96,40 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qstream-row { display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; }
 .qstream-key { color:var(--text3); }
 .qstream-val { font-weight:500; color:var(--text1); }
+
+/* Filtros elaborados Tab Contexto */
+.qfilters { background:var(--surface2); border-radius:12px; padding:16px; margin-bottom:16px; border:1px solid var(--border); }
+.qfilters-row { display:flex; flex-wrap:wrap; gap:16px 20px; align-items:flex-end; }
+.qfilter-group { display:flex; flex-direction:column; gap:6px; min-width:120px; }
+.qfilter-label { font-size:10px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
+
+/* Chips estado */
+.qfilter-chips { display:flex; gap:6px; flex-wrap:wrap; }
+.qchip { font-size:11px; padding:4px 10px; border-radius:20px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text2); transition:all .2s ease; font-family:var(--font); }
+.qchip:hover { background:var(--surface2); }
+.qchip.active { background:var(--text1); color:var(--surface); border-color:var(--text1); }
+
+/* Date inputs */
+.qfilter-date { display:flex; align-items:center; }
+.qdate-input { padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text1); font-size:11px; font-family:var(--mono); width:110px; }
+.qdate-input:focus { outline:none; border-color:var(--text2); }
+
+/* Selects */
+.qselect { padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text1); font-size:11px; font-family:var(--font); min-width:130px; cursor:pointer; }
+.qselect:focus { outline:none; border-color:var(--text2); }
+
+/* Filtros activos */
+.qfilters-active { display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+.qactive-chips { display:flex; gap:6px; flex-wrap:wrap; }
+.qactive-chip { font-size:10px; padding:3px 8px; border-radius:12px; background:var(--text1); color:var(--surface); display:flex; align-items:center; gap:4px; }
+.qreset-btn { font-size:10px; padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text3); cursor:pointer; display:flex; align-items:center; gap:4px; font-family:var(--font); }
+.qreset-btn:hover { background:var(--surface2); color:var(--text2); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .qfilters-row { flex-direction:column; align-items:stretch; }
+  .qfilter-group { min-width:auto; }
+  .qfilter-date { justify-content:space-between; }
+  .qdate-input { width:45%; }
+  .qselect { width:100%; }
+}
