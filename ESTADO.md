@@ -45,10 +45,10 @@ Etapas completadas: análisis ✅ · planificación ✅ · implementación ⏳
 - ✅ `app.css`: clases `.qdd-*`
 - ✅ `index.html`: reemplazar `<select id="cluster-select">` con container dropdown custom
 
-**Tarea 6 — Tab Temas** · `index.html` · `js/api.js` · `js/app.js`
-- `index.html`: eliminar cards Narrativas/Voces/Momento · añadir `#temas-bubble-container`, `#temas-rationale-panel`, `canvas#temas-trend`
-- `api.js`: `_updateTemasFromSummary` (rename de `_updateResumenFromSummary`) · `_renderTemasBubble()` (SVG determinista) · `_selectTema()` · `_initTrendChart()` · `_updateTemasTrend()`
-- `app.js`: eliminar `sparkRef` + `initCharts` existente → delegar a `_initTrendChart`
+**✅ Tarea 6 — Tab Temas** · `index.html` · `js/api.js` · `js/app.js`
+- ✅ `index.html`: eliminar cards Narrativas/Voces/Momento · añadir `#temas-bubble-container`, `#temas-rationale-panel`, `canvas#temas-trend`
+- ✅ `api.js`: `_updateTemasFromSummary` · `_renderTemasBubble()` · `_selectTema()` · `_initTrendChart()` · `_updateTemasTrend()`
+- ✅ `app.js`: eliminar `sparkRef` + `initCharts` existente → delegar a `_initTrendChart`
 
 **Tarea 7 — Tab Menciones** · `js/api.js` · `index.html` · `css/app.css`
 - `_renderTimeline`: dot → `_clusterHex(ev.alert?.cluster_name)` · cita → color de tema · chip urgencia neutro · leyenda en `#menciones-leyenda`

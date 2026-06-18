@@ -117,7 +117,7 @@ function _updateUI(state) {
     : (_contractStreamCount ?? state.streams_monitored?.length ?? 0);
 
   _setText('stat-streams', streamCount);
-  // stat-alertas lo gestiona _updateResumenFromSummary (tb.alertas = arcos activos).
+  // stat-alertas lo gestiona _updateTemasFromSummary (tb.alertas = arcos activos).
   // Solo lo toca _updateUI si el summary aún no cargó, para no sobrescribir con
   // alerts_total del agregado (que es acumulado de 30 días, no arcos activos).
   if (!_summary) _setText('stat-alertas', state.summary?.alerts_total ?? 0);
@@ -711,6 +711,10 @@ function _buildClusterColorMap() {
     _clusterHexMap[name]   = style.getPropertyValue(varN).trim();
   });
   if (_allArcs.length > 0) _renderNarrativeArcs(_allArcs);
+  if (_summary?.narrativas?.length) {
+    _renderTemasBubble(_summary.narrativas);
+    _updateTemasTrend(_summary.narrativas);
+  }
 }
 
 function _clusterHex(clusterName) {
@@ -1101,17 +1105,175 @@ async function _fetchContract() {
 
 // ── D12: Summary ─────────────────────────────────────────────────────────────
 
+let _trendChart   = null;
+let _selectedTema = null;
+
+const BUBBLE_COORDS = [
+  [[200, 150]],
+  [[130, 150], [290, 150]],
+  [[130, 100], [290, 100], [210, 210]],
+  [[110, 100], [280, 100], [110, 210], [280, 210]],
+];
+
+function _renderTemasBubble(narrativas) {
+  const el = document.getElementById('temas-bubble-container');
+  if (!el) return;
+  if (!narrativas?.length) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--text3);text-align:center;padding:40px 0">Sin temas activos.</p>';
+    return;
+  }
+
+  const W = 580, H = 280;
+  const items    = narrativas.slice(0, 4);
+  const coords   = BUBBLE_COORDS[Math.min(items.length, 4) - 1];
+  const maxScore = Math.max(...items.map(n => n.importance_score ?? 0), 0.01);
+  const getR     = s => 22 + ((s ?? 0) / maxScore) * 56;
+
+  const allRegions = [...new Set(items.flatMap(n => n.unique_regions ?? []))].slice(0, 6);
+  const regionX    = 500;
+  const regionY    = i => allRegions.length < 2
+    ? H / 2
+    : 50 + i * (H - 80) / (allRegions.length - 1);
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:260px;display:block">`;
+
+  // Bezier hebras (1 por conexión narrativa→región)
+  for (const [i, nav] of items.entries()) {
+    const [cx, cy] = coords[i];
+    const hex = _clusterHex(nav.cluster_name);
+    for (const region of (nav.unique_regions ?? []).slice(0, 4)) {
+      const ri = allRegions.indexOf(region);
+      if (ri < 0) continue;
+      const ry = regionY(ri);
+      const mx = (cx + regionX) / 2;
+      svg += `<path d="M${cx},${cy} C${mx},${cy} ${mx},${ry} ${regionX},${ry}" fill="none" stroke="${hex}" stroke-width="1.2" opacity="0.3"/>`;
+    }
+  }
+
+  // Nodos de región
+  for (const [i, region] of allRegions.entries()) {
+    const ry = regionY(i);
+    svg += `<circle cx="${regionX}" cy="${ry}" r="3.5" fill="var(--text3)"/>`;
+    svg += `<text x="${regionX + 9}" y="${ry + 4}" font-size="11" fill="var(--text2)" font-family="var(--font)">${_esc(region)}</text>`;
+  }
+
+  // Burbujas
+  for (const [i, nav] of items.entries()) {
+    const [cx, cy] = coords[i];
+    const r   = getR(nav.importance_score);
+    const hex = _clusterHex(nav.cluster_name);
+    const isSel = nav.cluster_name === _selectedTema;
+    svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${hex}" fill-opacity="${isSel ? 0.25 : 0.14}" stroke="${hex}" stroke-width="${isSel ? 2.5 : 1.8}" style="cursor:pointer" onclick="_selectTema('${_esc(nav.cluster_name ?? '')}')"/>`;
+
+    const words  = (nav.cluster_name ?? '').split(' ');
+    const half   = Math.ceil(words.length / 2);
+    const line1  = words.slice(0, half).join(' ');
+    const line2  = words.slice(half).join(' ');
+    const yOff   = line2 ? -7 : 0;
+    svg += `<text x="${cx}" y="${cy + yOff}" text-anchor="middle" font-size="10" font-weight="500" fill="${hex}" font-family="var(--font)" style="pointer-events:none">${_esc(line1)}</text>`;
+    if (line2) svg += `<text x="${cx}" y="${cy + yOff + 13}" text-anchor="middle" font-size="10" font-weight="500" fill="${hex}" font-family="var(--font)" style="pointer-events:none">${_esc(line2)}</text>`;
+  }
+
+  svg += '</svg>';
+  el.innerHTML = svg;
+}
+
+function _selectTema(clusterName) {
+  _selectedTema = clusterName;
+  if (_summary?.narrativas) _renderTemasBubble(_summary.narrativas);
+
+  const panel = document.getElementById('temas-rationale-panel');
+  if (!panel) return;
+
+  const nav = (_summary?.narrativas ?? []).find(n => n.cluster_name === clusterName);
+  if (!nav) { panel.style.display = 'none'; return; }
+
+  const hex      = _clusterHex(clusterName);
+  const arcCount = nav.arc_count ?? '';
+  const urg      = nav.urgency_label ?? nav.urgency ?? '';
+  const rationale = nav.rationale ?? '—';
+
+  panel.style.display        = 'block';
+  panel.style.borderLeftColor = hex;
+  panel.style.borderLeftWidth = '3px';
+  panel.innerHTML =
+    `<div style="font-size:14px;font-weight:600;color:${hex};margin-bottom:10px">${_esc(clusterName)}</div>` +
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">` +
+    (arcCount ? `<span style="font-size:11px;padding:2px 10px;border-radius:20px;border:1.5px solid ${hex};color:${hex}">${arcCount} historias</span>` : '') +
+    (urg      ? `<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:var(--surface2);color:var(--text2)">${_esc(urg)}</span>` : '') +
+    `</div>` +
+    `<div style="font-size:13px;color:var(--text2);line-height:1.6">${_esc(rationale)}</div>`;
+}
+
+function _initTrendChart() {
+  const canvas = document.getElementById('temas-trend');
+  if (!canvas) return;
+  if (_trendChart) { _trendChart.destroy(); _trendChart = null; }
+  _trendChart = new Chart(canvas, {
+    type: 'line',
+    data: { labels: [], datasets: [] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}` } }
+      },
+      scales: {
+        y: { display: false },
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { color: tickColor(), font: { size: 10 }, maxRotation: 0, maxTicksLimit: 6 }
+        }
+      }
+    }
+  });
+}
+
+function _updateTemasTrend(narrativas) {
+  if (!_trendChart) _initTrendChart();
+  if (!_trendChart || !narrativas?.length) return;
+
+  const allDates = [...new Set(
+    narrativas.flatMap(n => (n.series ?? []).map(p => p.date))
+  )].sort();
+
+  if (!allDates.length) return;
+
+  const datasets = narrativas.slice(0, 4).map(n => {
+    const hex = _clusterHex(n.cluster_name);
+    const byDate = Object.fromEntries((n.series ?? []).map(p => [p.date, p.score]));
+    return {
+      label:           n.cluster_name ?? '—',
+      data:            allDates.map(d => byDate[d] ?? null),
+      borderColor:     hex,
+      backgroundColor: 'transparent',
+      fill:            false,
+      tension:         0.4,
+      borderWidth:     2,
+      pointRadius:     0,
+      spanGaps:        false,
+    };
+  });
+
+  _trendChart.data.labels   = allDates.map(d => d.slice(5));
+  _trendChart.data.datasets = datasets;
+  _trendChart.options.scales.x.ticks.color = tickColor();
+  _trendChart.update();
+}
+
 async function _loadSummary() {
   try {
     const summary = await _apiFetch('/my/summary');
     _summary = summary;
-    _updateResumenFromSummary(summary);
+    _updateTemasFromSummary(summary);
   } catch (err) {
     console.warn('[Qontexto] summary fallido:', err.message);
   }
 }
 
-function _updateResumenFromSummary(summary) {
+function _updateTemasFromSummary(summary) {
   // F2a — Topbar
   if (summary.topbar) {
     const tb = summary.topbar;
@@ -1132,12 +1294,22 @@ function _updateResumenFromSummary(summary) {
   const verdCard = document.getElementById('veredicto-card');
   if (verdEl) verdEl.textContent = summary.veredicto || '—';
   if (verdCard && summary.narrativas?.length) {
-    const top = summary.narrativas[0];
-    const clr = URGENCY[_scoreToUrgency(top?.score_normalized ?? 0)]?.color ?? '#4CAF50';
-    verdCard.style.borderLeftColor = clr;
+    verdCard.style.borderLeftColor = _clusterHex(summary.narrativas[0]?.cluster_name);
     verdCard.style.borderLeftWidth = '3px';
   }
 
+  // Bubble + trend
+  if (summary.narrativas?.length) {
+    _renderTemasBubble(summary.narrativas);
+    _updateTemasTrend(summary.narrativas);
+  }
+
+  // Trend label por selección activa
+  const trendLabel = document.getElementById('temas-trend-label');
+  if (trendLabel && _selectedTema) {
+    const nav = (summary.narrativas ?? []).find(n => n.cluster_name === _selectedTema);
+    if (nav?.trend_label) trendLabel.textContent = nav.trend_label;
+  }
 }
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
