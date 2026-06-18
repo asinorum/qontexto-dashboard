@@ -1,25 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300..700&display=swap');
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:      #EFEDE6;
-  --surface: #FAFAF7;
-  --surface2:#EDEAE2;
-  --border:  rgba(0,0,0,0.07);
-  --text1:   #1C1C1A;
-  --text2:   #5C5A52;
-  --text3:   #9C9A90;
-  --font:    'Google Sans Flex', sans-serif;
+  --bg:      rgb(var(--mdui-color-surface-container-lowest));
+  --surface: rgb(var(--mdui-color-surface-container));
+  --surface2:rgb(var(--mdui-color-surface-container-high));
+  --border:  rgb(var(--mdui-color-outline-variant));
+  --text1:   rgb(var(--mdui-color-on-surface));
+  --text2:   rgb(var(--mdui-color-on-surface-variant));
+  --text3:   rgb(var(--mdui-color-on-surface-variant) / 0.6);
+  --font:    'Google Sans Flex', var(--mdui-typescale-body-medium-font);
   --mono:    'JetBrains Mono', ui-monospace, monospace;
+
+  --q-cluster-1:    #993C1D;
+  --q-cluster-2:    #534AB7;
+  --q-cluster-3:    #0F6E56;
+  --q-cluster-4:    #854F0B;
+  --q-cluster-none: #5F5E5A;
+
+  --q-urgency-critical: #991B1B;
+  --q-urgency-high:     #EF4444;
+  --q-urgency-medium:   #F59E0B;
+  --q-urgency-low:      #4CAF50;
 }
 
-[data-theme="dark"] {
-  --bg:      #111110;
-  --surface: #1C1C1A;
-  --surface2:#252522;
-  --border:  rgba(255,255,255,0.07);
-  --text1:   #EEECEA;
-  --text2:   #9A9890;
-  --text3:   #5A5852;
+[mdui-theme="dark"] {
+  --q-cluster-1:    #C4583A;
+  --q-cluster-2:    #7B72D4;
+  --q-cluster-3:    #1A9A78;
+  --q-cluster-4:    #B87A1A;
+  --q-cluster-none: #8A8880;
 }

@@ -1,3 +1,5 @@
+mdui.setColorScheme('#C4522A');
+
 let isDark = false;
 let sparkRef;
 
@@ -5,8 +7,12 @@ let sparkRef;
 let _sessionList  = [];
 let _sessionIndex = 0;
 
-function surfaceColor() { return isDark ? '#1C1C1A' : '#FAFAF7'; }
-function tickColor()    { return isDark ? 'rgba(154,152,144,0.45)' : 'rgba(90,88,80,0.4)'; }
+function surfaceColor() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+}
+function tickColor() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--text3').trim();
+}
 
 function initCharts() {
   if (sparkRef) sparkRef.destroy();
@@ -39,7 +45,7 @@ function initCharts() {
 
 function toggleTheme() {
   isDark = !isDark;
-  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('mdui-theme', isDark ? 'dark' : 'light');
   document.getElementById('ico-sun').style.display  = isDark ? 'none'  : 'block';
   document.getElementById('ico-moon').style.display = isDark ? 'block' : 'none';
   if (sparkRef) { sparkRef.options.scales.x.ticks.color = tickColor(); sparkRef.update(); }

@@ -19,7 +19,7 @@ Etapas completadas: análisis ✅ · planificación ✅ · implementación ⏳
 
 ### Tareas en orden
 
-**Tarea 1 — MDUI** · `index.html` · `css/tokens.css` · `js/app.js`
+**✅ Tarea 1 — MDUI** · `index.html` · `css/tokens.css` · `js/app.js`
 - `index.html`: añadir `mdui.css` + `mdui.global.js` en `<head>` en orden correcto (mdui.css → tokens.css → app.css → mdui.global.js → api.js → app.js)
 - `tokens.css`: reescritura completa — bridge MDUI + `--q-cluster-*` vars + `[mdui-theme="dark"]` · eliminar valores hardcodeados y `[data-theme="dark"]`
 - `app.js`: `mdui.setColorScheme('#C4522A')` al inicio · `surfaceColor()`/`tickColor()` → `getComputedStyle` · `toggleTheme` → `mdui-theme`
