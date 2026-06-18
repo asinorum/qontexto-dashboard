@@ -158,28 +158,43 @@ function _renderTimeline(state, alerts, streams) {
     );
   }
 
+  // Leyenda de temas
+  const leyendaEl = document.getElementById('menciones-leyenda');
+  if (leyendaEl) {
+    const themes = [...new Set(sorted.map(ev => ev.alert?.cluster_name).filter(Boolean))];
+    leyendaEl.innerHTML = themes.map(name => {
+      const hex = _clusterHex(name);
+      return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)">` +
+             `<span style="width:7px;height:7px;border-radius:50%;background:${hex};flex-shrink:0"></span>${_esc(name)}</span>`;
+    }).join('');
+  }
+
   for (const ev of sorted) {
-    const sev      = ev.alert?.severity ?? 'low';
-    const color    = _SEV_COLOR[sev] ?? 'var(--text3)';
-    const isUrgent = sev === 'critical' || sev === 'high';
-    const time     = limaTime(new Date(ev.timestamp));
-    const summary  = _esc(ev.alert?.summary ?? '');
-    const sub      = [ev.radio_id, ev.region].filter(Boolean).map(_esc).join(' · ');
-    const quote = ev.alert?.quote ? _esc(ev.alert.quote) : '';
+    const sev        = ev.alert?.severity ?? 'low';
+    const sevColor   = _SEV_COLOR[sev] ?? 'var(--text3)';
+    const clusterHex = _clusterHex(ev.alert?.cluster_name);
+    const isUrgent   = sev === 'critical' || sev === 'high';
+    const time       = limaTime(new Date(ev.timestamp));
+    const summary    = _esc(ev.alert?.summary ?? '');
+    const sub        = [ev.radio_id, ev.region].filter(Boolean).map(_esc).join(' · ');
+    const quote      = ev.alert?.quote ? _esc(ev.alert.quote) : '';
+    const urgLabel   = { critical: 'Alerta máxima', high: 'Señal temprana', medium: 'Emergiendo', low: 'Estable' }[sev] ?? sev;
 
     const wrap  = isUrgent
       ? `style="background:rgba(153,27,27,0.05);border-radius:12px;padding:10px;margin:0 -4px"`
       : '';
-    const tSty  = isUrgent ? ` style="color:${color};font-weight:500"` : '';
-    const hdSty = isUrgent ? ` style="color:${color}"` : '';
+    const tSty  = isUrgent ? ` style="color:${sevColor};font-weight:500"` : '';
+    const hdSty = isUrgent ? ` style="color:${sevColor}"` : '';
+
+    const urgChip = `<span style="font-size:10px;background:var(--surface2);color:var(--text2);border-radius:4px;padding:1px 6px;margin-left:4px">${urgLabel}</span>`;
 
     rows.push(
       `<div class="qtevent" ${wrap}><div class="qtl-left">` +
       `<div class="qtl-time"${tSty}>${time}</div>` +
-      `<div class="qtl-dot" style="background:${color}"></div><div class="qtl-line"></div></div>` +
+      `<div class="qtl-dot" style="background:${clusterHex}"></div><div class="qtl-line"></div></div>` +
       `<div><div class="qtl-title"${hdSty}>${summary}</div>` +
-      (sub   ? `<div class="qtl-sub">${sub}</div>` : '') +
-      (quote ? `<div class="qtl-quote">"${quote}"</div>` : '') +
+      (sub   ? `<div class="qtl-sub">${sub}${urgChip}</div>` : `<div class="qtl-sub">${urgChip}</div>`) +
+      (quote ? `<div class="qtl-quote" style="color:${clusterHex}">"${quote}"</div>` : '') +
       `</div></div>`
     );
   }
@@ -241,16 +256,22 @@ function _renderStreams(streams, alerts) {
   const el = document.getElementById('senales-streams');
   if (!el || !streams.length) return;
 
-  const alertCount = {};
-  const maxSev     = {};
+  const alertCount  = {};
+  const maxSev      = {};
+  const streamThemes = {};
 
   for (const ev of alerts) {
-    const sid = ev.stream_id;
+    const sid     = ev.stream_id;
+    const cluster = ev.alert?.cluster_name;
     if (!sid) continue;
     alertCount[sid] = (alertCount[sid] ?? 0) + 1;
     const sev = ev.alert?.severity ?? 'low';
     if (!maxSev[sid] || _SEV_ORDER.indexOf(sev) < _SEV_ORDER.indexOf(maxSev[sid])) {
       maxSev[sid] = sev;
+    }
+    if (cluster) {
+      if (!streamThemes[sid]) streamThemes[sid] = {};
+      streamThemes[sid][cluster] = (streamThemes[sid][cluster] ?? 0) + 1;
     }
   }
 
@@ -262,17 +283,24 @@ function _renderStreams(streams, alerts) {
     const status = _streamStatus(maxSev[sid]);
     const urgent = maxSev[sid] === 'critical' || maxSev[sid] === 'high';
     const border = urgent ? ` style="border-color:${_hexToRgba(status.color, 0.2)}"` : '';
-    const cntSty = cnt > 0 ? ` style="color:${status.color}"` : '';
+
+    const themes = Object.entries(streamThemes[sid] ?? {})
+      .sort((a, b) => b[1] - a[1])
+      .map(([cluster, n]) => {
+        const hex = _clusterHex(cluster);
+        return `<div style="display:flex;align-items:center;gap:6px;font-size:11px;margin-top:4px">` +
+          `<span style="width:7px;height:7px;border-radius:50%;background:${hex};flex-shrink:0"></span>` +
+          `<span style="color:var(--text2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_esc(cluster)}</span>` +
+          `<span style="color:var(--text3);flex-shrink:0">${n}</span></div>`;
+      }).join('');
 
     return `<div class="qstream"${border}>` +
       `<div class="qstream-name">` +
       `<div style="width:8px;height:8px;border-radius:50%;background:${status.color};flex-shrink:0"></div>` +
       `${name}</div>` +
-      `<div class="qstream-region">${region}</div>` +
-      `<div class="qstream-row"><span class="qstream-key">Menciones</span>` +
-      `<span class="qstream-val"${cntSty}>${cnt}</span></div>` +
-      `<div class="qstream-row"><span class="qstream-key">Estado</span>` +
-      `<span class="qstream-val" style="color:${status.color}">${status.label}</span></div>` +
+      `<div class="qstream-region" style="margin-bottom:4px">${region}</div>` +
+      `<div style="font-size:11px;color:var(--text3);margin-bottom:4px">${cnt} mención${cnt !== 1 ? 'es' : ''} · ${status.label}</div>` +
+      (themes || `<div style="font-size:11px;color:var(--text3)">Sin menciones</div>`) +
       `</div>`;
   }).join('');
 }

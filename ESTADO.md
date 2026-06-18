@@ -50,11 +50,11 @@ Etapas completadas: análisis ✅ · planificación ✅ · implementación ⏳
 - ✅ `api.js`: `_updateTemasFromSummary` · `_renderTemasBubble()` · `_selectTema()` · `_initTrendChart()` · `_updateTemasTrend()`
 - ✅ `app.js`: eliminar `sparkRef` + `initCharts` existente → delegar a `_initTrendChart`
 
-**Tarea 7 — Tab Menciones** · `js/api.js` · `index.html` · `css/app.css`
-- `_renderTimeline`: dot → `_clusterHex(ev.alert?.cluster_name)` · cita → color de tema · chip urgencia neutro · leyenda en `#menciones-leyenda`
-- `_renderStreams`: cada card muestra temas con dot de color + conteo de menciones
-- `index.html`: añadir `<div id="menciones-leyenda">` en header del card timeline
-- `app.css`: eliminar `color: #991B1B` de `.qtl-quote`
+**✅ Tarea 7 — Tab Menciones** · `js/api.js` · `index.html` · `css/app.css`
+- ✅ `_renderTimeline`: dot → `_clusterHex(ev.alert?.cluster_name)` · cita → color de tema · chip urgencia neutro · leyenda en `#menciones-leyenda`
+- ✅ `_renderStreams`: cada card muestra temas con dot de color + conteo de menciones
+- ✅ `index.html`: añadir `<div id="menciones-leyenda">` en header del card timeline
+- ✅ `app.css`: eliminar `color: #991B1B` de `.qtl-quote`
 
 ### Dependencias críticas
 - Tarea 5 antes de Tarea 6 (color map lo usa el bubble chart)
