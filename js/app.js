@@ -54,18 +54,18 @@ function toggleTheme() {
 function switchTab(tab, el) {
   document.querySelectorAll('.qtab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('tab-resumen').style.display  = tab === 'resumen'  ? 'block' : 'none';
-  document.getElementById('tab-contexto').style.display = tab === 'contexto' ? 'block' : 'none';
-  document.getElementById('tab-senales').style.display  = tab === 'senales'  ? 'block' : 'none';
-  document.getElementById('tab-contrato').style.display = tab === 'contrato' ? 'block' : 'none';
-  if (tab === 'resumen') {
+  document.getElementById('tab-temas').style.display     = tab === 'temas'     ? 'block' : 'none';
+  document.getElementById('tab-historias').style.display = tab === 'historias' ? 'block' : 'none';
+  document.getElementById('tab-menciones').style.display = tab === 'menciones' ? 'block' : 'none';
+  document.getElementById('tab-contrato').style.display  = tab === 'contrato'  ? 'block' : 'none';
+  if (tab === 'temas') {
     if (typeof _loadSummary === 'function') _loadSummary();
   }
-  if (tab === 'contexto') {
+  if (tab === 'historias') {
     if (typeof _loadClusterNames === 'function') _loadClusterNames();
     if (typeof _loadNarrativeArcs === 'function') _loadNarrativeArcs();
   }
-  if (tab === 'senales' && !_sessionIsLive) {
+  if (tab === 'menciones' && !_sessionIsLive) {
     if (typeof _loadSessionList === 'function' && !_sessionList.length) _loadSessionList();
   }
 }

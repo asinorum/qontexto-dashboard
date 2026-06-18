@@ -24,10 +24,10 @@ Etapas completadas: análisis ✅ · planificación ✅ · implementación ⏳
 - `tokens.css`: reescritura completa — bridge MDUI + `--q-cluster-*` vars + `[mdui-theme="dark"]` · eliminar valores hardcodeados y `[data-theme="dark"]`
 - `app.js`: `mdui.setColorScheme('#C4522A')` al inicio · `surfaceColor()`/`tickColor()` → `getComputedStyle` · `toggleTheme` → `mdui-theme`
 
-**Tarea 2 — Tabs + vocabulario** · `index.html` · `js/app.js` · `js/api.js`
-- Tab nav: labels + onclick + IDs de divs (`tab-resumen/contexto/senales` → `tab-temas/historias/menciones`)
-- `switchTab()`: referencias internas
-- Strings en `api.js` e `index.html`: "alertas"→"menciones", "arcos"→"historias", "cluster"→"tema", "Emisoras del contrato"→"Radios monitoreadas"
+**✅ Tarea 2 — Tabs + vocabulario** · `index.html` · `js/app.js` · `js/api.js`
+- ✅ Tab nav: labels + onclick + IDs de divs (`tab-resumen/contexto/senales` → `tab-temas/historias/menciones`)
+- ✅ `switchTab()`: referencias internas
+- ✅ Strings en `api.js` e `index.html`: "alertas"→"menciones", "arcos"→"historias", "cluster"→"tema", "Emisoras del contrato"→"Radios monitoreadas"
 
 **Tarea 3 — Limpieza de código muerto** · `js/api.js`
 - Eliminar 21 funciones y constantes listadas en §8.1 del doc de diseño

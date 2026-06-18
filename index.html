@@ -24,9 +24,9 @@
   <nav class="qnav">
     <div class="qlogo"><div class="qlogo-dot"></div>Qontexto</div>
     <div class="qtabs">
-      <button class="qtab active" onclick="switchTab('resumen',this)">Resumen</button>
-      <button class="qtab" onclick="switchTab('contexto',this)">Contexto</button>
-      <button class="qtab" onclick="switchTab('senales',this)">Señales</button>
+      <button class="qtab active" onclick="switchTab('temas',this)">Temas</button>
+      <button class="qtab" onclick="switchTab('historias',this)">Historias</button>
+      <button class="qtab" onclick="switchTab('menciones',this)">Menciones</button>
       <button class="qtab" onclick="switchTab('contrato',this)">Contrato</button>
     </div>
     <div class="qnav-right">
@@ -63,7 +63,7 @@
   </div>
 
   <!-- Tab: Resumen -->
-  <div id="tab-resumen" class="qcontent">
+  <div id="tab-temas" class="qcontent">
 
     <!-- Topbar comprimido -->
     <div class="qtopbar">
@@ -140,7 +140,7 @@
   </div>
 
   <!-- Tab: Contexto -->
-  <div id="tab-contexto" class="qcontent" style="display:none">
+  <div id="tab-historias" class="qcontent" style="display:none">
     <div class="qcard">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div class="qcard-lbl">Arcos narrativos</div>
@@ -222,7 +222,7 @@
   </div>
 
   <!-- Tab: Señales -->
-  <div id="tab-senales" class="qcontent" style="display:none">
+  <div id="tab-menciones" class="qcontent" style="display:none">
 
     <!-- D6: Navegador de sesiones -->
     <div id="session-nav" style="display:none;align-items:center;gap:8px;background:var(--surface2);
@@ -307,7 +307,7 @@
         <div id="contrato-keywords"></div>
       </div>
       <div class="qcard">
-        <div class="qcard-lbl" style="margin-bottom:12px">Emisoras del contrato</div>
+        <div class="qcard-lbl" style="margin-bottom:12px">Radios monitoreadas</div>
         <div id="contrato-emisoras"></div>
       </div>
     </div>

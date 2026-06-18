@@ -507,7 +507,7 @@ function _renderAnalisis(state, snap, alerts) {
 
   if (!snap) {
     el.innerHTML = n > 0
-      ? `<p>${n} alerta${n !== 1 ? 's' : ''} registrada${n !== 1 ? 's' : ''}. Análisis disponible con el próximo ciclo.</p>`
+      ? `<p>${n} mención${n !== 1 ? 'es' : ''} registrada${n !== 1 ? 's' : ''}. Análisis disponible con el próximo ciclo.</p>`
       : '';
     return;
   }
@@ -573,7 +573,7 @@ function _renderStreams(streams, alerts) {
       `<div style="width:8px;height:8px;border-radius:50%;background:${status.color};flex-shrink:0"></div>` +
       `${name}</div>` +
       `<div class="qstream-region">${region}</div>` +
-      `<div class="qstream-row"><span class="qstream-key">Alertas</span>` +
+      `<div class="qstream-row"><span class="qstream-key">Menciones</span>` +
       `<span class="qstream-val"${cntSty}>${cnt}</span></div>` +
       `<div class="qstream-row"><span class="qstream-key">Estado</span>` +
       `<span class="qstream-val" style="color:${status.color}">${status.label}</span></div>` +
@@ -773,7 +773,7 @@ function _renderSessionNav() {
     liveTag +
     `<span style="font-weight:500;color:var(--text1)">${_esc(dateLabel)}</span>` +
     `<span>· ${t0}–${t1} ·</span>` +
-    `<span style="color:${s.alerts_total > 0 ? '#F59E0B' : 'var(--text3)'}">${s.alerts_total} alertas</span>` +
+    `<span style="color:${s.alerts_total > 0 ? '#F59E0B' : 'var(--text3)'}">${s.alerts_total} menciones</span>` +
     `</span>` +
     `<button style="${btnSty}${nextOk ? '' : ';' + disabledSty}" onclick="nextSession()">›</button>`;
 
@@ -995,7 +995,7 @@ async function _loadNarrativeArcs(page = 1) {
     _updatePaginationControls();
   } catch (err) {
     const el = document.getElementById('narrative-arcs-list');
-    if (el) el.innerHTML = '<div class="qarcs-error"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Error al cargar arcos. Intenta nuevamente.</div>';
+    if (el) el.innerHTML = '<div class="qarcs-error"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Error al cargar historias. Intenta nuevamente.</div>';
     console.warn('[Qontexto] narrative-arcs fallido:', err.message);
   }
 }
@@ -1031,12 +1031,12 @@ function _showArcsEmptyState() {
     _advancedFilters.urgency;
 
   const message = hasActiveFilters
-    ? 'Sin arcos con estos filtros'
-    : 'No hay arcos narrativos registrados aún';
+    ? 'Sin historias con estos filtros'
+    : 'No hay historias registradas aún';
 
   const suggestion = hasActiveFilters
     ? 'Intenta ampliar los criterios de búsqueda o <button onclick="resetAllFilters()" style="background:none;border:none;color:var(--text2);text-decoration:underline;cursor:pointer;font-family:var(--font)">limpiar filtros</button>.'
-    : 'Los arcos aparecerán conforme el sistema detecte patrones narrativos.';
+    : 'Las historias aparecerán conforme el sistema detecte patrones narrativos.';
 
   el.innerHTML =
     '<div class="qarcs-empty">' +
@@ -1060,9 +1060,9 @@ function _updatePaginationControls() {
   const endIdx = Math.min(_currentPage * _pageSize, _totalArcs);
 
   if (_totalArcs > 0) {
-    indicator.textContent = `Mostrando ${startIdx}-${endIdx} de ${_totalArcs} arcos`;
+    indicator.textContent = `Mostrando ${startIdx}-${endIdx} de ${_totalArcs} historias`;
   } else {
-    indicator.textContent = 'Sin arcos para mostrar';
+    indicator.textContent = 'Sin historias para mostrar';
   }
 
   // Controles de navegación
@@ -1246,7 +1246,7 @@ function _updateActiveFilters() {
     const shortName = _advancedFilters.cluster.length > 20
       ? _advancedFilters.cluster.substring(0, 20) + '...'
       : _advancedFilters.cluster;
-    activeChips.push(`<span class="qactive-chip">Cluster: ${shortName}</span>`);
+    activeChips.push(`<span class="qactive-chip">Tema: ${shortName}</span>`);
   }
 
   if (_advancedFilters.urgency) {
@@ -1285,7 +1285,7 @@ function _renderNarrativeArcs(arcs) {
   const el = document.getElementById('narrative-arcs-list');
   if (!el) return;
   if (!arcs?.length) {
-    el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">Sin arcos para el filtro seleccionado.</div>';
+    el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">Sin historias para el filtro seleccionado.</div>';
     return;
   }
   el.innerHTML = arcs.map(arc => {
