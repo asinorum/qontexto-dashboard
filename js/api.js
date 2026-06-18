@@ -696,7 +696,27 @@ let _advancedFilters = {
   cluster: '',
   urgency: ''
 };
-let _clusterNames = []; // Dinámico desde API
+let _clusterNames    = [];
+let _clusterColorMap = {};
+let _clusterHexMap   = {};
+
+function _buildClusterColorMap() {
+  const style    = getComputedStyle(document.documentElement);
+  const varNames = ['--q-cluster-1', '--q-cluster-2', '--q-cluster-3', '--q-cluster-4'];
+  _clusterColorMap = {};
+  _clusterHexMap   = {};
+  _clusterNames.forEach((name, i) => {
+    const varN             = i < 4 ? varNames[i] : '--q-cluster-none';
+    _clusterColorMap[name] = `var(${varN})`;
+    _clusterHexMap[name]   = style.getPropertyValue(varN).trim();
+  });
+  if (_allArcs.length > 0) _renderNarrativeArcs(_allArcs);
+}
+
+function _clusterHex(clusterName) {
+  if (_clusterHexMap[clusterName]) return _clusterHexMap[clusterName];
+  return getComputedStyle(document.documentElement).getPropertyValue('--q-cluster-none').trim();
+}
 
 function toggleAdvancedFilters() {
   const container = document.getElementById('advanced-filters');
@@ -731,11 +751,32 @@ function updateDateFilter() {
   _updateActiveFilters();
 }
 
-function updateClusterFilter() {
-  _advancedFilters.cluster = document.getElementById('cluster-select').value;
+function updateTemaFilter(value) {
+  _advancedFilters.cluster = value ?? '';
+  _closeTemaDropdown();
+  const btn = document.getElementById('tema-btn');
+  if (btn) {
+    const label = value
+      ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${_clusterHex(value)};margin-right:6px;vertical-align:middle"></span>${_esc(value)}`
+      : 'Todos los temas';
+    btn.innerHTML = label + ' <span style="float:right;color:var(--text3)">▾</span>';
+  }
+  document.querySelectorAll('.qdd-opt').forEach(o => {
+    o.classList.toggle('sel', o.dataset.value === (value ?? ''));
+  });
   _currentPage = 1;
   _loadNarrativeArcs(_currentPage);
   _updateActiveFilters();
+}
+
+function _closeTemaDropdown() {
+  const menu = document.getElementById('tema-menu');
+  if (menu) menu.classList.remove('open');
+}
+
+function toggleTemaDropdown() {
+  const menu = document.getElementById('tema-menu');
+  if (menu) menu.classList.toggle('open');
 }
 
 function updateUrgencyFilter() {
@@ -746,20 +787,21 @@ function updateUrgencyFilter() {
 }
 
 function resetAllFilters() {
-  // Reset estado
   _arcStatusFilter = null;
   _advancedFilters = { dateFrom: '', dateTo: '', cluster: '', urgency: '' };
 
-  // Reset UI
-  document.getElementById('date-from').value = '';
-  document.getElementById('date-to').value = '';
-  document.getElementById('cluster-select').value = '';
+  document.getElementById('date-from').value  = '';
+  document.getElementById('date-to').value    = '';
   document.getElementById('urgency-select').value = '';
 
-  document.querySelectorAll('#status-chips .qchip').forEach(c => c.classList.remove('active'));
-  document.querySelector('#status-chips .qchip[data-status=""]').classList.add('active');
+  const btn = document.getElementById('tema-btn');
+  if (btn) btn.innerHTML = 'Todos los temas <span style="float:right;color:var(--text3)">▾</span>';
+  document.querySelectorAll('.qdd-opt').forEach(o => o.classList.toggle('sel', o.dataset.value === ''));
+  _closeTemaDropdown();
 
-  // Recargar
+  document.querySelectorAll('#status-chips .qchip').forEach(c => c.classList.remove('active'));
+  document.querySelector('#status-chips .qchip[data-status=""]')?.classList.add('active');
+
   _currentPage = 1;
   _loadNarrativeArcs(_currentPage);
   _updateActiveFilters();
@@ -770,43 +812,33 @@ async function _loadClusterNames() {
   try {
     const contractQs = _contractId ? `?contract_id=${_contractId}` : '';
     _clusterNames = await _apiFetch(`/my/cluster-names${contractQs}`);
-    _updateClusterDropdown();
   } catch (err) {
     console.warn('[Qontexto] cluster-names fallido:', err.message);
-    // Fallback: mantener dropdown vacío
     _clusterNames = [];
-    _updateClusterDropdown();
   }
+  _updateTemaDropdown();
 }
 
-function _updateClusterDropdown() {
-  const select = document.getElementById('cluster-select');
-  if (!select) return;
+function _updateTemaDropdown() {
+  const menu = document.getElementById('tema-menu');
+  if (!menu) return;
 
-  const options = ['<option value="">Todos los clusters</option>'];
-
-  if (_clusterNames.length > 0) {
-    // API dinámicas disponibles
-    for (const cluster of _clusterNames) {
-      const escaped = _esc(cluster);
-      options.push(`<option value="${escaped}">${escaped}</option>`);
-    }
-  } else {
-    // Fallback: valores temporales hasta que backend implemente /my/cluster-names
-    const fallbackClusters = [
-      'Narrativa de fraude electoral',
-      'Narrativa tarifaria',
-      'Narrativa de protesta social',
-      'Narrativa minera',
-      'Narrativa ambiental'
-    ];
-    for (const cluster of fallbackClusters) {
-      options.push(`<option value="${cluster}">${cluster}</option>`);
-    }
+  const items = [`<div class="qdd-opt sel" data-value="" onclick="updateTemaFilter('')">Todos los temas</div>`];
+  for (const name of _clusterNames) {
+    const hex = _clusterHex(name);
+    items.push(
+      `<div class="qdd-opt" data-value="${_esc(name)}" onclick="updateTemaFilter('${_esc(name)}')">` +
+      `<span style="width:8px;height:8px;border-radius:50%;background:${hex};flex-shrink:0"></span>` +
+      `${_esc(name)}</div>`
+    );
   }
-
-  select.innerHTML = options.join('');
+  menu.innerHTML = items.join('');
+  _buildClusterColorMap();
 }
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.qdd-wrap')) _closeTemaDropdown();
+});
 
 function _updateActiveFilters() {
   const container = document.getElementById('active-filters');
@@ -847,7 +879,7 @@ function _updateActiveFilters() {
   }
 }
 
-function _drawSparkline(history) {
+function _drawSparkline(history, clusterHex) {
   if (!history?.length) return '<svg width="120" height="30"></svg>';
   const scores = history.map(h => h.score);
   const min = Math.min(...scores);
@@ -857,8 +889,7 @@ function _drawSparkline(history) {
   const xs = scores.map((_, i) => pad + (i / Math.max(scores.length - 1, 1)) * (W - pad * 2));
   const ys = scores.map(s => H - pad - ((s - min) / range) * (H - pad * 2));
   const pts = xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
-  const last = scores[scores.length - 1];
-  const color = last >= 0.7 ? '#EF4444' : last >= 0.5 ? '#F59E0B' : '#4CAF50';
+  const color = clusterHex || '#4CAF50';
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">` +
     `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>` +
     `<circle cx="${xs[xs.length-1].toFixed(1)}" cy="${ys[ys.length-1].toFixed(1)}" r="2.5" fill="${color}"/>` +
@@ -873,31 +904,29 @@ function _renderNarrativeArcs(arcs) {
     return;
   }
   el.innerHTML = arcs.map(arc => {
-    const score   = _arcScore(arc);
-    const isEsc   = arc.trend === 'escalating' || score >= 0.65;
-    const cfg     = isEsc ? _ARC_STATUS.escalating : (_ARC_STATUS[arc.status] ?? _ARC_STATUS.active);
-    const trend   = _ARC_TREND[arc.trend] ?? arc.trend;
-    const cluster = _formatClusterData(arc);
-    const kws     = (arc.keywords ?? []).slice(0, 5).map(k => `<span style="font-size:10px;background:var(--surface2);border-radius:4px;padding:1px 6px;color:var(--text2)">${_esc(k)}</span>`).join('');
-    const spark   = _drawSparkline(arc.intensity_history ?? []);
-    const last    = arc.last_seen ? new Date(arc.last_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
-    const first   = arc.first_seen ? new Date(arc.first_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
-    const pts     = (arc.intensity_history ?? []).length;
+    const clusterHex = _clusterHex(arc.cluster_name);
+    const cfg        = _ARC_STATUS[arc.status] ?? _ARC_STATUS.active;
+    const trendLabel = _ARC_TREND[arc.trend] ?? arc.trend;
+    const kws        = (arc.keywords ?? []).slice(0, 5).map(k => `<span style="font-size:10px;background:var(--surface2);border-radius:4px;padding:1px 6px;color:var(--text2)">${_esc(k)}</span>`).join('');
+    const spark      = _drawSparkline(arc.intensity_history ?? [], clusterHex);
+    const last       = arc.last_seen ? new Date(arc.last_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
+    const first      = arc.first_seen ? new Date(arc.first_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
+    const pts        = (arc.intensity_history ?? []).length;
 
-    // Línea de cluster semántico (si hay datos)
-    const clusterLine = cluster.hasData
+    const clusterLine = arc.cluster_name
       ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-           ${cluster.nameSpan}${cluster.urgencyChip}
+           <span style="font-size:11px;font-weight:500;color:${clusterHex}">${_esc(arc.cluster_name)}</span>
+           ${arc.urgency ? `<span style="font-size:10px;background:var(--surface2);color:var(--text2);border-radius:5px;padding:1px 7px">${arc.urgency}</span>` : ''}
          </div>`
       : '';
 
-    return `<div onclick="_toggleArcDetail('${_esc(arc.arc_id)}')" style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:.5px solid var(--border);cursor:pointer" data-arc-id="${_esc(arc.arc_id)}">
-      <div style="width:8px;height:8px;border-radius:50%;background:${cfg.dot};flex-shrink:0"></div>
+    return `<div onclick="_toggleArcDetail('${_esc(arc.arc_id)}')" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;padding-left:12px;border-bottom:.5px solid var(--border);border-left:3px solid ${clusterHex};cursor:pointer" data-arc-id="${_esc(arc.arc_id)}">
+      <div style="width:8px;height:8px;border-radius:50%;background:${clusterHex};flex-shrink:0;margin-top:4px"></div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
           <span style="font-size:13px;font-weight:500;color:var(--text1)">${_esc(arc.topic || '—')}</span>
-          <span style="font-size:10px;background:${cfg.bg};color:${cfg.color};border-radius:5px;padding:1px 7px;font-weight:500">${cfg.label}</span>
-          <span style="font-size:11px;color:var(--text3)">${trend}</span>
+          <span style="font-size:10px;background:var(--surface2);color:var(--text2);border-radius:5px;padding:1px 7px">${cfg.label}</span>
+          ${trendLabel ? `<span style="font-size:10px;background:var(--surface2);color:var(--text2);border-radius:5px;padding:1px 7px">${trendLabel}</span>` : ''}
         </div>
         ${clusterLine}
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">${kws}</div>

@@ -36,14 +36,14 @@ Etapas completadas: análisis ✅ · planificación ✅ · implementación ⏳
 - ✅ `<code>` del contract ID: font-mono + fondo var(--surface2) + borde
 - ✅ Lista vertical de radios: chip "Ventana propia" / "Hereda del contrato"
 
-**Tarea 5 — Tab Historias** · `js/api.js` · `css/app.css` · `index.html`
-- Infraestructura color map: `_CLUSTER_HEXES_LIGHT/DARK`, `_clusterColorMap`, `_clusterHexMap`, `_buildClusterColorMap()`, `_clusterHex()`
-- `_drawSparkline`: añadir parámetro `clusterHex`
-- `_renderNarrativeArcs`: dot + borde + sparkline en color de tema · chips neutros · fallback `--q-cluster-none`
-- Dropdown custom: `_updateTemaDropdown` · `updateTemaFilter` · `resetAllFilters` · `_updateActiveFilters`
-- `toggleTheme()`: re-build color map + re-render arcos tras cambio de tema
-- `app.css`: clases `.qdd-*` (ver §8.7 del doc)
-- `index.html`: reemplazar `<select id="cluster-select">` con container dropdown custom
+**✅ Tarea 5 — Tab Historias** · `js/api.js` · `css/app.css` · `index.html`
+- ✅ Infraestructura color map: `_clusterColorMap`, `_clusterHexMap`, `_buildClusterColorMap()`, `_clusterHex()`
+- ✅ `_drawSparkline`: añadir parámetro `clusterHex`
+- ✅ `_renderNarrativeArcs`: dot + borde + sparkline en color de tema · chips neutros · fallback `--q-cluster-none`
+- ✅ Dropdown custom: `_updateTemaDropdown` · `updateTemaFilter` · `resetAllFilters` · click-outside
+- ✅ `toggleTheme()`: re-build color map + re-render arcos tras cambio de tema
+- ✅ `app.css`: clases `.qdd-*`
+- ✅ `index.html`: reemplazar `<select id="cluster-select">` con container dropdown custom
 
 **Tarea 6 — Tab Temas** · `index.html` · `js/api.js` · `js/app.js`
 - `index.html`: eliminar cards Narrativas/Voces/Momento · añadir `#temas-bubble-container`, `#temas-rationale-panel`, `canvas#temas-trend`

@@ -151,6 +151,21 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 #advanced-filters { transition:all .3s ease; overflow:hidden; }
 .qfilters-active { transition:all .2s ease; }
 
+/* Dropdown custom de temas */
+.qdd-wrap  { position:relative; display:inline-block; }
+.qdd-btn   { background:var(--surface2); border:.5px solid var(--border); border-radius:8px;
+             padding:6px 10px; font-size:12px; color:var(--text2); cursor:pointer;
+             font-family:var(--font); min-width:180px; text-align:left; }
+.qdd-btn:hover { background:var(--surface); }
+.qdd-menu  { position:absolute; top:calc(100% + 4px); left:0; background:var(--surface);
+             border:.5px solid var(--border); border-radius:10px; padding:4px; z-index:10;
+             display:none; min-width:200px; box-shadow:0 4px 16px rgba(0,0,0,.12); }
+.qdd-menu.open { display:block; }
+.qdd-opt   { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:8px;
+             font-size:12px; cursor:pointer; color:var(--text2); }
+.qdd-opt:hover { background:var(--surface2); }
+.qdd-opt.sel   { background:var(--surface2); color:var(--text1); font-weight:500; }
+
 /* Responsive */
 @media (max-width: 768px) {
   .qfilters-row { flex-direction:column; align-items:stretch; }

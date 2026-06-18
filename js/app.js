@@ -49,6 +49,7 @@ function toggleTheme() {
   document.getElementById('ico-sun').style.display  = isDark ? 'none'  : 'block';
   document.getElementById('ico-moon').style.display = isDark ? 'block' : 'none';
   if (sparkRef) { sparkRef.options.scales.x.ticks.color = tickColor(); sparkRef.update(); }
+  if (typeof _buildClusterColorMap === 'function') _buildClusterColorMap();
 }
 
 function switchTab(tab, el) {

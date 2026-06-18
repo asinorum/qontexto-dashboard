@@ -177,12 +177,15 @@
             </div>
           </div>
 
-          <!-- Dropdown cluster -->
+          <!-- Dropdown tema -->
           <div class="qfilter-group">
-            <label class="qfilter-label">Cluster</label>
-            <select id="cluster-select" class="qselect" onchange="updateClusterFilter()">
-              <option value="">Cargando clusters...</option>
-            </select>
+            <label class="qfilter-label">Tema</label>
+            <div class="qdd-wrap">
+              <button class="qdd-btn" id="tema-btn" onclick="toggleTemaDropdown()">
+                Todos los temas <span style="float:right;color:var(--text3)">▾</span>
+              </button>
+              <div class="qdd-menu" id="tema-menu"></div>
+            </div>
           </div>
 
           <!-- Dropdown urgency -->
