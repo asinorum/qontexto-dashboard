@@ -15,7 +15,7 @@ Deploy: `https://qontexto.com`
 
 Referencia: `docs/qontexto-design-system-v2.md`
 Backend: todos los cambios (#1–#5) deployados.
-Etapas completadas: análisis ✅ · planificación ✅ · implementación ⏳
+Etapas completadas: análisis ✅ · planificación ✅ · implementación ✅
 
 ### Tareas en orden
 
