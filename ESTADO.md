@@ -11,21 +11,54 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**✅ DEPLOY 29/5 COMPLETADO — D15 + citas en señales**
+**Refactor v2 — implementación aprobada (2026-06-18)**
 
-Estado actual en producción:
-- ✅ **D15 Tab Contexto**: paginación + filtros elaborados + UX profesional completo
-- ✅ **Citas en señales**: timeline muestra citas precisas extraídas por Haiku (`ev.alert.quote`)
-- ✅ **Filtro cluster_name**: valores dinámicos desde `GET /my/cluster-names` ✅
-- ✅ **Dashboard completo**: login Auth0, 4 tabs funcionales, datos en tiempo real
+Referencia: `docs/qontexto-design-system-v2.md`
+Backend: todos los cambios (#1–#5) deployados.
+Etapas completadas: análisis ✅ · planificación ✅ · implementación ⏳
 
-**FUNCIONALIDADES DESPLEGADAS**:
-- Tab Resumen: topbar + veredicto + barras + grid 50/50
-- Tab Contexto: paginación 20/página + filtros elaborados + empty states  
-- Tab Señales: timeline con citas precisas (no más truncado)
-- Tab Contrato: información contractual
+### Tareas en orden
 
-**PRÓXIMO TRABAJO**: Dashboard completo y funcional — sin pendientes críticos
+**Tarea 1 — MDUI** · `index.html` · `css/tokens.css` · `js/app.js`
+- `index.html`: añadir `mdui.css` + `mdui.global.js` en `<head>` en orden correcto (mdui.css → tokens.css → app.css → mdui.global.js → api.js → app.js)
+- `tokens.css`: reescritura completa — bridge MDUI + `--q-cluster-*` vars + `[mdui-theme="dark"]` · eliminar valores hardcodeados y `[data-theme="dark"]`
+- `app.js`: `mdui.setColorScheme('#C4522A')` al inicio · `surfaceColor()`/`tickColor()` → `getComputedStyle` · `toggleTheme` → `mdui-theme`
+
+**Tarea 2 — Tabs + vocabulario** · `index.html` · `js/app.js` · `js/api.js`
+- Tab nav: labels + onclick + IDs de divs (`tab-resumen/contexto/senales` → `tab-temas/historias/menciones`)
+- `switchTab()`: referencias internas
+- Strings en `api.js` e `index.html`: "alertas"→"menciones", "arcos"→"historias", "cluster"→"tema", "Emisoras del contrato"→"Radios monitoreadas"
+
+**Tarea 3 — Limpieza de código muerto** · `js/api.js`
+- Eliminar 21 funciones y constantes listadas en §8.1 del doc de diseño
+
+**Tarea 4 — Tab Contrato** · `js/api.js`
+- `_renderContratoTab`: grid de cards → lista vertical · chip "Ventana propia" si `stream.stream_windows.length > 0` · chip "Hereda del contrato" si vacío · `<code>` estilizado para contract ID
+
+**Tarea 5 — Tab Historias** · `js/api.js` · `css/app.css` · `index.html`
+- Infraestructura color map: `_CLUSTER_HEXES_LIGHT/DARK`, `_clusterColorMap`, `_clusterHexMap`, `_buildClusterColorMap()`, `_clusterHex()`
+- `_drawSparkline`: añadir parámetro `clusterHex`
+- `_renderNarrativeArcs`: dot + borde + sparkline en color de tema · chips neutros · fallback `--q-cluster-none`
+- Dropdown custom: `_updateTemaDropdown` · `updateTemaFilter` · `resetAllFilters` · `_updateActiveFilters`
+- `toggleTheme()`: re-build color map + re-render arcos tras cambio de tema
+- `app.css`: clases `.qdd-*` (ver §8.7 del doc)
+- `index.html`: reemplazar `<select id="cluster-select">` con container dropdown custom
+
+**Tarea 6 — Tab Temas** · `index.html` · `js/api.js` · `js/app.js`
+- `index.html`: eliminar cards Narrativas/Voces/Momento · añadir `#temas-bubble-container`, `#temas-rationale-panel`, `canvas#temas-trend`
+- `api.js`: `_updateTemasFromSummary` (rename de `_updateResumenFromSummary`) · `_renderTemasBubble()` (SVG determinista) · `_selectTema()` · `_initTrendChart()` · `_updateTemasTrend()`
+- `app.js`: eliminar `sparkRef` + `initCharts` existente → delegar a `_initTrendChart`
+
+**Tarea 7 — Tab Menciones** · `js/api.js` · `index.html` · `css/app.css`
+- `_renderTimeline`: dot → `_clusterHex(ev.alert?.cluster_name)` · cita → color de tema · chip urgencia neutro · leyenda en `#menciones-leyenda`
+- `_renderStreams`: cada card muestra temas con dot de color + conteo de menciones
+- `index.html`: añadir `<div id="menciones-leyenda">` en header del card timeline
+- `app.css`: eliminar `color: #991B1B` de `.qtl-quote`
+
+### Dependencias críticas
+- Tarea 5 antes de Tarea 6 (color map lo usa el bubble chart)
+- Tarea 6 antes de la parte de `toggleTheme` que re-renderiza el bubble
+- Tareas 1–4 independientes entre sí
 
 ---
 

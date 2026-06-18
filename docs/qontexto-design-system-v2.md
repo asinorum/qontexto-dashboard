@@ -49,34 +49,62 @@ En v2 el vocabulario cambia en toda la interfaz. Los nombres anteriores quedan e
 
 Un Tema agrupa varias Historias. Una Historia se compone de varias Menciones.
 
+### Ubicaciones concretas de cambio en `js/api.js`
+
+| Función | Texto actual | Texto v2 |
+|---|---|---|
+| `_renderSessionNav` | `${s.alerts_total} alertas` | `${s.alerts_total} menciones` |
+| `_renderAnalisis` | `N alerta/s registrada/s` | `N mención/es registrada/s` |
+| `_renderStreams` | `Alertas` (key label) | `Menciones` |
+| `_updateActiveFilters` | `Cluster: ...` | `Tema: ...` |
+| `_showArcsEmptyState` | `"Sin arcos..."` / `"No hay arcos..."` | `"Sin historias..."` / `"No hay historias..."` |
+| `_updatePaginationControls` | `"de Z arcos"` / `"Sin arcos..."` | `"de Z historias"` / `"Sin historias..."` |
+| `_renderNarrativeArcs` | `"Sin arcos para el filtro..."` | `"Sin historias para el filtro..."` |
+
+### Cambio de label en `index.html`
+
+| Elemento | Texto actual | Texto v2 |
+|---|---|---|
+| Card emisoras (Tab Contrato) | `"Emisoras del contrato"` | `"Radios monitoreadas"` |
+
 ---
 
 ## 2. Tipografía
 
-Sin cambios respecto a v1.5. Dos familias únicas.
+Base: MDUI 2. Google Sans Flex sobreescribe el default de Roboto que MDUI aplica vía CSS reset.
 
-```css
-/* Carga en index.html */
-@import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300..700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+```html
+<!-- En index.html — después de mdui.css, antes de app.css -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap">
 ```
+
+La variable `--font` del bridge de compatibilidad (§3.2) sobreescribe `--mdui-typescale-body-medium-font` globalmente.
 
 | Variable | Familia | Uso |
 |---|---|---|
 | `--font` | Google Sans Flex | Todo el dashboard |
 | `--mono` | JetBrains Mono | IDs, timestamps, valores numéricos, `<code>` |
 
-### Escala tipográfica
+### Escala tipográfica — mapeo a M3 type roles
 
-| Rol | Tamaño | Peso | Uso |
-|---|---|---|---|
-| Display | 26px | 500 | Valores KPI en stat cards |
-| Title | 15px | 500 | Nombre del producto, títulos de sección |
-| Body | 13px | 400 | Contenido de cards, análisis narrativo |
-| Body Strong | 13px | 500 | Veredictos, conclusiones destacadas |
-| Label | 11px | 400 | Labels de componente |
-| Caption | 10–11px | 400 | Footers, metadata, notas |
-| Micro | 10px | 500 | Chips de urgencia, badges (uppercase) |
+| TYPE ROLE M3 | NOMBRE QONTEXTO | TAMAÑO | PESO | USO |
+|---|---|---|---|---|
+| `display-large` | Slogan / Portada | 40px | 300 | Google Sans Light |
+| `title-large` | Título narrativo | 18px | 400 | Narrativa dominante, encabezados de sección |
+| `title-medium` | Título de sección | 16px | 500 | Subtítulos de card, títulos de módulo |
+| `body-medium` | Cuerpo narrativo | 13px | 400 | Análisis, alertas, recomendaciones |
+| `body-small` | Cuerpo secundario | 12px | 400 | Descripción de apoyo, sublabels |
+| `label-small` | Label de tarjeta | 10px | 500 | UPPERCASE con tracking — NARRATIVA · STREAMS |
+| `label-medium` | Label de chip/badge | 11px | 500 | Chips, badges, estados |
+
+**Tipografía numérica — fuera del type scale M3:**
+
+| Clase | Tamaño | Uso |
+|---|---|---|
+| `.q-score-value` | 22px / 400 | Valores de score — 0.81 / 1.0 |
+| `.q-numeric` | 13px / 400 | Contadores, valores en tabla |
+| `.q-timestamp` | 10px / 400 | Timestamps — 14:32 PE |
 
 ---
 
@@ -93,38 +121,56 @@ La urgencia sigue presente pero usa canales secundarios (fondo tintado, chip de 
 
 **Por qué:** en períodos de alta tensión, todo el dashboard se vuelve rojo y pierde poder discriminatorio. El analista no puede distinguir entre narrativas cuando todas son críticas. Con color por identidad, el color dice QUÉ está pasando, no solo cuán grave es.
 
-### 3.2 Variables CSS del sistema actual
+### 3.2 Variables CSS — bridge de compatibilidad con MDUI 2
 
-Definidas en `css/tokens.css`. Este es el sistema en producción — no ha migrado a MDUI.
+El proyecto usa un bridge que mapea las variables propias (`--bg`, `--surface`, etc.) a los tokens de color M3 generados algorítmicamente por MDUI desde el color semilla Terra `#C4522A`.
 
+**Orden de carga en `index.html`:**
+```html
+<link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/app.css">
+<!-- JS: MDUI debe cargarse antes de api.js y app.js -->
+<script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+```
+
+Sin `mdui.global.js`, `mdui.setColorScheme('#C4522A')` lanza `ReferenceError`.
+
+**Activación del palette algorítmico (en `js/app.js`, al inicializar):**
+```js
+mdui.setColorScheme('#C4522A');  // Terra — genera el palette M3 completo
+```
+
+Esto genera automáticamente todos los `--mdui-color-*` en ambos modos. No se necesita `css/qontexto-tokens.css` con overrides manuales.
+
+**Bridge de compatibilidad (`css/tokens.css`):**
 ```css
 :root {
-  /* Fondos */
-  --bg:       #EFEDE6;   /* fondo global */
-  --surface:  #FAFAF7;   /* cards, inputs */
-  --surface2: #EDEAE2;   /* fondos secundarios, chips, filtros */
-  --border:   rgba(0,0,0,0.07);
-
-  /* Texto */
-  --text1:    #1C1C1A;   /* texto primario */
-  --text2:    #5C5A52;   /* texto secundario */
-  --text3:    #9C9A90;   /* texto terciario, labels, metadata */
-
-  /* Tipografía */
-  --font:     'Google Sans Flex', sans-serif;
-  --mono:     'JetBrains Mono', ui-monospace, monospace;
+  --bg:      rgb(var(--mdui-color-surface-container-lowest));
+  --surface: rgb(var(--mdui-color-surface-container));
+  --surface2:rgb(var(--mdui-color-surface-container-high));
+  --border:  rgb(var(--mdui-color-outline-variant));
+  --text1:   rgb(var(--mdui-color-on-surface));
+  --text2:   rgb(var(--mdui-color-on-surface-variant));
+  --text3:   rgb(var(--mdui-color-on-surface-variant) / 0.6);
+  --font:    'Google Sans Flex', var(--mdui-typescale-body-medium-font);
+  --mono:    'JetBrains Mono', ui-monospace, monospace;
 }
-
-[data-theme="dark"] {
-  --bg:       #111110;
-  --surface:  #1C1C1A;
-  --surface2: #252522;
-  --border:   rgba(255,255,255,0.07);
-  --text1:    #EEECEA;
-  --text2:    #9A9890;
-  --text3:    #5A5852;
-}
+/* Dark mode gestionado por MDUI vía atributo mdui-theme — eliminar [data-theme="dark"] */
 ```
+
+**Cambio de tema (JS en `app.js`):**
+```js
+// v1 (eliminar):
+document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+
+// v2 (MDUI):
+document.documentElement.setAttribute('mdui-theme', isDark ? 'dark' : 'light');
+```
+
+**Palette resultante:** temperatura rosada/terracota desde Terra — warm pinkish en light, rojo-negro en dark. El algoritmo M3 HCT garantiza armonía cromática con los colores de identidad de temas (`--q-cluster-*`), que permanecen como valores manuales.
 
 ### 3.3 Identidad cromática por tema
 
@@ -133,13 +179,24 @@ La asignación es por ranking de score — el tema de mayor score recibe el prim
 
 **Máximo 4 temas con color.** Los temas adicionales con score ≥ 0.60 reciben gris hasta el próximo ciclo de evaluación.
 
+Los tokens `--q-cluster-*` se añaden al archivo `css/tokens.css` junto al bridge MDUI. El dark mode usa `[mdui-theme="dark"]` para ser consistente con el sistema de temas de MDUI 2.
+
 ```css
+/* En css/tokens.css — junto al bridge MDUI */
 :root {
   --q-cluster-1:    #993C1D;  /* coral   — rgb(216,90,48)   */
   --q-cluster-2:    #534AB7;  /* purple  — rgb(127,119,221) */
   --q-cluster-3:    #0F6E56;  /* teal    — rgb(29,158,117)  */
   --q-cluster-4:    #854F0B;  /* amber   — rgb(186,117,23)  */
   --q-cluster-none: #5F5E5A;  /* gris neutro — sin tema asignado */
+}
+
+[mdui-theme="dark"] {
+  --q-cluster-1:    #C4583A;  /* coral más claro sobre fondo oscuro */
+  --q-cluster-2:    #7B72D4;  /* purple más claro */
+  --q-cluster-3:    #1A9A78;  /* teal más claro */
+  --q-cluster-4:    #B87A1A;  /* amber más claro */
+  --q-cluster-none: #8A8880;  /* gris más claro */
 }
 ```
 
@@ -186,14 +243,28 @@ Estos tokens siguen en uso para: timestamps de eventos críticos, indicadores de
 
 ## 4. Shape system
 
-Sin cambios respecto a v1.5.
+Material You define border-radius por categoría de componente. Qontexto usa la escala completa de M3 vía MDUI 2. Todos los tokens de shape incluyen el segmento `-corner-` en el nombre.
 
-| Componente | Border-radius |
-|---|---|
-| Cards (`.qcard`, `.qstat`) | 16px |
-| Inputs, selects, chips | 8px |
-| Chips de estado / pills | 20px (full) |
-| Barras laterales de identidad | 2–3px, border-radius: 2px |
+| Nivel | Token MDUI 2 | Valor | Componentes en Qontexto |
+|---|---|---|---|
+| Extra Small | `--mdui-shape-corner-extra-small` | `4px` | Chips, badges, tooltips |
+| Small | `--mdui-shape-corner-small` | `8px` | Botones, inputs, menús |
+| Medium | `--mdui-shape-corner-medium` | `12px` | — (ver override) |
+| Large | `--mdui-shape-corner-large` | `16px` | Navigation rail |
+| Full | `--mdui-shape-corner-full` | `9999px` | Pills de estado |
+
+**Override de cards — a nivel de selector, no de token global:**
+```css
+/* css/app.css — override selectivo */
+.qcard { border-radius: 16px; }
+.qstat { border-radius: 16px; }
+```
+
+El valor 16px es una excepción documentada al token `medium` (12px), justificada por la densidad visual del dashboard. Sobreescribir el token global afectaría otros componentes MDUI que comparten ese nivel.
+
+**Barras laterales de identidad de tema:** `border-radius: 2px` — excepción explícita, no mapea a ningún nivel M3.
+
+Ver v1.5 §4 para la tabla completa de niveles y v1.5 §6–7 para State layers y Motion — sin cambios en v2.
 
 ---
 
@@ -341,7 +412,7 @@ ID de contrato
 - ID de contrato en `font-family: var(--mono)` con fondo `var(--surface2)` y borde
 
 **Card derecha — lista de radios:**
-Lista vertical (no grid). Escala a cualquier número de radios sin overflow.
+Lista vertical (no grid). Escala a cualquier número de radios sin overflow. Label del card: `"Radios monitoreadas"` (actualmente `"Emisoras del contrato"` en `index.html`).
 
 Cada fila:
 ```
@@ -430,6 +501,109 @@ Derivado de `narrativas[].score_trajectory` + `importance_score`:
 | 3 | Añadir `unique_regions` a `GET /my/summary` → `narrativas[].unique_regions` | Baja — exponer dato ya existente en `cluster_assessments.signals` |
 | 4 | Añadir `series` a `GET /my/summary` → `narrativas[].series` | Baja — `history` ya se computa en `_rank_clusters()`, solo exponerlo con rango completo y sin zeros |
 | 5 | Añadir `cluster_name` a `report_state.alerts[]` | Media — match por overlap de keywords entre alerta y arcos activos |
+
+---
+
+## 8. Inventario de cambios en `js/api.js`
+
+### 8.1 Código muerto a eliminar
+
+Al eliminar los cards Narrativas / Voces / Momento del Tab Resumen, las siguientes funciones y constantes quedan sin referencias activas y deben eliminarse:
+
+| Elemento | Motivo |
+|---|---|
+| `_maxUrgency` | Solo usada en `_buildNarrativeItems`, `_buildNarrativeItemsFromArcs` y `_buildVocesItems` — todas eliminadas |
+| `_URGENCY_ORDER` | Solo usada en `_maxUrgency` |
+| `_updateResumenFromArcs` | Código muerto hoy — ninguna ruta activa lo llama |
+| `_SEV_TO_URGENCY` | Definida pero nunca usada |
+| `_buildNarrativeItems` | Card Narrativas eliminado |
+| `_buildNarrativeItemsFromArcs` | Card Narrativas eliminado |
+| `_updateNarrativasCard` | Card Narrativas eliminado |
+| `_buildVeredicto` (función snapshot) | El veredicto en v2 viene directo de `summary.veredicto` |
+| `_buildVocesItems` | Card Voces eliminado |
+| `_updateVocesCard` | Card Voces eliminado |
+| `_detectTrend` | Card Momento eliminado |
+| `_buildSparklineData` | Card Momento eliminado |
+| `_updateMomentoCard` | Card Momento eliminado |
+| `_updateNarrativasFromSummary` | Reemplazado por bubble chart |
+| `_updateVocesFromSummary` | Card Voces eliminado |
+| `_updateMomentoFromSummary` | Reemplazado por Tendencia de temas |
+| `_TREND_CHIP` | Solo usada en `_updateNarrativasFromSummary` |
+| `_TREND_TO_COLOR` | Solo usada en `_updateMomentoFromSummary` |
+| `_TONE_URGENCY` | Solo usada en `_buildVocesItems` |
+| `_WC_SLOTS`, `_WC_SIZES`, `_WC_WEIGHTS` | Word cloud eliminado |
+| `_TREND_CONFIG` | Solo usada en funciones de Momento y `_updateResumenFromArcs` |
+
+### 8.2 Cambio de firma — `_drawSparkline`
+
+Actualmente infiere el color del score (`last >= 0.7 → rojo`). En v2 debe recibir el hex del cluster como parámetro:
+
+```
+_drawSparkline(canvas, data, clusterHex)
+```
+
+El `clusterHex` viene del color map `_clusterHexMap[arc.cluster_name]` al renderizar cada fila de historia.
+
+### 8.3 Dark mode — re-render de SVG y sparklines
+
+`toggleTheme()` en `app.js` actualmente solo actualiza el atributo CSS y llama `sparkRef.update()`. En v2, como el bubble chart SVG y los `<polyline>` de sparkline usan valores hex inline (no CSS vars), el toggle de tema requiere tres pasos adicionales:
+
+1. Reconstruir `_clusterHexMap` con los nuevos hex de dark mode (leer las vars `--q-cluster-N` del nuevo tema)
+2. Re-renderizar el SVG del bubble chart
+3. Re-renderizar la lista de historias (para actualizar sparklines y dots)
+
+### 8.4 Mecanismo de re-render al llegar el summary
+
+Al final de `_buildClusterColorMap()`, si `_allArcs.length > 0`, llamar `_renderNarrativeArcs(_allArcs)` para que los arcos ya cargados reciban sus colores de tema sin necesidad de un nuevo fetch.
+
+### 8.5 `resetAllFilters` — dropdown custom
+
+`resetAllFilters()` actualmente referencia `document.getElementById('cluster-select').value = ''`. Con el dropdown custom de tema este selector cambia. El reset debe limpiar el estado interno del dropdown custom y su label visible, además del valor de filtro.
+
+### 8.6 Fallback obsoleto en `_updateClusterDropdown`
+
+Las líneas con 5 clusters hardcodeados como fallback "hasta que el backend implemente /my/cluster-names" pueden eliminarse. El endpoint `GET /my/cluster-names` ya está implementado y funciona.
+
+### 8.8 `surfaceColor()` y `tickColor()` en `app.js`
+
+Las funciones `surfaceColor()` (línea 8) y `tickColor()` (línea 9) devuelven hex hardcodeados del palette anterior — `#1C1C1A` y `#FAFAF7`. Son los colores de fondo y ejes del Chart.js del trend chart.
+
+Con MDUI esos valores cambiarán según el palette algorítmico. Deben leer desde los tokens computados post-MDUI:
+
+```js
+// v1 (eliminar):
+function surfaceColor() { return isDark ? '#1C1C1A' : '#FAFAF7'; }
+function tickColor()    { return isDark ? '#9A9890' : '#5C5A52'; }
+
+// v2 — leer token computado después de que MDUI aplique el palette:
+function surfaceColor() {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue('--bg').trim();
+}
+function tickColor() {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue('--text3').trim();
+}
+```
+
+Estas funciones se llaman en el momento de renderizar el chart — si MDUI ya cargó y aplicó `setColorScheme`, el valor computado refleja el palette correcto.
+
+Añadir a `css/app.css` las clases para el dropdown custom:
+
+```css
+.qdd-wrap     { position:relative; display:inline-block; }
+.qdd-btn      { /* mismo estilo que inputs existentes */ }
+.qdd-menu     { position:absolute; top:calc(100% + 4px); left:0;
+                background:var(--surface); border:.5px solid var(--border);
+                border-radius:10px; padding:4px; z-index:10; display:none;
+                min-width:200px; }
+.qdd-menu.open { display:block; }
+.qdd-opt      { display:flex; align-items:center; gap:8px;
+                padding:7px 10px; border-radius:8px;
+                font-size:12px; cursor:pointer; color:var(--text2); }
+.qdd-opt:hover { background:var(--surface2); }
+.qdd-opt.sel  { background:var(--surface2); color:var(--text1); font-weight:500; }
+```
 
 ---
 
