@@ -32,8 +32,9 @@ Etapas completadas: análisis ✅ · planificación ✅ · implementación ⏳
 **✅ Tarea 3 — Limpieza de código muerto** · `js/api.js`
 - Eliminar 21 funciones y constantes listadas en §8.1 del doc de diseño
 
-**Tarea 4 — Tab Contrato** · `js/api.js`
-- `_renderContratoTab`: grid de cards → lista vertical · chip "Ventana propia" si `stream.stream_windows.length > 0` · chip "Hereda del contrato" si vacío · `<code>` estilizado para contract ID
+**✅ Tarea 4 — Tab Contrato** · `js/api.js`
+- ✅ `<code>` del contract ID: font-mono + fondo var(--surface2) + borde
+- ✅ Lista vertical de radios: chip "Ventana propia" / "Hereda del contrato"
 
 **Tarea 5 — Tab Historias** · `js/api.js` · `css/app.css` · `index.html`
 - Infraestructura color map: `_CLUSTER_HEXES_LIGHT/DARK`, `_clusterColorMap`, `_clusterHexMap`, `_buildClusterColorMap()`, `_clusterHex()`

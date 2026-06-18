@@ -1016,28 +1016,45 @@ function _renderContratoTab(contract) {
         `<div style="margin-top:14px;padding-top:12px;border-top:.5px solid var(--border)">` +
         `<div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;` +
         `color:var(--text3);margin-bottom:4px">ID de contrato</div>` +
-        `<code style="font-size:11px;color:var(--text3);word-break:break-all">${_esc(contract.contract_id)}</code>` +
+        `<code style="font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--surface2);` +
+        `border:.5px solid var(--border);border-radius:6px;padding:2px 8px;word-break:break-all">${_esc(contract.contract_id)}</code>` +
         `</div>`;
     }
   }
 
   const streamEl = document.getElementById('contrato-emisoras');
   if (streamEl) {
-    const streams = contract.streams ?? [];
+    const streams        = contract.streams ?? [];
+    const contractWins   = contract.windows ?? [];
     streamEl.innerHTML = !streams.length
       ? '<p style="font-size:13px;color:var(--text3)">Sin emisoras configuradas.</p>'
-      : `<div class="qstream-grid">` + streams.map(s =>
-          `<div class="qstream">` +
-          `<div class="qstream-name">` +
-          `<div style="width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0"></div>` +
-          `${_esc(s.radio_id || s.label || '—')}</div>` +
-          `<div class="qstream-region">${_esc(s.region || '—')}</div>` +
-          `<div class="qstream-row"><span class="qstream-key">Ciudad</span>` +
-          `<span class="qstream-val">${_esc(s.city || '—')}</span></div>` +
-          `<div class="qstream-row"><span class="qstream-key">Plataforma</span>` +
-          `<span class="qstream-val">${_esc(s.platform || '—')}</span></div>` +
-          `</div>`
-        ).join('') + `</div>`;
+      : streams.map((s, i) => {
+          const ownWins    = s.stream_windows ?? [];
+          const hasOwn     = ownWins.length > 0;
+          const wins       = hasOwn ? ownWins : contractWins;
+          const winText    = wins.length
+            ? `${_esc(wins[0].start_time)} — ${_esc(wins[0].end_time)} · ${_formatDays(wins[0].days_of_week)}`
+            : '—';
+          const chip = hasOwn
+            ? `<span style="font-size:11px;font-weight:500;padding:1px 8px;border-radius:20px;` +
+              `background:rgba(186,117,23,0.12);color:#854F0B;border:.5px solid rgba(186,117,23,0.4)">Ventana propia</span>`
+            : `<span style="font-size:11px;padding:1px 8px;border-radius:20px;` +
+              `background:var(--surface2);color:var(--text3)">Hereda del contrato</span>`;
+          const isLast = i === streams.length - 1;
+          return (
+            `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;` +
+            (isLast ? '' : 'border-bottom:.5px solid var(--border);') + `">` +
+            `<div style="width:8px;height:8px;border-radius:50%;background:#4CAF50;flex-shrink:0;margin-top:4px"></div>` +
+            `<div style="flex:1;min-width:0">` +
+            `<div style="font-size:13px;font-weight:500;color:var(--text1)">${_esc(s.radio_id || s.label || '—')}` +
+            (s.region ? ` <span style="color:var(--text3);font-weight:400">· ${_esc(s.region)}</span>` : '') +
+            `</div>` +
+            `<div style="display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap">` +
+            `<span style="font-size:12px;color:var(--text2)">${winText}</span>` +
+            chip +
+            `</div></div></div>`
+          );
+        }).join('');
   }
 }
 
