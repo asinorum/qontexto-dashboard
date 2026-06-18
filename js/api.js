@@ -728,20 +728,30 @@ let _clusterNames    = [];
 let _clusterColorMap = {};
 let _clusterHexMap   = {};
 
-function _buildClusterColorMap() {
+function _buildClusterColorMap(narrativas) {
+  narrativas = narrativas ?? _summary?.narrativas ?? [];
   const style    = getComputedStyle(document.documentElement);
   const varNames = ['--q-cluster-1', '--q-cluster-2', '--q-cluster-3', '--q-cluster-4'];
+
   _clusterColorMap = {};
   _clusterHexMap   = {};
-  _clusterNames.forEach((name, i) => {
-    const varN             = i < 4 ? varNames[i] : '--q-cluster-none';
-    _clusterColorMap[name] = `var(${varN})`;
-    _clusterHexMap[name]   = style.getPropertyValue(varN).trim();
-  });
+
+  const sorted = [...narrativas]
+    .sort((a, b) => (b.importance_score ?? 0) - (a.importance_score ?? 0));
+
+  let colorIdx = 0;
+  for (const nav of sorted) {
+    if (!nav.cluster_name) continue;
+    const eligible = colorIdx < 4 && (nav.importance_score ?? 0) >= 0.60;
+    const varN     = eligible ? varNames[colorIdx++] : '--q-cluster-none';
+    _clusterColorMap[nav.cluster_name] = `var(${varN})`;
+    _clusterHexMap[nav.cluster_name]   = style.getPropertyValue(varN).trim();
+  }
+
   if (_allArcs.length > 0) _renderNarrativeArcs(_allArcs);
-  if (_summary?.narrativas?.length) {
-    _renderTemasBubble(_summary.narrativas);
-    _updateTemasTrend(_summary.narrativas);
+  if (narrativas.length) {
+    _renderTemasBubble(narrativas);
+    _updateTemasTrend(narrativas);
   }
 }
 
@@ -865,7 +875,6 @@ function _updateTemaDropdown() {
     );
   }
   menu.innerHTML = items.join('');
-  _buildClusterColorMap();
 }
 
 document.addEventListener('click', e => {
@@ -1326,10 +1335,9 @@ function _updateTemasFromSummary(summary) {
     verdCard.style.borderLeftWidth = '3px';
   }
 
-  // Bubble + trend
+  // Color map → bubble → trend (en ese orden)
   if (summary.narrativas?.length) {
-    _renderTemasBubble(summary.narrativas);
-    _updateTemasTrend(summary.narrativas);
+    _buildClusterColorMap(summary.narrativas);
   }
 
   // Trend label por selección activa
