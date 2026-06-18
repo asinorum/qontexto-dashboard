@@ -29,7 +29,7 @@ Etapas completadas: análisis ✅ · planificación ✅ · implementación ⏳
 - ✅ `switchTab()`: referencias internas
 - ✅ Strings en `api.js` e `index.html`: "alertas"→"menciones", "arcos"→"historias", "cluster"→"tema", "Emisoras del contrato"→"Radios monitoreadas"
 
-**Tarea 3 — Limpieza de código muerto** · `js/api.js`
+**✅ Tarea 3 — Limpieza de código muerto** · `js/api.js`
 - Eliminar 21 funciones y constantes listadas en §8.1 del doc de diseño
 
 **Tarea 4 — Tab Contrato** · `js/api.js`
