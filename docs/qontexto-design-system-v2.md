@@ -95,7 +95,7 @@ La variable `--font` del bridge de compatibilidad (§3.2) sobreescribe `--mdui-t
 | `title-medium` | Título de sección | 16px | 500 | Subtítulos de card, títulos de módulo |
 | `body-medium` | Cuerpo narrativo | 13px | 400 | Análisis, alertas, recomendaciones |
 | `body-small` | Cuerpo secundario | 12px | 400 | Descripción de apoyo, sublabels |
-| `label-small` | Label de tarjeta | 10px | 500 | UPPERCASE con tracking — NARRATIVA · STREAMS |
+| `label-small` | Label de tarjeta | 11px | 500 | UPPERCASE con tracking — NARRATIVA · STREAMS (mínimo MD3) |
 | `label-medium` | Label de chip/badge | 11px | 500 | Chips, badges, estados |
 
 **Tipografía numérica — fuera del type scale M3:**
@@ -174,31 +174,33 @@ document.documentElement.setAttribute('mdui-theme', isDark ? 'dark' : 'light');
 
 ### 3.3 Identidad cromática por tema
 
-Los temas con `importance_score ≥ 0.60` reciben un color de identidad. Los demás son grises.
-La asignación es por ranking de score — el tema de mayor score recibe el primer color.
+**Implementación real (desde 2026-06-18):** todos los temas reciben un color único por golden angle — no hay límite de 4, no hay variables CSS estáticas. La asignación es dinámica en JS.
 
-**Máximo 4 temas con color.** Los temas adicionales con score ≥ 0.60 reciben gris hasta el próximo ciclo de evaluación.
+**Algoritmo (`_buildClusterColorMap` en `js/api.js`):**
 
-Los tokens `--q-cluster-*` se añaden al archivo `css/tokens.css` junto al bridge MDUI. El dark mode usa `[mdui-theme="dark"]` para ser consistente con el sistema de temas de MDUI 2.
+```js
+// Ordenados por importance_score desc; idx = posición en el ranking
+const hue = (18 + idx * 137.5) % 360;           // golden angle — evita colores adyacentes similares
+const sat = 55 + Math.min(score, 1) * 25;        // 55–80% — más saturado = más importante
+const lit = isDark ? 62 : 38;                     // claro en dark mode, oscuro en light
+const hex = hslToHex(hue, sat, lit);
+_clusterHexMap[topic] = hex;                      // keyed por nombre del tema
+```
+
+El mapa `_clusterHexMap` se reconstruye en cada poll y cada vez que cambia el tema claro/oscuro. `_clusterHex(topicName)` devuelve el hex del tema o `--q-cluster-none` si no tiene asignación.
+
+**Variables CSS de fallback (en `css/tokens.css`):**
 
 ```css
-/* En css/tokens.css — junto al bridge MDUI */
 :root {
-  --q-cluster-1:    #993C1D;  /* coral   — rgb(216,90,48)   */
-  --q-cluster-2:    #534AB7;  /* purple  — rgb(127,119,221) */
-  --q-cluster-3:    #0F6E56;  /* teal    — rgb(29,158,117)  */
-  --q-cluster-4:    #854F0B;  /* amber   — rgb(186,117,23)  */
-  --q-cluster-none: #5F5E5A;  /* gris neutro — sin tema asignado */
+  --q-cluster-none: #5F5E5A;  /* gris neutro — tema sin score o sin asignación */
 }
-
 [mdui-theme="dark"] {
-  --q-cluster-1:    #C4583A;  /* coral más claro sobre fondo oscuro */
-  --q-cluster-2:    #7B72D4;  /* purple más claro */
-  --q-cluster-3:    #1A9A78;  /* teal más claro */
-  --q-cluster-4:    #B87A1A;  /* amber más claro */
-  --q-cluster-none: #8A8880;  /* gris más claro */
+  --q-cluster-none: #8A8880;
 }
 ```
+
+Los colores `--q-cluster-1..4` del spec original ya no se usan — reemplazados por el mapa dinámico.
 
 **Regla de aplicación:**
 
@@ -276,14 +278,25 @@ Ver v1.5 §4 para la tabla completa de niveles y v1.5 §6–7 para State layers 
 
 **Componentes:**
 
-**Bubble chart SVG (hero)**
-- Una burbuja por tema activo
-- Tamaño = `importance_score`
-- Color = identidad del tema (`--q-cluster-N`)
-- Label = nombre del tema
+**Bubble chart SVG (hero) — implementación D3 v7 (desde 2026-06-19)**
+- Una burbuja por tema activo (todos los temas, sin límite)
+- Tamaño = `importance_score` · radio entre 28px (score mínimo) y 58px (score máximo)
+- Color = `_clusterHex(topic)` del color map dinámico
+- Label = nombre del tema, partido en dos líneas si > 2 palabras
+- Font proporcional al radio: `fs = round(11 + (r-22)/(maxBubbleR-22) * 3)` → 11–14px
+- Burbujas con r < 22px no muestran texto
 - Hebras bezier hacia nodos de región (Arequipa, Cajamarca, etc.)
-- 1 hebra = 5 historias activas en esa región · máximo 4 hebras por región
+- 1 hebra = 5 historias activas en esa región · máximo 4 hebras por burbuja
+- Regiones posicionadas bajo el cluster real (no bajo el SVG completo)
 - Interacción: clic en burbuja → selecciona el tema → activa el panel de rationale
+
+**Layout D3 force-directed (sincrónico):**
+- D3 v7 desde CDN (`d3@7/dist/d3.min.js`)
+- Posiciones iniciales: espiral compacta al centro — `x = centerX + cos(i*2.4)*(i+1)*5`
+- Simulación: `simulation.stop()` + loop de ticks hasta convergencia (sin animación)
+- Fuerzas: `forceCollide(r+14, 1.0)` · `forceManyBody(-120)` · `forceX/Y(center, 0.018/0.015)`
+- Post-simulación: eliminar aire arriba (`shiftY`), calcular `finalRegionRowY`, dimensionar SVG
+- SVG renderiza una sola vez con posiciones finales — sin `on('tick')`, sin transiciones
 
 **Panel de rationale** (al seleccionar un tema)
 - Barra lateral izquierda en color del tema
@@ -476,135 +489,89 @@ Derivado de `narrativas[].score_trajectory` + `importance_score`:
 
 ---
 
-## 7. Pendientes de implementación
+## 7. Estado de implementación
 
-### `qontexto-dashboard`
+### `qontexto-dashboard` — completado
 
-| Prioridad | Tarea | Depende de |
-|---|---|---|
-| 1 | Renombrar tabs: Resumen→Temas, Contexto→Historias, Señales→Menciones | — |
-| 2 | Vocabulario global: buscar/reemplazar "cluster"→"tema", "arcos"→"historias", "señales"→"menciones" en JS y HTML | — |
-| 3 | Añadir variables `--q-cluster-1..4` y `--q-cluster-none` a `css/tokens.css` | — |
-| 4 | Estilizar `<code>` del contract ID (Tab Contrato): `font-mono` + fondo + borde | — |
-| 5 | Tab Contrato: lista de radios con chip "Ventana propia" / "Hereda del contrato" | — (datos ya disponibles) |
-| 6 | Tab Historias: color de identidad en dot, borde izquierdo y sparkline | — (datos ya disponibles) |
-| 7 | Tab Historias: dropdown de tema con dots de color | — (datos ya disponibles) |
-| 8 | Tab Temas: implementación completa | Backend #1, #2, #3 y #4 |
-| 9 | Tab Menciones: dot de evento en color de tema | Backend #5 |
-| 10 | Tab Menciones: cards de radio con dots de tema | Backend #5 |
+| # | Tarea | Estado | Commit |
+|---|---|---|---|
+| 1 | Renombrar tabs: Resumen→Temas, Contexto→Historias, Señales→Menciones | ✅ | `fb97f1e` |
+| 2 | Vocabulario global: "cluster"→"tema", "arcos"→"historias", "señales"→"menciones" | ✅ | `fb97f1e` |
+| 3 | Sistema de color dinámico por golden angle (reemplaza --q-cluster-1..4 estáticos) | ✅ | `fb97f1e` |
+| 4 | `<code>` del contract ID: font-mono + fondo + borde | ✅ | `fb97f1e` |
+| 5 | Tab Contrato: lista de radios con chip "Ventana propia" / "Hereda del contrato" | ✅ | `fb97f1e` |
+| 6 | Tab Historias: color de identidad en dot, borde izquierdo y sparkline | ✅ | `fb97f1e` |
+| 7 | Tab Historias: dropdown de tema con dots de color | ✅ | `fb97f1e` |
+| 8 | Tab Temas: bubble chart D3 + panel rationale + tendencia + veredicto dinámico | ✅ | `fb97f1e` + `f9815e4` + `fbac15c` + `ff1cd34` + `f8fd966` + `962ac84` |
+| 9 | Tab Menciones: dot de evento en color de tema | ✅ | `fb97f1e` |
+| 10 | Tab Menciones: cards de radio con dots de tema | ✅ | `fb97f1e` |
 
-### `narrative-intelligence`
+### `qontexto-dashboard` — pendiente de decisión
 
-| Prioridad | Tarea | Complejidad |
-|---|---|---|
-| 1 | Añadir `score_trajectory` a `GET /my/summary` → `narrativas[].score_trajectory` | Baja — ya disponible en `_rank_clusters()` via `db_assessment.get("signals")`, solo exponerlo |
-| 2 | Añadir `trend_label` a `GET /my/summary` → `narrativas[].trend_label` | Baja — campo derivado de `score_trajectory`, requiere #1 |
-| 3 | Añadir `unique_regions` a `GET /my/summary` → `narrativas[].unique_regions` | Baja — exponer dato ya existente en `cluster_assessments.signals` |
-| 4 | Añadir `series` a `GET /my/summary` → `narrativas[].series` | Baja — `history` ya se computa en `_rank_clusters()`, solo exponerlo con rango completo y sin zeros |
-| 5 | Añadir `cluster_name` a `report_state.alerts[]` | Media — match por overlap de keywords entre alerta y arcos activos |
+| Tarea | Contexto |
+|---|---|
+| Sparkline de tendencia: migrar de Chart.js a D3 | Permitiría transiciones suaves al seleccionar temas. Costo: reescribir `_updateTemasTrend`. Decisión pendiente del usuario. |
+
+### `narrative-intelligence` — pendientes
+
+| # | Tarea | Complejidad | Estado |
+|---|---|---|---|
+| 1 | `score_trajectory` en `GET /my/summary` → `narrativas[].score_trajectory` | Baja | ✅ ya disponible vía `signals.score_trajectory` en el backend, frontend usa `_calcTrendFromSeries` como alternativa |
+| 2 | `trend_label` en `GET /my/summary` → `narrativas[].trend_label` | Baja | ✅ frontend genera `_buildVeredictoConjunto` y `_getTrendVeredicto` sin depender del campo |
+| 3 | `unique_regions` en `GET /my/summary` → `narrativas[].unique_regions` | Baja | ✅ implementado — ya viene del backend en la respuesta actual |
+| 4 | `series` en `GET /my/summary` → `narrativas[].series` | Baja | ✅ implementado — ya viene del backend; frontend usa `nav.series` para sparkline y tendencia |
+| 5 | `cluster_name` en `report_state.alerts[]` | Media | ⏳ pendiente — Tab Menciones ya usa `ev.alert?.cluster_name` pero el campo no siempre viene |
 
 ---
 
-## 8. Inventario de cambios en `js/api.js`
+## 8. Estado del código en `js/api.js` — refactor v2
 
-### 8.1 Código muerto a eliminar
+### 8.1 Código muerto eliminado ✅
 
-Al eliminar los cards Narrativas / Voces / Momento del Tab Resumen, las siguientes funciones y constantes quedan sin referencias activas y deben eliminarse:
+Todas las funciones listadas a continuación fueron eliminadas en el commit `fb97f1e`:
+`_maxUrgency`, `_URGENCY_ORDER`, `_updateResumenFromArcs`, `_SEV_TO_URGENCY`, `_buildNarrativeItems`, `_buildNarrativeItemsFromArcs`, `_updateNarrativasCard`, `_buildVeredicto` (snapshot), `_buildVocesItems`, `_updateVocesCard`, `_detectTrend`, `_buildSparklineData`, `_updateMomentoCard`, `_updateNarrativasFromSummary`, `_updateVocesFromSummary`, `_updateMomentoFromSummary`, `_TREND_CHIP`, `_TREND_TO_COLOR`, `_TONE_URGENCY`, `_WC_SLOTS`, `_WC_SIZES`, `_WC_WEIGHTS`, `_TREND_CONFIG`.
 
-| Elemento | Motivo |
+### 8.2 `_drawSparkline` — firma actualizada ✅
+
+Recibe `clusterHex` como tercer parámetro. El color del sparkline es el del tema, no derivado del score.
+
+### 8.3 Dark mode — re-render ✅
+
+`toggleTheme()` reconstruye `_clusterHexMap` y re-renderiza el bubble chart y la lista de historias.
+
+### 8.4 `_buildClusterColorMap` + re-render de arcos ✅
+
+Al final de `_buildClusterColorMap()`, si `_allArcs.length > 0`, llama `_renderNarrativeArcs(_allArcs)` automáticamente.
+
+### 8.5 Dropdown custom de tema ✅
+
+`resetAllFilters()` limpia el estado interno del dropdown custom. CSS en `app.css` con clases `.qdd-*`.
+
+### 8.6 Fallback de cluster names eliminado ✅
+
+El endpoint `GET /my/cluster-names` está implementado. Los hardcodeados fueron eliminados.
+
+### 8.7 `surfaceColor()` y `tickColor()` ✅
+
+Leen desde tokens computados: `getComputedStyle(...).getPropertyValue('--bg')` y `'--text3'`. No hay hex hardcodeados del palette anterior.
+
+### 8.8 Funciones del Tab Temas (nuevas) ✅
+
+| Función | Propósito |
 |---|---|
-| `_maxUrgency` | Solo usada en `_buildNarrativeItems`, `_buildNarrativeItemsFromArcs` y `_buildVocesItems` — todas eliminadas |
-| `_URGENCY_ORDER` | Solo usada en `_maxUrgency` |
-| `_updateResumenFromArcs` | Código muerto hoy — ninguna ruta activa lo llama |
-| `_SEV_TO_URGENCY` | Definida pero nunca usada |
-| `_buildNarrativeItems` | Card Narrativas eliminado |
-| `_buildNarrativeItemsFromArcs` | Card Narrativas eliminado |
-| `_updateNarrativasCard` | Card Narrativas eliminado |
-| `_buildVeredicto` (función snapshot) | El veredicto en v2 viene directo de `summary.veredicto` |
-| `_buildVocesItems` | Card Voces eliminado |
-| `_updateVocesCard` | Card Voces eliminado |
-| `_detectTrend` | Card Momento eliminado |
-| `_buildSparklineData` | Card Momento eliminado |
-| `_updateMomentoCard` | Card Momento eliminado |
-| `_updateNarrativasFromSummary` | Reemplazado por bubble chart |
-| `_updateVocesFromSummary` | Card Voces eliminado |
-| `_updateMomentoFromSummary` | Reemplazado por Tendencia de temas |
-| `_TREND_CHIP` | Solo usada en `_updateNarrativasFromSummary` |
-| `_TREND_TO_COLOR` | Solo usada en `_updateMomentoFromSummary` |
-| `_TONE_URGENCY` | Solo usada en `_buildVocesItems` |
-| `_WC_SLOTS`, `_WC_SIZES`, `_WC_WEIGHTS` | Word cloud eliminado |
-| `_TREND_CONFIG` | Solo usada en funciones de Momento y `_updateResumenFromArcs` |
-
-### 8.2 Cambio de firma — `_drawSparkline`
-
-Actualmente infiere el color del score (`last >= 0.7 → rojo`). En v2 debe recibir el hex del cluster como parámetro:
-
-```
-_drawSparkline(canvas, data, clusterHex)
-```
-
-El `clusterHex` viene del color map `_clusterHexMap[arc.cluster_name]` al renderizar cada fila de historia.
-
-### 8.3 Dark mode — re-render de SVG y sparklines
-
-`toggleTheme()` en `app.js` actualmente solo actualiza el atributo CSS y llama `sparkRef.update()`. En v2, como el bubble chart SVG y los `<polyline>` de sparkline usan valores hex inline (no CSS vars), el toggle de tema requiere tres pasos adicionales:
-
-1. Reconstruir `_clusterHexMap` con los nuevos hex de dark mode (leer las vars `--q-cluster-N` del nuevo tema)
-2. Re-renderizar el SVG del bubble chart
-3. Re-renderizar la lista de historias (para actualizar sparklines y dots)
-
-### 8.4 Mecanismo de re-render al llegar el summary
-
-Al final de `_buildClusterColorMap()`, si `_allArcs.length > 0`, llamar `_renderNarrativeArcs(_allArcs)` para que los arcos ya cargados reciban sus colores de tema sin necesidad de un nuevo fetch.
-
-### 8.5 `resetAllFilters` — dropdown custom
-
-`resetAllFilters()` actualmente referencia `document.getElementById('cluster-select').value = ''`. Con el dropdown custom de tema este selector cambia. El reset debe limpiar el estado interno del dropdown custom y su label visible, además del valor de filtro.
-
-### 8.6 Fallback obsoleto en `_updateClusterDropdown`
-
-Las líneas con 5 clusters hardcodeados como fallback "hasta que el backend implemente /my/cluster-names" pueden eliminarse. El endpoint `GET /my/cluster-names` ya está implementado y funciona.
-
-### 8.8 `surfaceColor()` y `tickColor()` en `app.js`
-
-Las funciones `surfaceColor()` (línea 8) y `tickColor()` (línea 9) devuelven hex hardcodeados del palette anterior — `#1C1C1A` y `#FAFAF7`. Son los colores de fondo y ejes del Chart.js del trend chart.
-
-Con MDUI esos valores cambiarán según el palette algorítmico. Deben leer desde los tokens computados post-MDUI:
-
-```js
-// v1 (eliminar):
-function surfaceColor() { return isDark ? '#1C1C1A' : '#FAFAF7'; }
-function tickColor()    { return isDark ? '#9A9890' : '#5C5A52'; }
-
-// v2 — leer token computado después de que MDUI aplique el palette:
-function surfaceColor() {
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue('--bg').trim();
-}
-function tickColor() {
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue('--text3').trim();
-}
-```
-
-Estas funciones se llaman en el momento de renderizar el chart — si MDUI ya cargó y aplicó `setColorScheme`, el valor computado refleja el palette correcto.
-
-Añadir a `css/app.css` las clases para el dropdown custom:
-
-```css
-.qdd-wrap     { position:relative; display:inline-block; }
-.qdd-btn      { /* mismo estilo que inputs existentes */ }
-.qdd-menu     { position:absolute; top:calc(100% + 4px); left:0;
-                background:var(--surface); border:.5px solid var(--border);
-                border-radius:10px; padding:4px; z-index:10; display:none;
-                min-width:200px; }
-.qdd-menu.open { display:block; }
-.qdd-opt      { display:flex; align-items:center; gap:8px;
-                padding:7px 10px; border-radius:8px;
-                font-size:12px; cursor:pointer; color:var(--text2); }
-.qdd-opt:hover { background:var(--surface2); }
-.qdd-opt.sel  { background:var(--surface2); color:var(--text1); font-weight:500; }
-```
+| `_updateTemasFromSummary(summary)` | Punto de entrada — llama bubble + trend + veredicto |
+| `_buildClusterColorMap(narrativas)` | Construye `_clusterHexMap` por golden angle · se llama antes de colorear el veredicto |
+| `_clusterHex(topic)` | Lookup de hex del tema o fallback `--q-cluster-none` |
+| `_renderTemasBubble(narrativas)` | SVG con D3 force sincrónico · posiciones finales directas |
+| `_selectTema(clusterName)` | Toggle de selección · actualiza burbujas in-place · actualiza panel y trend |
+| `_applyTrendSelection(clusterName)` | Resalta línea del tema en Chart.js sparkline |
+| `_initTrendChart()` | Inicializa Chart.js para el sparkline de tendencia |
+| `_updateTemasTrend(narrativas)` | Popula el sparkline con series por tema |
+| `_buildVeredictoConjunto(narrativas)` | Texto de tendencia cuando no hay tema seleccionado |
+| `_calcTrendFromSeries(series)` | Calcula veredicto de un tema desde su serie temporal |
+| `_getTrendVeredicto(nav)` | Dispatcher: usa `_calcTrendFromSeries` si hay series, `nav.trend` como fallback |
+| `_calcCircleR(N)` | Radio del círculo inicial para N nodos (posiciones de partida de D3) |
+| `_bubbleCoords(N, cx, cy, r)` | Coordenadas iniciales en círculo para D3 (reemplazado por espiral compacta) |
 
 ---
 
