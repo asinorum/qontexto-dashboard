@@ -11,40 +11,48 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**Tab Temas — 6 mejoras pendientes (análisis hecho, código NO aprobado aún)**
+**Sparkline: ¿migrar de Chart.js a D3?**
 
-Plan analizado 2026-06-19. Implementar en este orden:
+Decisión pendiente del usuario. Ventajas de D3: transiciones suaves al seleccionar temas, control total del render, consistencia con el bubble chart. Costo: reescribir `_updateTemasTrend` desde cero. El usuario preguntó pero no dio respuesta al cerrar sesión.
 
-### 1. CLUSTERS DINÁMICOS · `js/api.js` · `_renderTemasBubble` + `_updateTemasTrend`
-- Eliminar `narrativas.slice(0, 4)` y `BUBBLE_COORDS` hardcoded en `_renderTemasBubble`
-- Añadir `_bubbleCoords(N)`: layout circular dinámico
-  - N=1: centro; N≥2: círculo con R = f(N) para no solapar burbujas
-  - H del SVG crece si N > 4
-- Color: primeras 4 con importance_score ≥ 0.60 → --q-cluster-1..4; resto → --q-cluster-none (ya correcto)
-- A. `_updateTemasTrend` también hace `narrativas.slice(0, 4)` — corregir en el mismo pase para mostrar todos los clusters
-- B. Añadir `spanGaps: true` en cada dataset de `_updateTemasTrend`
+---
 
-### 2. BOTÓN "↺ Ver todos" · `index.html` + `js/api.js`
-- Añadir `<button onclick="_selectTema(null)">↺ Ver todos</button>` top-right en card "Temas activos"
-- Mostrar solo cuando `_selectedTema !== null`; ocultar en reset — manejar desde `_selectTema`
+## ✅ Tab Temas — 6 mejoras completadas (2026-06-19)
 
-### 3. SPARKLINE INTERACTIVIDAD · `js/api.js`
-- Bug: `_applyTrendSelection` no resetea `pointBackgroundColor` al deseleccionar → dots quedan casi invisibles
-  - Fix: añadir `ds.pointBackgroundColor = hex` en la rama `!clusterName`
-- Bug: `_hexToRgba` está duplicada (línea 74 y línea 1272) — eliminar la del 1272
+Commits: `fb97f1e` (las 6 mejoras) + `f9815e4` (height dinámico bubble)
 
-### 4. SPARKLINE LABELS · `index.html` + `js/api.js`
-- Añadir `<div>` flex sobre `<canvas id="temas-trend">`:
-  - Izquierda: `<span id="temas-trend-range">` — rango calculado desde `allDates`
-  - Derecha: `<span>~∿ Más historias y radios = línea más alta</span>` — estático
-- En `_updateTemasTrend`: poblar `#temas-trend-range` con `allDates[0]` → `allDates[last]`
+| # | Mejora | Commit |
+|---|--------|--------|
+| 1 | Clusters dinámicos — `_renderTemasBubble` y `_updateTemasTrend` sin `slice(0,4)` | `fb97f1e` |
+| 2 | Botón ↺ Ver todos — top-right en card, visible solo con selección activa | `fb97f1e` |
+| 3 | Sparkline interactividad — fix `pointBackgroundColor` reset + eliminar `_hexToRgba` duplicada | `fb97f1e` |
+| 4 | Sparkline labels — flex row sobre canvas con rango de fechas dinámico | `fb97f1e` |
+| 5 | Veredicto dinámico — `_buildVeredictoConjunto` (sin selección) + `_calcTrendFromSeries` (con selección) | `fb97f1e` |
+| 6 | Panel default — texto explicativo con borde neutro cuando no hay tema seleccionado | `fb97f1e` |
 
-### 5. VEREDICTO DEBAJO DEL SPARKLINE · `js/api.js`
-- Sin selección: `_buildVeredictoConjunto(narrativas)` — cuenta cuántos tienen trend creciendo/estable/sin señal
-- Con selección: `_calcTrendFromSeries(series)` — compara promedio últimos 3 puntos vs anteriores 3, genera texto interpretativo. Reemplaza `_getTrendVeredicto` que usaba campo hardcodeado
+---
 
-### 6. PANEL DEFAULT · `js/api.js` · `_selectTema`
-- Rama `!clusterName`: en vez de `display:none`, mostrar panel con texto explicativo y borde neutro
+## ✅ Bubble chart Tab Temas — mejoras visuales (2026-06-19)
+
+### Layout D3 force-directed · commits `fbac15c` → `962ac84`
+
+| Cambio | Detalle |
+|--------|---------|
+| D3 force simulation | Reemplazó layout circular estático. `forceManyBody(-120)` + `forceCollide(r+14)` + `forceX/Y(0.018/0.015)` |
+| Simulación sincrónica | `simulation.stop()` + loop de ticks → renderiza posiciones finales, sin animación |
+| Posiciones iniciales | Espiral compacta al centro (no círculo) — fuerzas tienen trabajo real que hacer |
+| Burbujas más grandes | `maxBubbleR` 44 → 58px; formula `MAX_H / 6` en lugar de `/ 8` |
+| Regiones dinámicas | Posición X calculada del spread real del cluster post-simulación (no ancho total SVG) |
+| Aire eliminado | `shiftY = actualTop - pad_top` desplaza todo el cluster hacia arriba |
+| Height dinámico | SVG dimensionado desde geometría real: `finalH = actualBottom - shiftY + pad_mid + regionRowH` |
+| Escalado MD3 | `css/app.css`: 12 clases subidas de 10→11px o 11→12px (Label Small mínimo 11sp) |
+| Font proporcional | Labels burbujas: `fs = round(11 + (r-22)/(maxBubbleR-22) * 3)` → 11–14px según radio |
+| Leyenda bubble | 10px → 12px |
+| Veredicto border-left | Color fijo del tema con mayor score al cargar estado; no cambia con selección |
+
+### Detalle técnico — orden de inicialización corregido
+`_buildClusterColorMap(narrativas)` ahora se llama **antes** de asignar el color al veredicto card.
+Antes el color se asignaba antes del color map → `_clusterHex()` devolvía vacío.
 
 ---
 
