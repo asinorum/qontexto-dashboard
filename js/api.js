@@ -1172,19 +1172,21 @@ function _renderTemasBubble(narrativas) {
   }
 
   const N          = narrativas.length;
-  const W          = 580;
-  const maxBubbleR = 66;
-  const circleR    = _calcCircleR(N);
-  const pad        = maxBubbleR + 14;
-  const H          = N <= 1 ? 200 : Math.max(240, Math.ceil(2 * (circleR + pad)));
-  const centerX    = 210, centerY = H / 2;
+  const W          = 600;
+  const MAX_H      = 380;
+  const maxBubbleR = 44;
+  const rawCircleR = _calcCircleR(N);
+  const circleR    = Math.min(rawCircleR, MAX_H / 2 - maxBubbleR - 12);
+  const H          = N <= 1 ? 200 : Math.ceil(2 * (circleR + maxBubbleR + 12));
+  const centerX    = circleR + maxBubbleR + 14;
+  const centerY    = H / 2;
   const coords     = _bubbleCoords(N, centerX, centerY, circleR);
   const items      = narrativas;
   const maxScore   = Math.max(...items.map(n => n.importance_score ?? 0), 0.01);
-  const getR       = s => 18 + ((s ?? 0) / maxScore) * 48;
+  const getR       = s => 12 + ((s ?? 0) / maxScore) * 32;
 
   const allRegions = [...new Set(items.flatMap(n => n.unique_regions ?? []))].slice(0, 6);
-  const regionX    = 500;
+  const regionX    = W - 100;
   const regionY    = i => allRegions.length < 2
     ? H / 2
     : 50 + i * (H - 80) / (allRegions.length - 1);
