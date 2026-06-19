@@ -11,6 +11,41 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
+**Tab Temas — 6 mejoras pendientes (análisis hecho, código NO aprobado aún)**
+
+Plan analizado 2026-06-19. Implementar en este orden:
+
+### 1. CLUSTERS DINÁMICOS · `js/api.js` · `_renderTemasBubble`
+- Eliminar `narrativas.slice(0, 4)` y `BUBBLE_COORDS` hardcoded
+- Añadir `_bubbleCoords(N)`: layout circular dinámico
+  - N=1: centro; N≥2: círculo con R = f(N) para no solapar burbujas
+  - H del SVG crece si N > 4
+- Color: primeras 4 con importance_score ≥ 0.60 → --q-cluster-1..4; resto → --q-cluster-none (ya correcto)
+
+### 2. BOTÓN "↺ Ver todos" · `index.html` + `js/api.js`
+- Añadir `<button onclick="_selectTema(null)">↺ Ver todos</button>` top-right en card "Temas activos"
+- Mostrar solo cuando `_selectedTema !== null`; ocultar en reset — manejar desde `_selectTema`
+
+### 3. SPARKLINE INTERACTIVIDAD · `js/api.js`
+- Bug: `_applyTrendSelection` no resetea `pointBackgroundColor` al deseleccionar → dots quedan casi invisibles
+  - Fix: añadir `ds.pointBackgroundColor = hex` en la rama `!clusterName`
+- Bug: `_hexToRgba` está duplicada (línea 74 y línea 1272) — eliminar la del 1272
+
+### 4. SPARKLINE LABELS · `index.html` + `js/api.js`
+- Añadir `<div>` flex sobre `<canvas id="temas-trend">`:
+  - Izquierda: `<span id="temas-trend-range">` — rango calculado desde `allDates`
+  - Derecha: `<span>~∿ Más historias y radios = línea más alta</span>` — estático
+- En `_updateTemasTrend`: poblar `#temas-trend-range` con `allDates[0]` → `allDates[last]`
+
+### 5. VEREDICTO DEBAJO DEL SPARKLINE · `js/api.js`
+- Sin selección: `_buildVeredictoConjunto(narrativas)` — cuenta cuántos tienen trend creciendo/estable/sin señal
+- Con selección: `_calcTrendFromSeries(series)` — compara promedio últimos 3 puntos vs anteriores 3, genera texto interpretativo. Reemplaza `_getTrendVeredicto` que usaba campo hardcodeado
+
+### 6. PANEL DEFAULT · `js/api.js` · `_selectTema`
+- Rama `!clusterName`: en vez de `display:none`, mostrar panel con texto explicativo y borde neutro
+
+---
+
 **Refactor v2 — implementación aprobada (2026-06-18)**
 
 Referencia: `docs/qontexto-design-system-v2.md`
