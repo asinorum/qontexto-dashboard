@@ -1243,14 +1243,16 @@ function _renderTemasBubble(narrativas) {
     .attr('stroke', d => _clusterHex(d.node.topic))
     .attr('stroke-width', 1.2).attr('opacity', 0.3);
 
-  // Nodos de región (estáticos)
-  allRegions.forEach((region, i) => {
-    const rx = regionXFor(i, allRegions.length);
-    svg.append('circle').attr('cx', rx).attr('cy', regionRowY).attr('r', 3.5).attr('fill', 'var(--text3)');
-    svg.append('text').attr('x', rx).attr('y', regionRowY + 13)
-      .attr('text-anchor', 'middle').attr('font-size', 11)
-      .attr('fill', 'var(--text2)').attr('font-family', 'var(--font)').text(region);
-  });
+  // Nodos de región — selecciones D3 para poder transicionarlos al final de la sim
+  const regionDots = svg.selectAll('.qregion-dot').data(allRegions).join('circle')
+    .attr('class', 'qregion-dot').attr('r', 3.5).attr('fill', 'var(--text3)')
+    .attr('cx', (_, i) => regionXFor(i, allRegions.length))
+    .attr('cy', regionRowY);
+  const regionTexts = svg.selectAll('.qregion-lbl').data(allRegions).join('text')
+    .attr('class', 'qregion-lbl').attr('text-anchor', 'middle')
+    .attr('font-size', 11).attr('fill', 'var(--text2)').attr('font-family', 'var(--font)')
+    .attr('x', (_, i) => regionXFor(i, allRegions.length))
+    .attr('y', regionRowY + 13).text(d => d);
 
   // Burbujas
   const circles = svg.selectAll('.qbubble').data(nodes).join('circle')
@@ -1312,7 +1314,51 @@ function _renderTemasBubble(narrativas) {
     .force('y',       d3.forceY(centerY).strength(0.05))
     .alphaDecay(0.03)
     .on('tick', ticked)
-    .on('end',  () => { _bubbleSim = null; });
+    .on('end', () => {
+      _bubbleSim = null;
+
+      // Bounds reales post-simulación
+      const actualTop    = Math.min(...nodes.map(d => d.y - d.r));
+      const actualBottom = Math.max(...nodes.map(d => d.y + d.r));
+      const actualLeft   = Math.min(...nodes.map(d => d.x - d.r));
+      const actualRight  = Math.max(...nodes.map(d => d.x + d.r));
+
+      // Eliminar aire arriba: desplazar todos los nodos al padding mínimo
+      const shiftY = Math.max(0, actualTop - 16);
+      nodes.forEach(d => { d.y -= shiftY; });
+
+      // RegionX alineada al spread horizontal real del cluster
+      const finalRegionXFor = (i, total) => total <= 1 ? centerX
+        : Math.round(actualLeft + i * (actualRight - actualLeft) / (total - 1));
+
+      const finalRegionRowY = actualBottom - shiftY + pad_mid;
+      const finalH          = finalRegionRowY + regionRowH;
+
+      // Redimensionar SVG
+      svg.transition().duration(400)
+        .attr('viewBox', `0 0 ${W} ${finalH}`).style('height', `${finalH}px`);
+
+      // Burbujas y labels suben (eliminan aire arriba)
+      circles.transition().duration(400).attr('cx', d => d.x).attr('cy', d => d.y);
+      labelGroups.transition().duration(400).attr('transform', d => `translate(${d.x},${d.y})`);
+
+      // Regiones se mueven justo bajo el cluster
+      regionDots.transition().duration(400)
+        .attr('cx', (_, i) => finalRegionXFor(i, allRegions.length))
+        .attr('cy', finalRegionRowY);
+      regionTexts.transition().duration(400)
+        .attr('x', (_, i) => finalRegionXFor(i, allRegions.length))
+        .attr('y', finalRegionRowY + 13);
+
+      // Hebras se re-dibujan hacia posiciones finales
+      hebras.transition().duration(400).attr('d', d => {
+        const ri   = allRegions.indexOf(d.region);
+        if (ri < 0) return '';
+        const rx   = finalRegionXFor(ri, allRegions.length);
+        const midY = (d.node.y + finalRegionRowY) / 2;
+        return `M${d.node.x},${d.node.y} C${d.node.x},${midY} ${rx},${midY} ${rx},${finalRegionRowY}`;
+      });
+    });
 }
 
 const TREND_LABEL_DEFAULT = 'Cada línea es un tema. La altura refleja su presencia simultánea en radios e historias.';
