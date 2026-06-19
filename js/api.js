@@ -931,9 +931,13 @@ function _drawSparkline(history, clusterHex) {
   const ys = scores.map(s => H - pad - ((s - min) / range) * (H - pad * 2));
   const pts = xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
   const color = clusterHex || '#4CAF50';
+  const dots = xs.map((x, i) => {
+    const r = i === xs.length - 1 ? 2.5 : 2;
+    return `<circle cx="${x.toFixed(1)}" cy="${ys[i].toFixed(1)}" r="${r}" fill="${color}"/>`;
+  }).join('');
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">` +
     `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>` +
-    `<circle cx="${xs[xs.length-1].toFixed(1)}" cy="${ys[ys.length-1].toFixed(1)}" r="2.5" fill="${color}"/>` +
+    dots +
     `</svg>`;
 }
 
@@ -1286,17 +1290,18 @@ function _applyTrendSelection(clusterName) {
   _trendChart.data.datasets.forEach(ds => {
     const hex = _clusterHex(ds.label);
     if (!clusterName) {
-      ds.borderColor = hex;
-      ds.borderWidth = 2;
-      ds.pointRadius = 0;
+      ds.borderColor   = hex;
+      ds.borderWidth   = 2;
+      ds.pointRadius   = 2;
     } else if (ds.label === clusterName) {
-      ds.borderColor = hex;
-      ds.borderWidth = 3;
-      ds.pointRadius = ds.data.map(v => v !== null ? 3 : 0);
+      ds.borderColor   = hex;
+      ds.borderWidth   = 3;
+      ds.pointRadius   = ds.data.map(v => v !== null ? 3 : 0);
     } else {
-      ds.borderColor = _hexToRgba(hex, 0.07);
-      ds.borderWidth = 2;
-      ds.pointRadius = 0;
+      ds.borderColor           = _hexToRgba(hex, 0.07);
+      ds.pointBackgroundColor  = _hexToRgba(hex, 0.07);
+      ds.borderWidth           = 2;
+      ds.pointRadius           = 1;
     }
   });
   _trendChart.update('none');
@@ -1348,10 +1353,12 @@ function _updateTemasTrend(narrativas) {
       backgroundColor: 'transparent',
       fill:            false,
       tension:         0.4,
-      borderWidth:     2,
-      borderCapStyle:  'round',
-      pointRadius:     0,
-      spanGaps:        false,
+      borderWidth:          2,
+      borderCapStyle:       'round',
+      pointRadius:          2,
+      pointHitRadius:       6,
+      pointBackgroundColor: hex,
+      spanGaps:             false,
     };
   });
 
