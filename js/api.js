@@ -1172,18 +1172,20 @@ function _renderTemasBubble(narrativas) {
   }
 
   const N          = narrativas.length;
-  const W          = 600;
-  const MAX_H      = 380;
-  const maxBubbleR = 44;
+  const containerW = el.clientWidth || 580;
+  const vpH        = window.innerHeight || 800;
+  const W          = Math.max(360, containerW);
+  const MAX_H      = Math.round(Math.min(vpH * 0.38, containerW * 0.65, 440));
+  const maxBubbleR = Math.round(Math.min(44, MAX_H / 8));
   const rawCircleR = _calcCircleR(N);
   const circleR    = Math.min(rawCircleR, MAX_H / 2 - maxBubbleR - 12);
-  const H          = N <= 1 ? 200 : Math.ceil(2 * (circleR + maxBubbleR + 12));
+  const H          = N <= 1 ? Math.round(MAX_H * 0.55) : Math.ceil(2 * (circleR + maxBubbleR + 12));
   const centerX    = circleR + maxBubbleR + 14;
   const centerY    = H / 2;
   const coords     = _bubbleCoords(N, centerX, centerY, circleR);
   const items      = narrativas;
   const maxScore   = Math.max(...items.map(n => n.importance_score ?? 0), 0.01);
-  const getR       = s => 12 + ((s ?? 0) / maxScore) * 32;
+  const getR       = s => Math.round(maxBubbleR * 0.28 + ((s ?? 0) / maxScore) * maxBubbleR * 0.72);
 
   const allRegions = [...new Set(items.flatMap(n => n.unique_regions ?? []))].slice(0, 6);
   const regionX    = W - 100;
@@ -1191,7 +1193,7 @@ function _renderTemasBubble(narrativas) {
     ? H / 2
     : 50 + i * (H - 80) / (allRegions.length - 1);
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block">`;
 
   // Bezier hebras (1 por conexión narrativa→región)
   for (const [i, nav] of items.entries()) {
