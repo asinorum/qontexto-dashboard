@@ -1203,8 +1203,10 @@ function _renderTemasBubble(narrativas) {
   const getR       = s => Math.round(maxBubbleR * 0.28 + ((s ?? 0) / maxScore) * maxBubbleR * 0.72);
 
   const allRegions  = [...new Set(items.flatMap(n => n.unique_regions ?? []))].slice(0, 8);
-  const regionXFor  = (i, total) => total <= 1 ? W / 2
-    : Math.round(W * 0.1 + i * (W * 0.8) / (total - 1));
+  const bubbleLeft  = centerX - circleR - maxBubbleR;
+  const bubbleRight = centerX + circleR + maxBubbleR;
+  const regionXFor  = (i, total) => total <= 1 ? centerX
+    : Math.round(bubbleLeft + i * (bubbleRight - bubbleLeft) / (total - 1));
 
   let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block">`;
 
