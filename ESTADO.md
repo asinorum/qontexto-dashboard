@@ -17,6 +17,11 @@ Referencia: `docs/qontexto-design-system-v2.md`
 Backend: todos los cambios (#1–#5) deployados.
 Etapas completadas: análisis ✅ · planificación ✅ · implementación ✅
 
+**✅ Fix post-implementación — color map desde summary** · `js/api.js` · commit `69f8e58`
+- `_buildClusterColorMap(narrativas)` ahora se llama desde `_updateTemasFromSummary`, no desde `_loadClusterNames`
+- Orden de asignación: narrativas ordenadas por `importance_score` desc · primeras 4 con score ≥ 0.60 → `--q-cluster-1..4` · resto → `--q-cluster-none`
+- `toggleTheme()` sigue llamando sin args → fallback interno a `_summary?.narrativas`
+
 ### Tareas en orden
 
 **✅ Tarea 1 — MDUI** · `index.html` · `css/tokens.css` · `js/app.js`
