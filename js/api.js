@@ -730,7 +730,7 @@ let _clusterHexMap   = {};
 
 function _buildClusterColorMap(narrativas) {
   narrativas = narrativas ?? _summary?.narrativas ?? [];
-  console.log('[qontexto] _buildClusterColorMap narrativas:', narrativas);
+  console.log('[qontexto] _buildClusterColorMap:', narrativas.map(n => ({ cluster_name: n.cluster_name, importance_score: n.importance_score })));
   const style    = getComputedStyle(document.documentElement);
   const varNames = ['--q-cluster-1', '--q-cluster-2', '--q-cluster-3', '--q-cluster-4'];
 
