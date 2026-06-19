@@ -5,7 +5,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qlogo { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:500; color:var(--text1); }
 .qlogo-dot { width:10px; height:10px; border-radius:50%; background:#FF5722; flex-shrink:0; }
 .qtabs { display:flex; background:var(--surface2); border-radius:10px; padding:3px; gap:2px; }
-.qtab { padding:5px 16px; border-radius:7px; font-size:13px; color:var(--text2); cursor:pointer; border:none; background:transparent; font-family:var(--font); }
+.qtab { padding:5px 16px; border-radius:7px; font-size:14px; color:var(--text2); cursor:pointer; border:none; background:transparent; font-family:var(--font); }
 .qtab.active { background:var(--surface); color:var(--text1); font-weight:500; }
 .qnav-right { display:flex; align-items:center; gap:12px; }
 .qlive { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2); }
@@ -14,7 +14,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 
 /* Timebar */
 .qtimebar { display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:44px; background:var(--surface); border-bottom:.5px solid var(--border); }
-.qwlabel { font-size:10px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-right:12px; }
+.qwlabel { font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-right:12px; }
 .qwindow-tabs { display:flex; align-items:center; gap:2px; }
 .qwt { padding:4px 11px; border-radius:6px; font-size:12px; color:var(--text3); cursor:pointer; border:none; background:transparent; font-family:var(--font); }
 .qwt.active { background:var(--surface2); color:var(--text1); font-weight:500; }
@@ -31,7 +31,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qtopbar { display:flex; align-items:center; background:var(--surface); border:.5px solid var(--border); border-radius:16px; padding:10px 16px; margin-bottom:14px; flex-wrap:wrap; gap:4px 0; }
 .qtopbar-item { display:flex; align-items:center; gap:6px; padding:0 14px; }
 .qtopbar-item:first-child { padding-left:0; }
-.qtopbar-lbl { font-size:10px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
+.qtopbar-lbl { font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
 .qtopbar-val { font-size:14px; font-weight:500; color:var(--text1); }
 .qtopbar-sub { font-size:11px; color:var(--text3); }
 .qtopbar-sep { width:.5px; height:20px; background:var(--border); flex-shrink:0; }
@@ -47,17 +47,17 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qbar-name { font-size:12px; font-weight:500; color:var(--text1); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .qbar-name.muted { color:var(--text3); }
 .qbar-chips { display:flex; gap:4px; flex-shrink:0; }
-.qbar-chip { font-size:10px; font-weight:500; padding:2px 7px; border-radius:20px; white-space:nowrap; }
+.qbar-chip { font-size:11px; font-weight:500; padding:2px 7px; border-radius:20px; white-space:nowrap; }
 .qbar-track { width:100%; height:5px; background:var(--surface2); border-radius:3px; overflow:hidden; }
 .qbar-fill { height:100%; border-radius:3px; transition:width .4s ease; }
-.qbar-rationale { font-size:11px; color:var(--text3); line-height:1.45; padding-top:1px; }
+.qbar-rationale { font-size:12px; color:var(--text3); line-height:1.45; padding-top:1px; }
 
 /* Cards */
 .qcard { background:var(--surface); border-radius:20px; border:.5px solid var(--border); padding:18px; position:relative; }
-.qcard-lbl { font-size:10px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-bottom:5px; }
-.qcard-title { font-size:13px; font-weight:500; color:var(--text1); margin-bottom:14px; line-height:1.45; }
-.qcard-note { font-size:10px; color:var(--text3); margin-top:10px; padding:7px 10px; background:var(--surface2); border-radius:8px; line-height:1.5; }
-.qcard-footer { font-size:10px; color:var(--text3); margin-top:10px; padding-top:10px; border-top:.5px solid var(--border); }
+.qcard-lbl { font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-bottom:5px; }
+.qcard-title { font-size:14px; font-weight:500; color:var(--text1); margin-bottom:14px; line-height:1.45; }
+.qcard-note { font-size:11px; color:var(--text3); margin-top:10px; padding:7px 10px; background:var(--surface2); border-radius:8px; line-height:1.5; }
+.qcard-footer { font-size:11px; color:var(--text3); margin-top:10px; padding-top:10px; border-top:.5px solid var(--border); }
 
 /* Arc filter buttons */
 .qarc-filter.active { background:var(--text1); color:var(--surface); font-weight:500; }
@@ -68,8 +68,8 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 /* Leyenda narrativas */
 .qleg-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
 .qleg-dot { width:9px; height:9px; border-radius:2px; flex-shrink:0; }
-.qleg-name { font-size:11px; color:var(--text2); margin-left:7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.qleg-tag { font-size:10px; font-weight:500; padding:2px 7px; border-radius:20px; white-space:nowrap; margin-left:6px; }
+.qleg-name { font-size:12px; color:var(--text2); margin-left:7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.qleg-tag { font-size:11px; font-weight:500; padding:2px 7px; border-radius:20px; white-space:nowrap; margin-left:6px; }
 
 /* Word cloud */
 .qwc { position:relative; width:100%; height:170px; overflow:hidden; }
@@ -80,20 +80,20 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qtevent { display:flex; gap:14px; padding-bottom:18px; }
 .qtevent:last-child { padding-bottom:0; }
 .qtl-left { display:flex; flex-direction:column; align-items:center; width:38px; flex-shrink:0; }
-.qtl-time { font-size:10px; color:var(--text3); white-space:nowrap; margin-bottom:5px; text-align:right; width:100%; }
+.qtl-time { font-size:11px; color:var(--text3); white-space:nowrap; margin-bottom:5px; text-align:right; width:100%; }
 .qtl-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 .qtl-line { width:1px; flex:1; background:var(--border); margin-top:4px; }
 .qtevent:last-child .qtl-line { display:none; }
-.qtl-title { font-size:13px; font-weight:500; color:var(--text1); margin-bottom:2px; }
-.qtl-sub { font-size:11px; color:var(--text3); line-height:1.4; }
+.qtl-title { font-size:14px; font-weight:500; color:var(--text1); margin-bottom:2px; }
+.qtl-sub { font-size:12px; color:var(--text3); line-height:1.4; }
 .qtl-quote { font-size:12px; margin-top:4px; font-style:italic; }
 
 /* Emisoras */
 .qstream-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
 .qstream { background:var(--surface); border-radius:16px; border:.5px solid var(--border); padding:14px; }
-.qstream-name { font-size:13px; font-weight:500; color:var(--text1); margin-bottom:2px; display:flex; align-items:center; gap:6px; }
-.qstream-region { font-size:11px; color:var(--text3); margin-bottom:10px; }
-.qstream-row { display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; }
+.qstream-name { font-size:14px; font-weight:500; color:var(--text1); margin-bottom:2px; display:flex; align-items:center; gap:6px; }
+.qstream-region { font-size:12px; color:var(--text3); margin-bottom:10px; }
+.qstream-row { display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; }
 .qstream-key { color:var(--text3); }
 .qstream-val { font-weight:500; color:var(--text1); }
 
@@ -101,7 +101,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qfilters { background:var(--surface2); border-radius:12px; padding:16px; margin-bottom:16px; border:1px solid var(--border); }
 .qfilters-row { display:flex; flex-wrap:wrap; gap:16px 20px; align-items:flex-end; }
 .qfilter-group { display:flex; flex-direction:column; gap:6px; min-width:120px; }
-.qfilter-label { font-size:10px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
+.qfilter-label { font-size:11px; font-weight:500; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
 
 /* Chips estado */
 .qfilter-chips { display:flex; gap:6px; flex-wrap:wrap; }
@@ -121,8 +121,8 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 /* Filtros activos */
 .qfilters-active { display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
 .qactive-chips { display:flex; gap:6px; flex-wrap:wrap; }
-.qactive-chip { font-size:10px; padding:3px 8px; border-radius:12px; background:var(--text1); color:var(--surface); display:flex; align-items:center; gap:4px; }
-.qreset-btn { font-size:10px; padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text3); cursor:pointer; display:flex; align-items:center; gap:4px; font-family:var(--font); }
+.qactive-chip { font-size:11px; padding:3px 8px; border-radius:12px; background:var(--text1); color:var(--surface); display:flex; align-items:center; gap:4px; }
+.qreset-btn { font-size:11px; padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text3); cursor:pointer; display:flex; align-items:center; gap:4px; font-family:var(--font); }
 .qreset-btn:hover { background:var(--surface2); color:var(--text2); }
 
 /* F4: Skeleton loading */

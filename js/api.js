@@ -1199,7 +1199,15 @@ function _renderTemasBubble(narrativas) {
   const regionRowY = centerY + (N <= 1 ? maxBubbleR : circleR + maxBubbleR) + pad_mid;
   const H          = regionRowY + regionRowH;
   const coords     = _bubbleCoords(N, centerX, centerY, circleR);
-  const items      = narrativas;
+  // Distribución simétrica: mayor importancia arriba, luego alternando derecha/izquierda
+  const _sorted = [...narrativas].sort((a, b) => (b.importance_score ?? 0) - (a.importance_score ?? 0));
+  const items   = new Array(N);
+  items[0] = _sorted[0];
+  let _hi = 1, _lo = N - 1;
+  for (let _k = 1; _k < N; _k++) {
+    if (_k % 2 === 1) items[_hi++] = _sorted[_k];
+    else              items[_lo--] = _sorted[_k];
+  }
   const maxScore   = Math.max(...items.map(n => n.importance_score ?? 0), 0.01);
   const getR       = s => Math.round(maxBubbleR * 0.28 + ((s ?? 0) / maxScore) * maxBubbleR * 0.72);
 
@@ -1240,7 +1248,7 @@ function _renderTemasBubble(narrativas) {
     svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${hex}" fill-opacity="${isSel ? 0.25 : 0.14}" stroke="${hex}" stroke-width="${isSel ? 2.5 : 1.8}" style="cursor:pointer" onclick="_selectTema('${_esc(nav.topic ?? '')}')"/>`;
 
     if (r >= 22) {
-      const fs     = Math.min(10, Math.max(8, Math.floor(r / 4.5)));
+      const fs     = 11;
       const words  = (nav.topic ?? '').split(' ');
       const half   = Math.ceil(words.length / 2);
       const line1  = words.slice(0, half).join(' ');
