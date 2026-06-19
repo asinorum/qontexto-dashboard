@@ -725,16 +725,29 @@ let _advancedFilters = {
   urgency: ''
 };
 let _clusterNames    = [];
-let _clusterColorMap = {};
+let _clusterColorMap = {}; // legacy — no longer read, kept for safety
 let _clusterHexMap   = {};
+
+function _hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const x = v => Math.round(v * 255).toString(16).padStart(2, '0');
+  return `#${x(f(0))}${x(f(8))}${x(f(4))}`;
+}
+
+function _clusterColorForIndex(idx, isDark) {
+  const hue = (18 + idx * 137.5) % 360;
+  return isDark ? _hslToHex(hue, 58, 62) : _hslToHex(hue, 52, 33);
+}
 
 function _buildClusterColorMap(narrativas) {
   narrativas = narrativas ?? _summary?.narrativas ?? [];
-  const style    = getComputedStyle(document.documentElement);
-  const varNames = ['--q-cluster-1', '--q-cluster-2', '--q-cluster-3', '--q-cluster-4'];
+  const isDark  = document.documentElement.getAttribute('mdui-theme') === 'dark';
+  const noneHex = getComputedStyle(document.documentElement).getPropertyValue('--q-cluster-none').trim();
 
-  _clusterColorMap = {};
-  _clusterHexMap   = {};
+  _clusterHexMap = {};
 
   const sorted = [...narrativas]
     .sort((a, b) => (b.importance_score ?? 0) - (a.importance_score ?? 0));
@@ -742,10 +755,8 @@ function _buildClusterColorMap(narrativas) {
   let colorIdx = 0;
   for (const nav of sorted) {
     if (!nav.topic) continue;
-    const eligible = colorIdx < 4 && (nav.importance_score ?? 0) >= 0.60;
-    const varN     = eligible ? varNames[colorIdx++] : '--q-cluster-none';
-    _clusterColorMap[nav.topic] = `var(${varN})`;
-    _clusterHexMap[nav.topic]   = style.getPropertyValue(varN).trim();
+    const eligible = (nav.importance_score ?? 0) >= 0.60;
+    _clusterHexMap[nav.topic] = eligible ? _clusterColorForIndex(colorIdx++, isDark) : noneHex;
   }
 
   if (_allArcs.length > 0) _renderNarrativeArcs(_allArcs);
