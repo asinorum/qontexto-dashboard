@@ -442,6 +442,7 @@ Datos que el dashboard v2 necesita del backend, organizados por disponibilidad.
 
 | Dato | Endpoint | Campo | Tab que lo consume |
 |---|---|---|---|
+| Nombre del tema/cluster | `GET /my/summary` | `narrativas[].topic` | Temas — **no es `cluster_name`**, ese campo no existe en este endpoint |
 | importance_score por cluster | `GET /my/summary` | `narrativas[].importance_score` | Temas |
 | urgency por cluster | `GET /my/summary` | `narrativas[].urgency` | Temas, Historias |
 | rationale por cluster | `GET /my/summary` | `narrativas[].rationale` | Temas |
