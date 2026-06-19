@@ -15,12 +15,14 @@ Deploy: `https://qontexto.com`
 
 Plan analizado 2026-06-19. Implementar en este orden:
 
-### 1. CLUSTERS DINÁMICOS · `js/api.js` · `_renderTemasBubble`
-- Eliminar `narrativas.slice(0, 4)` y `BUBBLE_COORDS` hardcoded
+### 1. CLUSTERS DINÁMICOS · `js/api.js` · `_renderTemasBubble` + `_updateTemasTrend`
+- Eliminar `narrativas.slice(0, 4)` y `BUBBLE_COORDS` hardcoded en `_renderTemasBubble`
 - Añadir `_bubbleCoords(N)`: layout circular dinámico
   - N=1: centro; N≥2: círculo con R = f(N) para no solapar burbujas
   - H del SVG crece si N > 4
 - Color: primeras 4 con importance_score ≥ 0.60 → --q-cluster-1..4; resto → --q-cluster-none (ya correcto)
+- A. `_updateTemasTrend` también hace `narrativas.slice(0, 4)` — corregir en el mismo pase para mostrar todos los clusters
+- B. Añadir `spanGaps: true` en cada dataset de `_updateTemasTrend`
 
 ### 2. BOTÓN "↺ Ver todos" · `index.html` + `js/api.js`
 - Añadir `<button onclick="_selectTema(null)">↺ Ver todos</button>` top-right en card "Temas activos"
