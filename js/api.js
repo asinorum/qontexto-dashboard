@@ -1193,7 +1193,7 @@ function _renderTemasBubble(narrativas) {
   const containerW = el.clientWidth || 580;
   const vpW        = window.innerWidth  || 1200;
   const vpH        = window.innerHeight || 800;
-  const W          = Math.max(360, Math.min(Math.round(vpW * 0.62), containerW, 820));
+  const W          = Math.max(360, Math.min(Math.round(vpW * 0.75), containerW, 1000));
   const MAX_H      = Math.round(Math.min(vpH * Math.min(0.38 + N * 0.02, 0.60), containerW * 0.8, 600));
   const maxBubbleR = Math.round(Math.min(44, MAX_H / 8));
   const pad_mid    = 22;
@@ -1308,11 +1308,11 @@ function _renderTemasBubble(narrativas) {
 
   // Simulación D3 force
   _bubbleSim = d3.forceSimulation(nodes)
-    .force('collide', d3.forceCollide(d => d.r + 6).strength(1))
-    .force('charge',  d3.forceManyBody().strength(-20))
-    .force('x',       d3.forceX(centerX).strength(0.06))
-    .force('y',       d3.forceY(centerY).strength(0.05))
-    .alphaDecay(0.03)
+    .force('collide', d3.forceCollide(d => d.r + 14).strength(1))
+    .force('charge',  d3.forceManyBody().strength(-120))
+    .force('x',       d3.forceX(centerX).strength(0.018))
+    .force('y',       d3.forceY(centerY).strength(0.015))
+    .alphaDecay(0.025)
     .on('tick', ticked)
     .on('end', () => {
       _bubbleSim = null;
