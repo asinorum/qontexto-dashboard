@@ -1309,13 +1309,16 @@ function _renderTemasBubble(narrativas) {
     const line2 = words.slice(half).join(' ');
     const g     = d3.select(this);
     const hex   = _clusterHex(d.topic);
-    const style = sel => sel.attr('text-anchor', 'middle').attr('font-size', 12)
+    // Font proporcional al radio: 11px (r=22) → 14px (r=maxBubbleR)
+    const fs    = Math.round(11 + Math.max(0, d.r - 22) / Math.max(1, maxBubbleR - 22) * 3);
+    const lh    = fs + 3;
+    const style = sel => sel.attr('text-anchor', 'middle').attr('font-size', fs)
       .attr('font-weight', 500).attr('fill', hex).attr('font-family', 'var(--font)');
     if (line2) {
-      style(g.append('text').attr('y', -7)).text(line1);
-      style(g.append('text').attr('y',  8)).text(line2);
+      style(g.append('text').attr('y', -Math.round(lh / 2))).text(line1);
+      style(g.append('text').attr('y',  Math.round(lh / 2))).text(line2);
     } else {
-      style(g.append('text').attr('y', 4)).text(line1);
+      style(g.append('text').attr('y', Math.round(fs / 4))).text(line1);
     }
   });
 }
