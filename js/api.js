@@ -1188,42 +1188,44 @@ function _renderTemasBubble(narrativas) {
   const W          = Math.max(360, containerW);
   const MAX_H      = Math.round(Math.min(vpH * 0.38, containerW * 0.65, 440));
   const maxBubbleR = Math.round(Math.min(44, MAX_H / 8));
+  const pad_top    = 14;
+  const pad_mid    = 22;
+  const regionRowH = 32;
   const rawCircleR = _calcCircleR(N);
-  const circleR    = Math.min(rawCircleR, MAX_H / 2 - maxBubbleR - 12);
-  const H          = N <= 1 ? Math.round(MAX_H * 0.55) : Math.ceil(2 * (circleR + maxBubbleR + 12));
-  const centerX    = circleR + maxBubbleR + 14;
-  const centerY    = H / 2;
+  const circleR    = Math.min(rawCircleR, Math.max(30, (MAX_H - regionRowH - pad_top - pad_mid) / 2 - maxBubbleR));
+  const centerX    = W / 2;
+  const centerY    = N <= 1 ? Math.round(MAX_H * 0.4) : pad_top + circleR + maxBubbleR;
+  const regionRowY = centerY + (N <= 1 ? maxBubbleR : circleR + maxBubbleR) + pad_mid;
+  const H          = regionRowY + regionRowH;
   const coords     = _bubbleCoords(N, centerX, centerY, circleR);
   const items      = narrativas;
   const maxScore   = Math.max(...items.map(n => n.importance_score ?? 0), 0.01);
   const getR       = s => Math.round(maxBubbleR * 0.28 + ((s ?? 0) / maxScore) * maxBubbleR * 0.72);
 
-  const allRegions = [...new Set(items.flatMap(n => n.unique_regions ?? []))].slice(0, 6);
-  const regionX    = W - 100;
-  const regionY    = i => allRegions.length < 2
-    ? H / 2
-    : 50 + i * (H - 80) / (allRegions.length - 1);
+  const allRegions  = [...new Set(items.flatMap(n => n.unique_regions ?? []))].slice(0, 8);
+  const regionXFor  = (i, total) => total <= 1 ? W / 2
+    : Math.round(W * 0.1 + i * (W * 0.8) / (total - 1));
 
   let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block">`;
 
-  // Bezier hebras (1 por conexión narrativa→región)
+  // Bezier hebras — de burbuja hacia abajo al nodo de región
   for (const [i, nav] of items.entries()) {
     const [cx, cy] = coords[i];
     const hex = _clusterHex(nav.topic);
     for (const region of (nav.unique_regions ?? []).slice(0, 4)) {
       const ri = allRegions.indexOf(region);
       if (ri < 0) continue;
-      const ry = regionY(ri);
-      const mx = (cx + regionX) / 2;
-      svg += `<path d="M${cx},${cy} C${mx},${cy} ${mx},${ry} ${regionX},${ry}" fill="none" stroke="${hex}" stroke-width="1.2" opacity="0.3"/>`;
+      const rx  = regionXFor(ri, allRegions.length);
+      const midY = Math.round((cy + regionRowY) / 2);
+      svg += `<path d="M${cx},${cy} C${cx},${midY} ${rx},${midY} ${rx},${regionRowY}" fill="none" stroke="${hex}" stroke-width="1.2" opacity="0.3"/>`;
     }
   }
 
-  // Nodos de región
+  // Nodos de región — fila horizontal al fondo
   for (const [i, region] of allRegions.entries()) {
-    const ry = regionY(i);
-    svg += `<circle cx="${regionX}" cy="${ry}" r="3.5" fill="var(--text3)"/>`;
-    svg += `<text x="${regionX + 9}" y="${ry + 4}" font-size="11" fill="var(--text2)" font-family="var(--font)">${_esc(region)}</text>`;
+    const rx = regionXFor(i, allRegions.length);
+    svg += `<circle cx="${rx}" cy="${regionRowY}" r="3.5" fill="var(--text3)"/>`;
+    svg += `<text x="${rx}" y="${regionRowY + 13}" text-anchor="middle" font-size="11" fill="var(--text2)" font-family="var(--font)">${_esc(region)}</text>`;
   }
 
   // Burbujas
