@@ -1149,14 +1149,17 @@ async function _fetchContract() {
 let _trendChart   = null;
 let _selectedTema = null;
 
-function _bubbleCoords(N, centerX, centerY) {
+function _calcCircleR(N) {
+  if (N <= 1) return 0;
+  return Math.max(70, 70 / Math.sin(Math.PI / N)) * 1.1;
+}
+
+function _bubbleCoords(N, centerX, centerY, circleR) {
   if (N === 0) return [];
   if (N === 1) return [[centerX, centerY]];
-  const minR = 70;
-  const R = Math.max(minR, minR / Math.sin(Math.PI / N)) * 1.1;
   return Array.from({ length: N }, (_, i) => {
     const angle = -Math.PI / 2 + (2 * Math.PI * i / N);
-    return [centerX + R * Math.cos(angle), centerY + R * Math.sin(angle)];
+    return [centerX + circleR * Math.cos(angle), centerY + circleR * Math.sin(angle)];
   });
 }
 
@@ -1168,14 +1171,17 @@ function _renderTemasBubble(narrativas) {
     return;
   }
 
-  const N      = narrativas.length;
-  const W      = 580;
-  const H      = N > 4 ? 320 : 280;
-  const centerX = 200, centerY = H / 2;
-  const coords  = _bubbleCoords(N, centerX, centerY);
-  const items   = narrativas;
-  const maxScore = Math.max(...items.map(n => n.importance_score ?? 0), 0.01);
-  const getR     = s => 18 + ((s ?? 0) / maxScore) * 48;
+  const N          = narrativas.length;
+  const W          = 580;
+  const maxBubbleR = 66;
+  const circleR    = _calcCircleR(N);
+  const pad        = maxBubbleR + 14;
+  const H          = N <= 1 ? 200 : Math.max(240, Math.ceil(2 * (circleR + pad)));
+  const centerX    = 210, centerY = H / 2;
+  const coords     = _bubbleCoords(N, centerX, centerY, circleR);
+  const items      = narrativas;
+  const maxScore   = Math.max(...items.map(n => n.importance_score ?? 0), 0.01);
+  const getR       = s => 18 + ((s ?? 0) / maxScore) * 48;
 
   const allRegions = [...new Set(items.flatMap(n => n.unique_regions ?? []))].slice(0, 6);
   const regionX    = 500;
@@ -1183,7 +1189,7 @@ function _renderTemasBubble(narrativas) {
     ? H / 2
     : 50 + i * (H - 80) / (allRegions.length - 1);
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:260px;display:block">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block">`;
 
   // Bezier hebras (1 por conexión narrativa→región)
   for (const [i, nav] of items.entries()) {
