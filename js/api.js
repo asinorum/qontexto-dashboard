@@ -1343,8 +1343,6 @@ function _selectTema(clusterName) {
 
   const resetBtn = document.getElementById('temas-reset-btn');
 
-  const verdCard = document.getElementById('veredicto-card');
-
   if (!clusterName) {
     if (resetBtn)    resetBtn.style.display = 'none';
     if (trendLabel) {
@@ -1356,7 +1354,6 @@ function _selectTema(clusterName) {
       panel.style.borderLeftColor = 'var(--border)';
       panel.innerHTML = '<div style="font-size:13px;color:var(--text3);line-height:1.6">Selecciona un tema para ver su análisis: historias activas, señal de urgencia y contexto.</div>';
     }
-    if (verdCard) verdCard.style.borderLeftColor = 'transparent';
     return;
   }
 
@@ -1371,7 +1368,6 @@ function _selectTema(clusterName) {
   if (resetBtn) resetBtn.style.display = 'inline-block';
 
   const hex = _clusterHex(clusterName);
-  if (verdCard) verdCard.style.borderLeftColor = hex;
 
   if (trendLabel) {
     trendLabel.textContent = _getTrendVeredicto(nav);
@@ -1552,14 +1548,16 @@ function _updateTemasFromSummary(summary) {
   const verdEl   = document.getElementById('veredicto-text');
   const verdCard = document.getElementById('veredicto-card');
   if (verdEl) verdEl.textContent = summary.veredicto || '—';
+
+  // Color map primero — _clusterHex depende de él
+  if (summary.narrativas?.length) {
+    _buildClusterColorMap(summary.narrativas);
+  }
+
+  // Veredicto: border-left con el color del tema de mayor score (el que referencia el texto)
   if (verdCard && summary.narrativas?.length) {
     verdCard.style.borderLeftColor = _clusterHex(summary.narrativas[0]?.topic);
     verdCard.style.borderLeftWidth = '3px';
-  }
-
-  // Color map → bubble → trend (en ese orden)
-  if (summary.narrativas?.length) {
-    _buildClusterColorMap(summary.narrativas);
   }
 
   // Trend label: veredicto conjunto si no hay selección activa
