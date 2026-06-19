@@ -11,9 +11,25 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**Sparkline: ¿migrar de Chart.js a D3?**
+**Sparkline tendencia de temas — refactor Chart.js → D3 (plan aprobado)**
 
-Decisión pendiente del usuario. Ventajas de D3: transiciones suaves al seleccionar temas, control total del render, consistencia con el bubble chart. Costo: reescribir `_updateTemasTrend` desde cero. El usuario preguntó pero no dio respuesta al cerrar sesión.
+8 puntos en orden. Implementar en secuencia según dependencias.
+
+| # | Tarea | Archivo | Depende de |
+|---|---|---|---|
+| 1 | `<canvas id="temas-trend">` → `<div id="temas-trend">` | `index.html` | — |
+| 2 | `let _trendChart` → `let _trendSvg / _trendLines / _trendDots` | `api.js` | — |
+| 3 | Eliminar `_initTrendChart()` | `api.js` | — |
+| 4 | Reescribir `_updateTemasTrend()` con D3 · escalas time+linear · `d3.line()+curveCatmullRom` · `defined()` para spanGaps · SVG `width="100%"` + `viewBox` | `api.js` | 1, 2, 3 |
+| 5 | Reescribir `_applyTrendSelection()` con `.transition().duration(250)` sobre `_trendLines/_trendDots` | `api.js` | 4 |
+| 6 | `toggleTheme()`: añadir `_updateTemasTrend(_summary?.narrativas)` tras reconstruir color map | `app.js` | 4 |
+| 7 | Eliminar `tickColor()` de `app.js` (solo usada en `_initTrendChart`) | `app.js` | 3 |
+| 8 | Eliminar CDN Chart.js de `index.html` (último paso, verificar cero referencias) | `index.html` | 7 |
+
+**Riesgos conocidos:**
+- `spanGaps`: D3 `defined()` omite nulls pero conecta segmentos definidos — verificar con datos reales
+- Tooltips: omitir en primera iteración (no eran críticos)
+- Resize: usar SVG `viewBox` + `width="100%"` — escala sin ResizeObserver
 
 ---
 
