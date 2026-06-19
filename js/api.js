@@ -1184,9 +1184,10 @@ function _renderTemasBubble(narrativas) {
 
   const N          = narrativas.length;
   const containerW = el.clientWidth || 580;
+  const vpW        = window.innerWidth || 1200;
   const vpH        = window.innerHeight || 800;
-  const W          = Math.max(360, containerW);
-  const MAX_H      = Math.round(Math.min(vpH * 0.38, containerW * 0.65, 440));
+  const W          = Math.max(360, Math.min(Math.round(vpW * 0.62), containerW, 820));
+  const MAX_H      = Math.round(Math.min(vpH * Math.min(0.38 + N * 0.02, 0.60), containerW * 0.8, 600));
   const maxBubbleR = Math.round(Math.min(44, MAX_H / 8));
   const pad_top    = 14;
   const pad_mid    = 22;
@@ -1208,7 +1209,7 @@ function _renderTemasBubble(narrativas) {
   const regionXFor  = (i, total) => total <= 1 ? centerX
     : Math.round(bubbleLeft + i * (bubbleRight - bubbleLeft) / (total - 1));
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:${H}px;display:block">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;max-width:100%;height:${H}px;display:block;margin:0 auto">`;
 
   // Bezier hebras — de burbuja hacia abajo al nodo de región
   for (const [i, nav] of items.entries()) {
@@ -1238,13 +1239,17 @@ function _renderTemasBubble(narrativas) {
     const isSel = nav.topic === _selectedTema;
     svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${hex}" fill-opacity="${isSel ? 0.25 : 0.14}" stroke="${hex}" stroke-width="${isSel ? 2.5 : 1.8}" style="cursor:pointer" onclick="_selectTema('${_esc(nav.topic ?? '')}')"/>`;
 
-    const words  = (nav.topic ?? '').split(' ');
-    const half   = Math.ceil(words.length / 2);
-    const line1  = words.slice(0, half).join(' ');
-    const line2  = words.slice(half).join(' ');
-    const yOff   = line2 ? -7 : 0;
-    svg += `<text x="${cx}" y="${cy + yOff}" text-anchor="middle" font-size="10" font-weight="500" fill="${hex}" font-family="var(--font)" style="pointer-events:none">${_esc(line1)}</text>`;
-    if (line2) svg += `<text x="${cx}" y="${cy + yOff + 13}" text-anchor="middle" font-size="10" font-weight="500" fill="${hex}" font-family="var(--font)" style="pointer-events:none">${_esc(line2)}</text>`;
+    if (r >= 22) {
+      const fs     = Math.min(10, Math.max(8, Math.floor(r / 4.5)));
+      const words  = (nav.topic ?? '').split(' ');
+      const half   = Math.ceil(words.length / 2);
+      const line1  = words.slice(0, half).join(' ');
+      const line2  = words.slice(half).join(' ');
+      const lh     = fs + 3;
+      const yOff   = line2 ? -lh / 2 : 0;
+      svg += `<text x="${cx}" y="${cy + yOff}" text-anchor="middle" font-size="${fs}" font-weight="500" fill="${hex}" font-family="var(--font)" style="pointer-events:none">${_esc(line1)}</text>`;
+      if (line2) svg += `<text x="${cx}" y="${cy + yOff + lh}" text-anchor="middle" font-size="${fs}" font-weight="500" fill="${hex}" font-family="var(--font)" style="pointer-events:none">${_esc(line2)}</text>`;
+    }
   }
 
   svg += '</svg>';
