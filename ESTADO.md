@@ -26,10 +26,10 @@ Deploy: `https://qontexto.com`
 | 7 | Eliminar `tickColor()` de `app.js` (solo usada en `_initTrendChart`) | `app.js` | 3 |
 | 8 | Eliminar CDN Chart.js de `index.html` (último paso, verificar cero referencias) | `index.html` | 7 |
 
-**Riesgos conocidos:**
-- `spanGaps`: D3 `defined()` omite nulls pero conecta segmentos definidos — verificar con datos reales
+**Notas de implementación:**
+- `spanGaps`: usar `n.series` directo en `d3.line()` — no null-map sobre `allDates`. Equivale a `spanGaps:true`.
 - Tooltips: omitir en primera iteración (no eran críticos)
-- Resize: usar SVG `viewBox` + `width="100%"` — escala sin ResizeObserver
+- Resize: SVG `viewBox` + `width="100%"` — escala sin ResizeObserver
 
 ---
 
