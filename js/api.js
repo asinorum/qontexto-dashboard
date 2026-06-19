@@ -730,7 +730,6 @@ let _clusterHexMap   = {};
 
 function _buildClusterColorMap(narrativas) {
   narrativas = narrativas ?? _summary?.narrativas ?? [];
-  console.log('[qontexto] _buildClusterColorMap narrativa[0] keys:', Object.keys(narrativas[0] ?? {}));
   const style    = getComputedStyle(document.documentElement);
   const varNames = ['--q-cluster-1', '--q-cluster-2', '--q-cluster-3', '--q-cluster-4'];
 
@@ -742,11 +741,11 @@ function _buildClusterColorMap(narrativas) {
 
   let colorIdx = 0;
   for (const nav of sorted) {
-    if (!nav.cluster_name) continue;
+    if (!nav.topic) continue;
     const eligible = colorIdx < 4 && (nav.importance_score ?? 0) >= 0.60;
     const varN     = eligible ? varNames[colorIdx++] : '--q-cluster-none';
-    _clusterColorMap[nav.cluster_name] = `var(${varN})`;
-    _clusterHexMap[nav.cluster_name]   = style.getPropertyValue(varN).trim();
+    _clusterColorMap[nav.topic] = `var(${varN})`;
+    _clusterHexMap[nav.topic]   = style.getPropertyValue(varN).trim();
   }
 
   if (_allArcs.length > 0) _renderNarrativeArcs(_allArcs);
@@ -1178,7 +1177,7 @@ function _renderTemasBubble(narrativas) {
   // Bezier hebras (1 por conexión narrativa→región)
   for (const [i, nav] of items.entries()) {
     const [cx, cy] = coords[i];
-    const hex = _clusterHex(nav.cluster_name);
+    const hex = _clusterHex(nav.topic);
     for (const region of (nav.unique_regions ?? []).slice(0, 4)) {
       const ri = allRegions.indexOf(region);
       if (ri < 0) continue;
@@ -1199,11 +1198,11 @@ function _renderTemasBubble(narrativas) {
   for (const [i, nav] of items.entries()) {
     const [cx, cy] = coords[i];
     const r   = getR(nav.importance_score);
-    const hex = _clusterHex(nav.cluster_name);
-    const isSel = nav.cluster_name === _selectedTema;
-    svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${hex}" fill-opacity="${isSel ? 0.25 : 0.14}" stroke="${hex}" stroke-width="${isSel ? 2.5 : 1.8}" style="cursor:pointer" onclick="_selectTema('${_esc(nav.cluster_name ?? '')}')"/>`;
+    const hex = _clusterHex(nav.topic);
+    const isSel = nav.topic === _selectedTema;
+    svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${hex}" fill-opacity="${isSel ? 0.25 : 0.14}" stroke="${hex}" stroke-width="${isSel ? 2.5 : 1.8}" style="cursor:pointer" onclick="_selectTema('${_esc(nav.topic ?? '')}')"/>`;
 
-    const words  = (nav.cluster_name ?? '').split(' ');
+    const words  = (nav.topic ?? '').split(' ');
     const half   = Math.ceil(words.length / 2);
     const line1  = words.slice(0, half).join(' ');
     const line2  = words.slice(half).join(' ');
@@ -1223,7 +1222,7 @@ function _selectTema(clusterName) {
   const panel = document.getElementById('temas-rationale-panel');
   if (!panel) return;
 
-  const nav = (_summary?.narrativas ?? []).find(n => n.cluster_name === clusterName);
+  const nav = (_summary?.narrativas ?? []).find(n => n.topic === clusterName);
   if (!nav) { panel.style.display = 'none'; return; }
 
   const hex      = _clusterHex(clusterName);
@@ -1280,10 +1279,10 @@ function _updateTemasTrend(narrativas) {
   if (!allDates.length) return;
 
   const datasets = narrativas.slice(0, 4).map(n => {
-    const hex = _clusterHex(n.cluster_name);
+    const hex = _clusterHex(n.topic);
     const byDate = Object.fromEntries((n.series ?? []).map(p => [p.date, p.score]));
     return {
-      label:           n.cluster_name ?? '—',
+      label:           n.topic ?? '—',
       data:            allDates.map(d => byDate[d] ?? null),
       borderColor:     hex,
       backgroundColor: 'transparent',
@@ -1332,7 +1331,7 @@ function _updateTemasFromSummary(summary) {
   const verdCard = document.getElementById('veredicto-card');
   if (verdEl) verdEl.textContent = summary.veredicto || '—';
   if (verdCard && summary.narrativas?.length) {
-    verdCard.style.borderLeftColor = _clusterHex(summary.narrativas[0]?.cluster_name);
+    verdCard.style.borderLeftColor = _clusterHex(summary.narrativas[0]?.topic);
     verdCard.style.borderLeftWidth = '3px';
   }
 
@@ -1344,7 +1343,7 @@ function _updateTemasFromSummary(summary) {
   // Trend label por selección activa
   const trendLabel = document.getElementById('temas-trend-label');
   if (trendLabel && _selectedTema) {
-    const nav = (summary.narrativas ?? []).find(n => n.cluster_name === _selectedTema);
+    const nav = (summary.narrativas ?? []).find(n => n.topic === _selectedTema);
     if (nav?.trend_label) trendLabel.textContent = nav.trend_label;
   }
 }
