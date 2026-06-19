@@ -1149,12 +1149,16 @@ async function _fetchContract() {
 let _trendChart   = null;
 let _selectedTema = null;
 
-const BUBBLE_COORDS = [
-  [[200, 150]],
-  [[130, 150], [290, 150]],
-  [[130, 100], [290, 100], [210, 210]],
-  [[110, 100], [280, 100], [110, 210], [280, 210]],
-];
+function _bubbleCoords(N, centerX, centerY) {
+  if (N === 0) return [];
+  if (N === 1) return [[centerX, centerY]];
+  const minR = 70;
+  const R = Math.max(minR, minR / Math.sin(Math.PI / N)) * 1.1;
+  return Array.from({ length: N }, (_, i) => {
+    const angle = -Math.PI / 2 + (2 * Math.PI * i / N);
+    return [centerX + R * Math.cos(angle), centerY + R * Math.sin(angle)];
+  });
+}
 
 function _renderTemasBubble(narrativas) {
   const el = document.getElementById('temas-bubble-container');
@@ -1164,11 +1168,14 @@ function _renderTemasBubble(narrativas) {
     return;
   }
 
-  const W = 580, H = 280;
-  const items    = narrativas.slice(0, 4);
-  const coords   = BUBBLE_COORDS[Math.min(items.length, 4) - 1];
+  const N      = narrativas.length;
+  const W      = 580;
+  const H      = N > 4 ? 320 : 280;
+  const centerX = 200, centerY = H / 2;
+  const coords  = _bubbleCoords(N, centerX, centerY);
+  const items   = narrativas;
   const maxScore = Math.max(...items.map(n => n.importance_score ?? 0), 0.01);
-  const getR     = s => 22 + ((s ?? 0) / maxScore) * 56;
+  const getR     = s => 18 + ((s ?? 0) / maxScore) * 48;
 
   const allRegions = [...new Set(items.flatMap(n => n.unique_regions ?? []))].slice(0, 6);
   const regionX    = 500;
@@ -1232,18 +1239,31 @@ function _selectTema(clusterName) {
   const trendLabel = document.getElementById('temas-trend-label');
   const panel      = document.getElementById('temas-rationale-panel');
 
+  const resetBtn = document.getElementById('temas-reset-btn');
+
   if (!clusterName) {
-    if (trendLabel) { trendLabel.textContent = TREND_LABEL_DEFAULT; trendLabel.style.color = ''; }
-    if (panel) panel.style.display = 'none';
+    if (resetBtn)    resetBtn.style.display = 'none';
+    if (trendLabel) {
+      const narrativas = _summary?.narrativas ?? [];
+      trendLabel.textContent = narrativas.length ? _buildVeredictoConjunto(narrativas) : TREND_LABEL_DEFAULT;
+      trendLabel.style.color = '';
+    }
+    if (panel) {
+      panel.style.borderLeftColor = 'var(--border)';
+      panel.innerHTML = '<div style="font-size:13px;color:var(--text3);line-height:1.6">Selecciona un tema para ver su análisis: historias activas, señal de urgencia y contexto.</div>';
+    }
     return;
   }
 
   const nav = (_summary?.narrativas ?? []).find(n => n.topic === clusterName);
   if (!nav) {
+    if (resetBtn)    resetBtn.style.display = 'none';
     if (trendLabel) { trendLabel.textContent = TREND_LABEL_DEFAULT; trendLabel.style.color = ''; }
-    if (panel) panel.style.display = 'none';
+    if (panel) panel.style.borderLeftColor = 'var(--border)';
     return;
   }
+
+  if (resetBtn) resetBtn.style.display = 'inline-block';
 
   const hex = _clusterHex(clusterName);
 
@@ -1257,7 +1277,6 @@ function _selectTema(clusterName) {
   const urg       = nav.urgency_label ?? nav.urgency ?? '';
   const rationale = nav.rationale ?? '—';
 
-  panel.style.display         = 'block';
   panel.style.borderLeftColor = hex;
   panel.style.borderLeftWidth = '3px';
   panel.innerHTML =
@@ -1269,20 +1288,41 @@ function _selectTema(clusterName) {
     `<div style="font-size:13px;color:var(--text2);line-height:1.6">${_esc(rationale)}</div>`;
 }
 
-function _hexToRgba(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
+function _calcTrendFromSeries(series) {
+  if (!series?.length) return 'sin_datos';
+  const sorted  = [...series].sort((a, b) => a.date.localeCompare(b.date));
+  const recent  = sorted.slice(-3).map(p => p.score);
+  const prev    = sorted.slice(-6, -3).map(p => p.score);
+  if (!prev.length) return 'nuevo';
+  const avg = arr => arr.reduce((s, v) => s + v, 0) / arr.length;
+  const delta = avg(recent) - avg(prev);
+  if (delta > 0.06)  return 'escalating';
+  if (delta < -0.06) return 'descending';
+  return 'stable';
 }
 
 function _getTrendVeredicto(nav) {
-  const t = nav?.trend ?? '';
-  if (t === 'escalating')   return 'Intensificándose — cobertura creciente en múltiples radios.';
-  if (t === 'new')          return 'Emergiendo — primer ciclo de cobertura registrado.';
-  if (t === 'reactivation') return 'Reactivado — retoma fuerza tras un período de calma.';
-  if (t === 'continuing')   return 'Sostenido — mantiene presencia estable en la agenda.';
-  return nav?.trend_label ?? '—';
+  const t = _calcTrendFromSeries(nav?.series);
+  if (t === 'escalating') return 'Intensificándose — cobertura creciente en los últimos días.';
+  if (t === 'descending') return 'Cediendo — la presencia pierde intensidad.';
+  if (t === 'nuevo')      return 'Emergiendo — primer ciclo de cobertura registrado.';
+  if (t === 'stable')     return 'Sostenido — presencia estable en la agenda.';
+  return nav?.trend_label ?? nav?.rationale?.split('.')[0] ?? '—';
+}
+
+function _buildVeredictoConjunto(narrativas) {
+  let creciendo = 0, estable = 0, cediendo = 0;
+  for (const n of narrativas) {
+    const t = _calcTrendFromSeries(n.series);
+    if (t === 'escalating' || t === 'nuevo') creciendo++;
+    else if (t === 'descending') cediendo++;
+    else estable++;
+  }
+  const parts = [];
+  if (creciendo) parts.push(`${creciendo} creciendo`);
+  if (estable)   parts.push(`${estable} estable${estable > 1 ? 's' : ''}`);
+  if (cediendo)  parts.push(`${cediendo} cediendo`);
+  return parts.join(' · ') || 'Sin datos de tendencia.';
 }
 
 function _applyTrendSelection(clusterName) {
@@ -1290,9 +1330,10 @@ function _applyTrendSelection(clusterName) {
   _trendChart.data.datasets.forEach(ds => {
     const hex = _clusterHex(ds.label);
     if (!clusterName) {
-      ds.borderColor   = hex;
-      ds.borderWidth   = 2;
-      ds.pointRadius   = 2;
+      ds.borderColor          = hex;
+      ds.pointBackgroundColor = hex;
+      ds.borderWidth          = 2;
+      ds.pointRadius          = 2;
     } else if (ds.label === clusterName) {
       ds.borderColor   = hex;
       ds.borderWidth   = 3;
@@ -1343,24 +1384,30 @@ function _updateTemasTrend(narrativas) {
 
   if (!allDates.length) return;
 
-  const datasets = narrativas.slice(0, 4).map(n => {
+  const datasets = narrativas.map(n => {
     const hex = _clusterHex(n.topic);
     const byDate = Object.fromEntries((n.series ?? []).map(p => [p.date, p.score]));
     return {
-      label:           n.topic ?? '—',
-      data:            allDates.map(d => byDate[d] ?? null),
-      borderColor:     hex,
-      backgroundColor: 'transparent',
-      fill:            false,
-      tension:         0.4,
+      label:                n.topic ?? '—',
+      data:                 allDates.map(d => byDate[d] ?? null),
+      borderColor:          hex,
+      backgroundColor:      'transparent',
+      fill:                 false,
+      tension:              0.4,
       borderWidth:          2,
       borderCapStyle:       'round',
       pointRadius:          2,
       pointHitRadius:       6,
       pointBackgroundColor: hex,
-      spanGaps:             false,
+      spanGaps:             true,
     };
   });
+
+  const rangeEl = document.getElementById('temas-trend-range');
+  if (rangeEl && allDates.length) {
+    const fmt = d => d.slice(5).replace('-', '/');
+    rangeEl.textContent = `Importancia diaria estimada · ${fmt(allDates[0])}–${fmt(allDates[allDates.length - 1])}`;
+  }
 
   _trendChart.data.labels   = allDates.map(d => d.slice(5));
   _trendChart.data.datasets = datasets;
@@ -1409,11 +1456,20 @@ function _updateTemasFromSummary(summary) {
     _buildClusterColorMap(summary.narrativas);
   }
 
-  // Trend label por selección activa
+  // Trend label: veredicto conjunto si no hay selección activa
   const trendLabel = document.getElementById('temas-trend-label');
-  if (trendLabel && _selectedTema) {
-    const nav = (summary.narrativas ?? []).find(n => n.topic === _selectedTema);
-    if (nav?.trend_label) trendLabel.textContent = nav.trend_label;
+  if (trendLabel && !_selectedTema && summary.narrativas?.length) {
+    trendLabel.textContent = _buildVeredictoConjunto(summary.narrativas);
+    trendLabel.style.color = '';
+  }
+
+  // Panel default al cargar (sin selección)
+  if (!_selectedTema) {
+    const panel = document.getElementById('temas-rationale-panel');
+    if (panel) {
+      panel.style.borderLeftColor = 'var(--border)';
+      panel.innerHTML = '<div style="font-size:13px;color:var(--text3);line-height:1.6">Selecciona un tema para ver su análisis: historias activas, señal de urgencia y contexto.</div>';
+    }
   }
 }
 
