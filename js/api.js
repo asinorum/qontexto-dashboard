@@ -1343,6 +1343,8 @@ function _selectTema(clusterName) {
 
   const resetBtn = document.getElementById('temas-reset-btn');
 
+  const verdCard = document.getElementById('veredicto-card');
+
   if (!clusterName) {
     if (resetBtn)    resetBtn.style.display = 'none';
     if (trendLabel) {
@@ -1354,6 +1356,7 @@ function _selectTema(clusterName) {
       panel.style.borderLeftColor = 'var(--border)';
       panel.innerHTML = '<div style="font-size:13px;color:var(--text3);line-height:1.6">Selecciona un tema para ver su análisis: historias activas, señal de urgencia y contexto.</div>';
     }
+    if (verdCard) verdCard.style.borderLeftColor = 'transparent';
     return;
   }
 
@@ -1368,6 +1371,7 @@ function _selectTema(clusterName) {
   if (resetBtn) resetBtn.style.display = 'inline-block';
 
   const hex = _clusterHex(clusterName);
+  if (verdCard) verdCard.style.borderLeftColor = hex;
 
   if (trendLabel) {
     trendLabel.textContent = _getTrendVeredicto(nav);
