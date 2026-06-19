@@ -1158,7 +1158,9 @@ async function _fetchContract() {
 // ── D12: Summary ─────────────────────────────────────────────────────────────
 
 let _trendChart   = null;
-let _selectedTema = null;
+let _selectedTema  = null;
+let _bubbleSim     = null;   // D3 force simulation activa
+let _bubbleCircles = null;   // D3 selection de circles para actualizar selección en lugar
 
 function _calcCircleR(N) {
   if (N <= 1) return 0;
@@ -1177,91 +1179,140 @@ function _bubbleCoords(N, centerX, centerY, circleR) {
 function _renderTemasBubble(narrativas) {
   const el = document.getElementById('temas-bubble-container');
   if (!el) return;
+
+  if (_bubbleSim) { _bubbleSim.stop(); _bubbleSim = null; }
+  _bubbleCircles = null;
+
   if (!narrativas?.length) {
     el.innerHTML = '<p style="font-size:13px;color:var(--text3);text-align:center;padding:40px 0">Sin temas activos.</p>';
     return;
   }
+  el.innerHTML = '';
 
   const N          = narrativas.length;
   const containerW = el.clientWidth || 580;
-  const vpW        = window.innerWidth || 1200;
+  const vpW        = window.innerWidth  || 1200;
   const vpH        = window.innerHeight || 800;
   const W          = Math.max(360, Math.min(Math.round(vpW * 0.62), containerW, 820));
   const MAX_H      = Math.round(Math.min(vpH * Math.min(0.38 + N * 0.02, 0.60), containerW * 0.8, 600));
   const maxBubbleR = Math.round(Math.min(44, MAX_H / 8));
-  const pad_top    = 14;
   const pad_mid    = 22;
   const regionRowH = 32;
-  const rawCircleR = _calcCircleR(N);
-  const circleR    = Math.min(rawCircleR, Math.max(30, (MAX_H - regionRowH - pad_top - pad_mid) / 2 - maxBubbleR));
   const centerX    = W / 2;
-  const centerY    = N <= 1 ? Math.round(MAX_H * 0.4) : pad_top + circleR + maxBubbleR;
-  const regionRowY = centerY + (N <= 1 ? maxBubbleR : circleR + maxBubbleR) + pad_mid;
+  const centerY    = Math.round(MAX_H * 0.48);
+  const regionRowY = MAX_H + pad_mid;
   const H          = regionRowY + regionRowH;
-  const coords     = _bubbleCoords(N, centerX, centerY, circleR);
-  // Distribución simétrica: mayor importancia arriba, luego alternando derecha/izquierda
-  const _sorted = [...narrativas].sort((a, b) => (b.importance_score ?? 0) - (a.importance_score ?? 0));
-  const items   = new Array(N);
-  items[0] = _sorted[0];
-  let _hi = 1, _lo = N - 1;
-  for (let _k = 1; _k < N; _k++) {
-    if (_k % 2 === 1) items[_hi++] = _sorted[_k];
-    else              items[_lo--] = _sorted[_k];
-  }
-  const maxScore   = Math.max(...items.map(n => n.importance_score ?? 0), 0.01);
-  const getR       = s => Math.round(maxBubbleR * 0.28 + ((s ?? 0) / maxScore) * maxBubbleR * 0.72);
 
-  const allRegions  = [...new Set(items.flatMap(n => n.unique_regions ?? []))].slice(0, 8);
+  const maxScore = Math.max(...narrativas.map(n => n.importance_score ?? 0), 0.01);
+  const getR     = s => Math.round(maxBubbleR * 0.28 + ((s ?? 0) / maxScore) * maxBubbleR * 0.72);
+
+  // Posiciones iniciales circulares — punto de partida para la simulación
+  const rawCircleR = _calcCircleR(N);
+  const circleR    = Math.min(rawCircleR, centerY - maxBubbleR - 10);
+  const initCoords = _bubbleCoords(N, centerX, centerY, circleR);
+
+  const nodes = narrativas.map((nav, i) => ({
+    topic: nav.topic,
+    nav,
+    r: getR(nav.importance_score),
+    x: initCoords[i][0],
+    y: initCoords[i][1],
+  }));
+
+  const allRegions = [...new Set(narrativas.flatMap(n => n.unique_regions ?? []))].slice(0, 8);
   const bubbleLeft  = centerX - circleR - maxBubbleR;
   const bubbleRight = centerX + circleR + maxBubbleR;
   const regionXFor  = (i, total) => total <= 1 ? centerX
     : Math.round(bubbleLeft + i * (bubbleRight - bubbleLeft) / (total - 1));
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:${W}px;max-width:100%;height:${H}px;display:block;margin:0 auto">`;
+  // SVG root
+  const svg = d3.select(el)
+    .append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .style('width', `${W}px`).style('max-width', '100%')
+    .style('height', `${H}px`).style('display', 'block').style('margin', '0 auto');
 
-  // Bezier hebras — de burbuja hacia abajo al nodo de región
-  for (const [i, nav] of items.entries()) {
-    const [cx, cy] = coords[i];
-    const hex = _clusterHex(nav.topic);
-    for (const region of (nav.unique_regions ?? []).slice(0, 4)) {
-      const ri = allRegions.indexOf(region);
-      if (ri < 0) continue;
-      const rx  = regionXFor(ri, allRegions.length);
-      const midY = Math.round((cy + regionRowY) / 2);
-      svg += `<path d="M${cx},${cy} C${cx},${midY} ${rx},${midY} ${rx},${regionRowY}" fill="none" stroke="${hex}" stroke-width="1.2" opacity="0.3"/>`;
-    }
-  }
+  // Hebras (detrás de las burbujas)
+  const hebraData = nodes.flatMap(node =>
+    (node.nav.unique_regions ?? []).slice(0, 4)
+      .filter(r => allRegions.includes(r))
+      .map(region => ({ node, region }))
+  );
+  const hebras = svg.selectAll('.qhebra').data(hebraData).join('path')
+    .attr('class', 'qhebra').attr('fill', 'none')
+    .attr('stroke', d => _clusterHex(d.node.topic))
+    .attr('stroke-width', 1.2).attr('opacity', 0.3);
 
-  // Nodos de región — fila horizontal al fondo
-  for (const [i, region] of allRegions.entries()) {
+  // Nodos de región (estáticos)
+  allRegions.forEach((region, i) => {
     const rx = regionXFor(i, allRegions.length);
-    svg += `<circle cx="${rx}" cy="${regionRowY}" r="3.5" fill="var(--text3)"/>`;
-    svg += `<text x="${rx}" y="${regionRowY + 13}" text-anchor="middle" font-size="11" fill="var(--text2)" font-family="var(--font)">${_esc(region)}</text>`;
-  }
+    svg.append('circle').attr('cx', rx).attr('cy', regionRowY).attr('r', 3.5).attr('fill', 'var(--text3)');
+    svg.append('text').attr('x', rx).attr('y', regionRowY + 13)
+      .attr('text-anchor', 'middle').attr('font-size', 11)
+      .attr('fill', 'var(--text2)').attr('font-family', 'var(--font)').text(region);
+  });
 
   // Burbujas
-  for (const [i, nav] of items.entries()) {
-    const [cx, cy] = coords[i];
-    const r   = getR(nav.importance_score);
-    const hex = _clusterHex(nav.topic);
-    const isSel = nav.topic === _selectedTema;
-    svg += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${hex}" fill-opacity="${isSel ? 0.25 : 0.14}" stroke="${hex}" stroke-width="${isSel ? 2.5 : 1.8}" style="cursor:pointer" onclick="_selectTema('${_esc(nav.topic ?? '')}')"/>`;
+  const circles = svg.selectAll('.qbubble').data(nodes).join('circle')
+    .attr('class', 'qbubble')
+    .attr('r', d => d.r)
+    .attr('fill', d => _clusterHex(d.topic))
+    .attr('fill-opacity', d => d.topic === _selectedTema ? 0.25 : 0.14)
+    .attr('stroke', d => _clusterHex(d.topic))
+    .attr('stroke-width', d => d.topic === _selectedTema ? 2.5 : 1.8)
+    .style('cursor', 'pointer')
+    .on('click', (_, d) => _selectTema(d.topic));
 
-    if (r >= 22) {
-      const fs     = 11;
-      const words  = (nav.topic ?? '').split(' ');
-      const half   = Math.ceil(words.length / 2);
-      const line1  = words.slice(0, half).join(' ');
-      const line2  = words.slice(half).join(' ');
-      const lh     = fs + 3;
-      const yOff   = line2 ? -lh / 2 : 0;
-      svg += `<text x="${cx}" y="${cy + yOff}" text-anchor="middle" font-size="${fs}" font-weight="500" fill="${hex}" font-family="var(--font)" style="pointer-events:none">${_esc(line1)}</text>`;
-      if (line2) svg += `<text x="${cx}" y="${cy + yOff + lh}" text-anchor="middle" font-size="${fs}" font-weight="500" fill="${hex}" font-family="var(--font)" style="pointer-events:none">${_esc(line2)}</text>`;
+  _bubbleCircles = circles;
+
+  // Labels — grupos <g> para que el transform en tick mueva todo junto
+  const labelNodes = nodes.filter(d => d.r >= 22);
+  const labelGroups = svg.selectAll('.qblabel').data(labelNodes).join('g')
+    .attr('class', 'qblabel').style('pointer-events', 'none');
+
+  labelGroups.each(function(d) {
+    const words = (d.topic ?? '').split(' ');
+    const half  = Math.ceil(words.length / 2);
+    const line1 = words.slice(0, half).join(' ');
+    const line2 = words.slice(half).join(' ');
+    const g     = d3.select(this);
+    const hex   = _clusterHex(d.topic);
+    const style = sel => sel.attr('text-anchor', 'middle').attr('font-size', 12)
+      .attr('font-weight', 500).attr('fill', hex).attr('font-family', 'var(--font)');
+    if (line2) {
+      style(g.append('text').attr('y', -7)).text(line1);
+      style(g.append('text').attr('y',  8)).text(line2);
+    } else {
+      style(g.append('text').attr('y', 4)).text(line1);
     }
+  });
+
+  // Tick: actualiza posiciones en cada paso de la simulación
+  function ticked() {
+    nodes.forEach(d => {
+      d.x = Math.max(d.r + 4, Math.min(W - d.r - 4, d.x));
+      d.y = Math.max(d.r + 4, Math.min(MAX_H - d.r - 4, d.y));
+    });
+    circles.attr('cx', d => d.x).attr('cy', d => d.y);
+    labelGroups.attr('transform', d => `translate(${d.x},${d.y})`);
+    hebras.attr('d', d => {
+      const ri  = allRegions.indexOf(d.region);
+      if (ri < 0) return '';
+      const rx   = regionXFor(ri, allRegions.length);
+      const midY = (d.node.y + regionRowY) / 2;
+      return `M${d.node.x},${d.node.y} C${d.node.x},${midY} ${rx},${midY} ${rx},${regionRowY}`;
+    });
   }
 
-  svg += '</svg>';
-  el.innerHTML = svg;
+  // Simulación D3 force
+  _bubbleSim = d3.forceSimulation(nodes)
+    .force('collide', d3.forceCollide(d => d.r + 6).strength(1))
+    .force('charge',  d3.forceManyBody().strength(-20))
+    .force('x',       d3.forceX(centerX).strength(0.06))
+    .force('y',       d3.forceY(centerY).strength(0.05))
+    .alphaDecay(0.03)
+    .on('tick', ticked)
+    .on('end',  () => { _bubbleSim = null; });
 }
 
 const TREND_LABEL_DEFAULT = 'Cada línea es un tema. La altura refleja su presencia simultánea en radios e historias.';
@@ -1271,7 +1322,12 @@ function _selectTema(clusterName) {
   if (_selectedTema === clusterName) clusterName = null;
   _selectedTema = clusterName;
 
-  if (_summary?.narrativas) _renderTemasBubble(_summary.narrativas);
+  // Actualizar burbujas en lugar sin reiniciar la simulación D3
+  if (_bubbleCircles) {
+    _bubbleCircles
+      .attr('fill-opacity', d => d.topic === _selectedTema ? 0.25 : 0.14)
+      .attr('stroke-width', d => d.topic === _selectedTema ? 2.5 : 1.8);
+  }
   _applyTrendSelection(clusterName);
 
   const trendLabel = document.getElementById('temas-trend-label');
