@@ -1215,22 +1215,45 @@ function _renderTemasBubble(narrativas) {
   el.innerHTML = svg;
 }
 
-function _selectTema(clusterName) {
-  _selectedTema = clusterName;
-  if (_summary?.narrativas) _renderTemasBubble(_summary.narrativas);
+const TREND_LABEL_DEFAULT = 'Cada línea es un tema. La altura refleja su presencia simultánea en radios e historias.';
 
-  const panel = document.getElementById('temas-rationale-panel');
-  if (!panel) return;
+function _selectTema(clusterName) {
+  // Toggle: clic en burbuja ya seleccionada → deseleccionar
+  if (_selectedTema === clusterName) clusterName = null;
+  _selectedTema = clusterName;
+
+  if (_summary?.narrativas) _renderTemasBubble(_summary.narrativas);
+  _applyTrendSelection(clusterName);
+
+  const trendLabel = document.getElementById('temas-trend-label');
+  const panel      = document.getElementById('temas-rationale-panel');
+
+  if (!clusterName) {
+    if (trendLabel) { trendLabel.textContent = TREND_LABEL_DEFAULT; trendLabel.style.color = ''; }
+    if (panel) panel.style.display = 'none';
+    return;
+  }
 
   const nav = (_summary?.narrativas ?? []).find(n => n.topic === clusterName);
-  if (!nav) { panel.style.display = 'none'; return; }
+  if (!nav) {
+    if (trendLabel) { trendLabel.textContent = TREND_LABEL_DEFAULT; trendLabel.style.color = ''; }
+    if (panel) panel.style.display = 'none';
+    return;
+  }
 
-  const hex      = _clusterHex(clusterName);
-  const arcCount = nav.arc_count ?? '';
-  const urg      = nav.urgency_label ?? nav.urgency ?? '';
+  const hex = _clusterHex(clusterName);
+
+  if (trendLabel) {
+    trendLabel.textContent = _getTrendVeredicto(nav);
+    trendLabel.style.color = hex;
+  }
+
+  if (!panel) return;
+  const arcCount  = nav.arc_count ?? '';
+  const urg       = nav.urgency_label ?? nav.urgency ?? '';
   const rationale = nav.rationale ?? '—';
 
-  panel.style.display        = 'block';
+  panel.style.display         = 'block';
   panel.style.borderLeftColor = hex;
   panel.style.borderLeftWidth = '3px';
   panel.innerHTML =
@@ -1240,6 +1263,43 @@ function _selectTema(clusterName) {
     (urg      ? `<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:var(--surface2);color:var(--text2)">${_esc(urg)}</span>` : '') +
     `</div>` +
     `<div style="font-size:13px;color:var(--text2);line-height:1.6">${_esc(rationale)}</div>`;
+}
+
+function _hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function _getTrendVeredicto(nav) {
+  const t = nav?.trend ?? '';
+  if (t === 'escalating')   return 'Intensificándose — cobertura creciente en múltiples radios.';
+  if (t === 'new')          return 'Emergiendo — primer ciclo de cobertura registrado.';
+  if (t === 'reactivation') return 'Reactivado — retoma fuerza tras un período de calma.';
+  if (t === 'continuing')   return 'Sostenido — mantiene presencia estable en la agenda.';
+  return nav?.trend_label ?? '—';
+}
+
+function _applyTrendSelection(clusterName) {
+  if (!_trendChart) return;
+  _trendChart.data.datasets.forEach(ds => {
+    const hex = _clusterHex(ds.label);
+    if (!clusterName) {
+      ds.borderColor = hex;
+      ds.borderWidth = 2;
+      ds.pointRadius = 0;
+    } else if (ds.label === clusterName) {
+      ds.borderColor = hex;
+      ds.borderWidth = 3;
+      ds.pointRadius = ds.data.map(v => v !== null ? 3 : 0);
+    } else {
+      ds.borderColor = _hexToRgba(hex, 0.07);
+      ds.borderWidth = 2;
+      ds.pointRadius = 0;
+    }
+  });
+  _trendChart.update('none');
 }
 
 function _initTrendChart() {
@@ -1289,6 +1349,7 @@ function _updateTemasTrend(narrativas) {
       fill:            false,
       tension:         0.4,
       borderWidth:     2,
+      borderCapStyle:  'round',
       pointRadius:     0,
       spanGaps:        false,
     };
@@ -1298,6 +1359,7 @@ function _updateTemasTrend(narrativas) {
   _trendChart.data.datasets = datasets;
   _trendChart.options.scales.x.ticks.color = tickColor();
   _trendChart.update();
+  _applyTrendSelection(_selectedTema);
 }
 
 async function _loadSummary() {
