@@ -1195,69 +1195,97 @@ function _renderTemasBubble(narrativas) {
   const vpH        = window.innerHeight || 800;
   const W          = Math.max(360, Math.min(Math.round(vpW * 0.75), containerW, 1000));
   const MAX_H      = Math.round(Math.min(vpH * Math.min(0.38 + N * 0.02, 0.60), containerW * 0.8, 600));
-  const maxBubbleR = Math.round(Math.min(44, MAX_H / 8));
-  const pad_mid    = 22;
+  const maxBubbleR = Math.round(Math.min(58, MAX_H / 6));
+  const pad_top    = 16;
+  const pad_mid    = 24;
   const regionRowH = 32;
   const centerX    = W / 2;
   const centerY    = Math.round(MAX_H * 0.48);
-  const regionRowY = MAX_H + pad_mid;
-  const H          = regionRowY + regionRowH;
 
   const maxScore = Math.max(...narrativas.map(n => n.importance_score ?? 0), 0.01);
   const getR     = s => Math.round(maxBubbleR * 0.28 + ((s ?? 0) / maxScore) * maxBubbleR * 0.72);
 
-  // Posiciones iniciales circulares — punto de partida para la simulación
-  const rawCircleR = _calcCircleR(N);
-  const circleR    = Math.min(rawCircleR, centerY - maxBubbleR - 10);
-  const initCoords = _bubbleCoords(N, centerX, centerY, circleR);
-
+  // Posiciones iniciales: espiral compacta al centro — da trabajo real a las fuerzas
   const nodes = narrativas.map((nav, i) => ({
     topic: nav.topic,
     nav,
     r: getR(nav.importance_score),
-    x: initCoords[i][0],
-    y: initCoords[i][1],
+    x: centerX + Math.cos(i * 2.4) * (i + 1) * 5,
+    y: centerY + Math.sin(i * 2.4) * (i + 1) * 5,
   }));
 
+  // Simulación sincrónica — corre hasta convergencia antes de renderizar
+  const sim = d3.forceSimulation(nodes)
+    .force('collide', d3.forceCollide(d => d.r + 14).strength(1))
+    .force('charge',  d3.forceManyBody().strength(-120))
+    .force('x',       d3.forceX(centerX).strength(0.018))
+    .force('y',       d3.forceY(centerY).strength(0.015))
+    .stop();
+
+  const ticks = Math.ceil(Math.log(sim.alphaMin()) / Math.log(1 - sim.alphaDecay()));
+  for (let i = 0; i < ticks; i++) sim.tick();
+
+  // Clamp bounds una vez al final
+  nodes.forEach(d => {
+    d.x = Math.max(d.r + 4, Math.min(W - d.r - 4, d.x));
+    d.y = Math.max(d.r + 4, Math.min(MAX_H - d.r - 4, d.y));
+  });
+
+  // Calcular bounds reales y eliminar aire arriba
+  const actualTop    = Math.min(...nodes.map(d => d.y - d.r));
+  const actualBottom = Math.max(...nodes.map(d => d.y + d.r));
+  const actualLeft   = Math.min(...nodes.map(d => d.x - d.r));
+  const actualRight  = Math.max(...nodes.map(d => d.x + d.r));
+
+  const shiftY = Math.max(0, actualTop - pad_top);
+  nodes.forEach(d => { d.y -= shiftY; });
+
+  const finalRegionXFor = (i, total) => total <= 1 ? centerX
+    : Math.round(actualLeft + i * (actualRight - actualLeft) / (total - 1));
+  const finalRegionRowY = actualBottom - shiftY + pad_mid;
+  const finalH          = finalRegionRowY + regionRowH;
+
   const allRegions = [...new Set(narrativas.flatMap(n => n.unique_regions ?? []))].slice(0, 8);
-  const bubbleLeft  = centerX - circleR - maxBubbleR;
-  const bubbleRight = centerX + circleR + maxBubbleR;
-  const regionXFor  = (i, total) => total <= 1 ? centerX
-    : Math.round(bubbleLeft + i * (bubbleRight - bubbleLeft) / (total - 1));
 
-  // SVG root
-  const svg = d3.select(el)
-    .append('svg')
-    .attr('viewBox', `0 0 ${W} ${H}`)
+  // Renderizar SVG con posiciones finales directamente
+  const svg = d3.select(el).append('svg')
+    .attr('viewBox', `0 0 ${W} ${finalH}`)
     .style('width', `${W}px`).style('max-width', '100%')
-    .style('height', `${H}px`).style('display', 'block').style('margin', '0 auto');
+    .style('height', `${finalH}px`).style('display', 'block').style('margin', '0 auto');
 
-  // Hebras (detrás de las burbujas)
+  // Hebras
   const hebraData = nodes.flatMap(node =>
     (node.nav.unique_regions ?? []).slice(0, 4)
       .filter(r => allRegions.includes(r))
       .map(region => ({ node, region }))
   );
-  const hebras = svg.selectAll('.qhebra').data(hebraData).join('path')
+  svg.selectAll('.qhebra').data(hebraData).join('path')
     .attr('class', 'qhebra').attr('fill', 'none')
     .attr('stroke', d => _clusterHex(d.node.topic))
-    .attr('stroke-width', 1.2).attr('opacity', 0.3);
+    .attr('stroke-width', 1.2).attr('opacity', 0.3)
+    .attr('d', d => {
+      const ri   = allRegions.indexOf(d.region);
+      if (ri < 0) return '';
+      const rx   = finalRegionXFor(ri, allRegions.length);
+      const midY = (d.node.y + finalRegionRowY) / 2;
+      return `M${d.node.x},${d.node.y} C${d.node.x},${midY} ${rx},${midY} ${rx},${finalRegionRowY}`;
+    });
 
-  // Nodos de región — selecciones D3 para poder transicionarlos al final de la sim
-  const regionDots = svg.selectAll('.qregion-dot').data(allRegions).join('circle')
+  // Nodos de región
+  svg.selectAll('.qregion-dot').data(allRegions).join('circle')
     .attr('class', 'qregion-dot').attr('r', 3.5).attr('fill', 'var(--text3)')
-    .attr('cx', (_, i) => regionXFor(i, allRegions.length))
-    .attr('cy', regionRowY);
-  const regionTexts = svg.selectAll('.qregion-lbl').data(allRegions).join('text')
+    .attr('cx', (_, i) => finalRegionXFor(i, allRegions.length))
+    .attr('cy', finalRegionRowY);
+  svg.selectAll('.qregion-lbl').data(allRegions).join('text')
     .attr('class', 'qregion-lbl').attr('text-anchor', 'middle')
     .attr('font-size', 11).attr('fill', 'var(--text2)').attr('font-family', 'var(--font)')
-    .attr('x', (_, i) => regionXFor(i, allRegions.length))
-    .attr('y', regionRowY + 13).text(d => d);
+    .attr('x', (_, i) => finalRegionXFor(i, allRegions.length))
+    .attr('y', finalRegionRowY + 13).text(d => d);
 
   // Burbujas
   const circles = svg.selectAll('.qbubble').data(nodes).join('circle')
     .attr('class', 'qbubble')
-    .attr('r', d => d.r)
+    .attr('r', d => d.r).attr('cx', d => d.x).attr('cy', d => d.y)
     .attr('fill', d => _clusterHex(d.topic))
     .attr('fill-opacity', d => d.topic === _selectedTema ? 0.25 : 0.14)
     .attr('stroke', d => _clusterHex(d.topic))
@@ -1267,10 +1295,12 @@ function _renderTemasBubble(narrativas) {
 
   _bubbleCircles = circles;
 
-  // Labels — grupos <g> para que el transform en tick mueva todo junto
+  // Labels como <g translate> — texto en coordenadas locales
   const labelNodes = nodes.filter(d => d.r >= 22);
   const labelGroups = svg.selectAll('.qblabel').data(labelNodes).join('g')
-    .attr('class', 'qblabel').style('pointer-events', 'none');
+    .attr('class', 'qblabel')
+    .attr('transform', d => `translate(${d.x},${d.y})`)
+    .style('pointer-events', 'none');
 
   labelGroups.each(function(d) {
     const words = (d.topic ?? '').split(' ');
@@ -1288,77 +1318,6 @@ function _renderTemasBubble(narrativas) {
       style(g.append('text').attr('y', 4)).text(line1);
     }
   });
-
-  // Tick: actualiza posiciones en cada paso de la simulación
-  function ticked() {
-    nodes.forEach(d => {
-      d.x = Math.max(d.r + 4, Math.min(W - d.r - 4, d.x));
-      d.y = Math.max(d.r + 4, Math.min(MAX_H - d.r - 4, d.y));
-    });
-    circles.attr('cx', d => d.x).attr('cy', d => d.y);
-    labelGroups.attr('transform', d => `translate(${d.x},${d.y})`);
-    hebras.attr('d', d => {
-      const ri  = allRegions.indexOf(d.region);
-      if (ri < 0) return '';
-      const rx   = regionXFor(ri, allRegions.length);
-      const midY = (d.node.y + regionRowY) / 2;
-      return `M${d.node.x},${d.node.y} C${d.node.x},${midY} ${rx},${midY} ${rx},${regionRowY}`;
-    });
-  }
-
-  // Simulación D3 force
-  _bubbleSim = d3.forceSimulation(nodes)
-    .force('collide', d3.forceCollide(d => d.r + 14).strength(1))
-    .force('charge',  d3.forceManyBody().strength(-120))
-    .force('x',       d3.forceX(centerX).strength(0.018))
-    .force('y',       d3.forceY(centerY).strength(0.015))
-    .alphaDecay(0.025)
-    .on('tick', ticked)
-    .on('end', () => {
-      _bubbleSim = null;
-
-      // Bounds reales post-simulación
-      const actualTop    = Math.min(...nodes.map(d => d.y - d.r));
-      const actualBottom = Math.max(...nodes.map(d => d.y + d.r));
-      const actualLeft   = Math.min(...nodes.map(d => d.x - d.r));
-      const actualRight  = Math.max(...nodes.map(d => d.x + d.r));
-
-      // Eliminar aire arriba: desplazar todos los nodos al padding mínimo
-      const shiftY = Math.max(0, actualTop - 16);
-      nodes.forEach(d => { d.y -= shiftY; });
-
-      // RegionX alineada al spread horizontal real del cluster
-      const finalRegionXFor = (i, total) => total <= 1 ? centerX
-        : Math.round(actualLeft + i * (actualRight - actualLeft) / (total - 1));
-
-      const finalRegionRowY = actualBottom - shiftY + pad_mid;
-      const finalH          = finalRegionRowY + regionRowH;
-
-      // Redimensionar SVG
-      svg.transition().duration(400)
-        .attr('viewBox', `0 0 ${W} ${finalH}`).style('height', `${finalH}px`);
-
-      // Burbujas y labels suben (eliminan aire arriba)
-      circles.transition().duration(400).attr('cx', d => d.x).attr('cy', d => d.y);
-      labelGroups.transition().duration(400).attr('transform', d => `translate(${d.x},${d.y})`);
-
-      // Regiones se mueven justo bajo el cluster
-      regionDots.transition().duration(400)
-        .attr('cx', (_, i) => finalRegionXFor(i, allRegions.length))
-        .attr('cy', finalRegionRowY);
-      regionTexts.transition().duration(400)
-        .attr('x', (_, i) => finalRegionXFor(i, allRegions.length))
-        .attr('y', finalRegionRowY + 13);
-
-      // Hebras se re-dibujan hacia posiciones finales
-      hebras.transition().duration(400).attr('d', d => {
-        const ri   = allRegions.indexOf(d.region);
-        if (ri < 0) return '';
-        const rx   = finalRegionXFor(ri, allRegions.length);
-        const midY = (d.node.y + finalRegionRowY) / 2;
-        return `M${d.node.x},${d.node.y} C${d.node.x},${midY} ${rx},${midY} ${rx},${finalRegionRowY}`;
-      });
-    });
 }
 
 const TREND_LABEL_DEFAULT = 'Cada línea es un tema. La altura refleja su presencia simultánea en radios e historias.';
