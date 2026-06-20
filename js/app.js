@@ -1,4 +1,4 @@
-mdui.setColorScheme('#3949AB');
+mdui.setColorScheme('#C4522A');
 
 let isDark = false;
 

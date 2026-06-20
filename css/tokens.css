@@ -16,8 +16,8 @@
   --primary-container:    rgb(var(--mdui-color-primary-container));
   --on-primary-container: rgb(var(--mdui-color-on-primary-container));
 
-  --chip-bg: rgb(var(--mdui-color-secondary-container));
-  --chip-fg: rgb(var(--mdui-color-on-secondary-container));
+  --chip-bg: rgb(var(--mdui-color-tertiary-container));
+  --chip-fg: rgb(var(--mdui-color-on-tertiary-container));
 
   --q-cluster-1:    #993C1D;
   --q-cluster-2:    #534AB7;
