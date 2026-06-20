@@ -15,6 +15,48 @@ Sin tareas pendientes identificadas. Revisar con el usuario al iniciar.
 
 ---
 
+## ✅ Auditoría MD3 — correcciones de paleta y contraste (2026-06-19)
+
+Commits: sesión actual
+
+### Problemas detectados y corregidos
+
+| # | Problema | Fix |
+|---|----------|-----|
+| 1 | `font-size:10px` bajo mínimo MD3 (Label Small = 11px) | Eliminado override inline en badges `.qtag`; la clase ya define 11px |
+| 2 | Chips activos usaban `text1`/`surface` (sin garantía de contraste) | Migrado a `--primary`/`--on-primary` — par garantizado MD3 |
+| 3 | Logo dot y botón login con `#FF5722` hardcodeado | Reemplazado por `var(--primary)` — sigue al acento del tema |
+| 4 | `--text3` = `on-surface-variant × 0.6` — par sin garantía MD3 | Cambiado a `rgb(var(--mdui-color-outline))` — rol MD3 real para texto sutil |
+
+### Correcciones anteriores en esta sesión
+
+| Problema | Fix | Commit |
+|----------|-----|--------|
+| Chips/tags usaban `surface-container-high` (elevación, no componente) | Migrado a `secondary-container`/`on-secondary-container` | `576d85f` |
+| Filtros historias — dropdown no visible | `overflow:hidden` en `#advanced-filters` bloqueaba `position:absolute` | `e42276e` |
+| Tab Contrato sin formato | Clases `.qstats`/`.qstat`/`.qstat-lbl`/`.qstat-val` faltaban en app.css | `d0c6fe8` |
+| Tabs nav sin contraste activo/inactivo | Inactivos → `text3`; activo → `text1` + `font-weight:600` + sombra | `d3aacf4` |
+| Sparkline eje X invisible | CSS vars en SVG no resuelven en attrs; solución: clase `.qtrend-axis` en stylesheet | `4cd04b7` |
+| Sparkline eje X muy claro | `--text3` demasiado tenue; cambiado a `--text2` | `5c4cfe2` |
+
+### Estado del sistema de tokens tras esta sesión
+
+```css
+--bg        → surface-container-lowest   (fondo página)
+--surface   → surface-container          (cards)
+--surface2  → surface-container-high     (paneles, hover, skeletons)
+--border    → outline-variant            (bordes)
+--text1     → on-surface                 (texto principal)
+--text2     → on-surface-variant         (texto secundario)
+--text3     → outline                    (texto sutil — antes on-surface-variant×0.6)
+--primary   → primary                    (nuevo — acento activo)
+--on-primary→ on-primary                 (nuevo — texto sobre primario)
+--chip-bg   → secondary-container        (badges, keywords, tags)
+--chip-fg   → on-secondary-container     (texto en chips)
+```
+
+---
+
 ## ✅ Sparkline tendencia — Chart.js → D3 (2026-06-19) · commit `a0d3515`
 
 - `canvas` → `div`; SVG creado por D3 con `viewBox` + `width:100%`

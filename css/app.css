@@ -3,7 +3,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 /* Navbar */
 .qnav { display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:52px; background:var(--surface); border-bottom:.5px solid var(--border); }
 .qlogo { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:500; color:var(--text1); }
-.qlogo-dot { width:10px; height:10px; border-radius:50%; background:#FF5722; flex-shrink:0; }
+.qlogo-dot { width:10px; height:10px; border-radius:50%; background:var(--primary); flex-shrink:0; }
 .qtabs { display:flex; background:var(--surface2); border-radius:10px; padding:3px; gap:2px; border:.5px solid var(--border); }
 .qtab { padding:5px 16px; border-radius:7px; font-size:14px; color:var(--text3); cursor:pointer; border:none; background:transparent; font-family:var(--font); transition:color .15s; }
 .qtab.active { background:var(--surface); color:var(--text1); font-weight:600; box-shadow:0 1px 4px rgba(0,0,0,.12); }
@@ -20,7 +20,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qwt.active { background:var(--surface2); color:var(--text1); font-weight:500; }
 .qrange { font-size:11px; color:var(--text3); }
 .qsnap { display:flex; align-items:center; gap:6px; padding:5px 12px; border-radius:8px; border:.5px solid var(--border); background:var(--surface2); font-size:11px; font-weight:500; color:var(--text2); cursor:pointer; font-family:var(--font); }
-.qsnap-dot { width:6px; height:6px; border-radius:50%; background:#FF5722; flex-shrink:0; }
+.qsnap-dot { width:6px; height:6px; border-radius:50%; background:var(--primary); flex-shrink:0; }
 .qsnap:disabled { opacity:0.45; cursor:not-allowed; }
 
 /* Layout */
@@ -65,7 +65,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qcard-footer { font-size:11px; color:var(--text3); margin-top:10px; padding-top:10px; border-top:.5px solid var(--border); }
 
 /* Arc filter buttons */
-.qarc-filter.active { background:var(--text1); color:var(--surface); font-weight:500; }
+.qarc-filter.active { background:var(--primary); color:var(--on-primary); font-weight:500; }
 
 /* Veredicto pill */
 .qverdict { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:500; padding:3px 10px; border-radius:20px; }
@@ -112,7 +112,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qfilter-chips { display:flex; gap:6px; flex-wrap:wrap; }
 .qchip { font-size:11px; padding:4px 10px; border-radius:20px; cursor:pointer; border:1px solid var(--border); background:var(--surface); color:var(--text2); transition:all .2s ease; font-family:var(--font); }
 .qchip:hover { background:var(--surface2); }
-.qchip.active { background:var(--text1); color:var(--surface); border-color:var(--text1); }
+.qchip.active { background:var(--primary); color:var(--on-primary); border-color:var(--primary); }
 
 /* Date inputs */
 .qfilter-date { display:flex; align-items:center; }
@@ -126,7 +126,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 /* Filtros activos */
 .qfilters-active { display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
 .qactive-chips { display:flex; gap:6px; flex-wrap:wrap; }
-.qactive-chip { font-size:11px; padding:3px 8px; border-radius:12px; background:var(--text1); color:var(--surface); display:flex; align-items:center; gap:4px; }
+.qactive-chip { font-size:11px; padding:3px 8px; border-radius:12px; background:var(--primary); color:var(--on-primary); display:flex; align-items:center; gap:4px; }
 .qreset-btn { font-size:11px; padding:4px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text3); cursor:pointer; display:flex; align-items:center; gap:4px; font-family:var(--font); }
 .qreset-btn:hover { background:var(--surface2); color:var(--text2); }
 

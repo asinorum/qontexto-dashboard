@@ -7,9 +7,12 @@
   --border:  rgb(var(--mdui-color-outline-variant));
   --text1:   rgb(var(--mdui-color-on-surface));
   --text2:   rgb(var(--mdui-color-on-surface-variant));
-  --text3:   rgb(var(--mdui-color-on-surface-variant) / 0.6);
+  --text3:   rgb(var(--mdui-color-outline));
   --font:    'Google Sans Flex', var(--mdui-typescale-body-medium-font);
   --mono:    'JetBrains Mono', ui-monospace, monospace;
+
+  --primary:    rgb(var(--mdui-color-primary));
+  --on-primary: rgb(var(--mdui-color-on-primary));
 
   --chip-bg: rgb(var(--mdui-color-secondary-container));
   --chip-fg: rgb(var(--mdui-color-on-secondary-container));

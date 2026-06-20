@@ -186,7 +186,7 @@ function _renderTimeline(state, alerts, streams) {
     const tSty  = isUrgent ? ` style="color:${sevColor};font-weight:500"` : '';
     const hdSty = isUrgent ? ` style="color:${sevColor}"` : '';
 
-    const urgChip = `<span class="qtag" style="font-size:10px;padding:1px 6px;margin-left:4px">${urgLabel}</span>`;
+    const urgChip = `<span class="qtag" style="padding:1px 6px;margin-left:4px">${urgLabel}</span>`;
 
     rows.push(
       `<div class="qtevent" ${wrap}><div class="qtl-left">` +
@@ -963,7 +963,7 @@ function _renderNarrativeArcs(arcs) {
     const clusterHex = _clusterHex(arc.cluster_name);
     const cfg        = _ARC_STATUS[arc.status] ?? _ARC_STATUS.active;
     const trendLabel = _ARC_TREND[arc.trend] ?? arc.trend;
-    const kws        = (arc.keywords ?? []).slice(0, 5).map(k => `<span class="qtag" style="font-size:10px;padding:1px 6px">${_esc(k)}</span>`).join('');
+    const kws        = (arc.keywords ?? []).slice(0, 5).map(k => `<span class="qtag" style="padding:1px 6px">${_esc(k)}</span>`).join('');
     const spark      = _drawSparkline(arc.intensity_history ?? [], clusterHex);
     const last       = arc.last_seen ? new Date(arc.last_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
     const first      = arc.first_seen ? new Date(arc.first_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
@@ -972,7 +972,7 @@ function _renderNarrativeArcs(arcs) {
     const clusterLine = arc.cluster_name
       ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
            <span style="font-size:11px;font-weight:500;color:${clusterHex}">${_esc(arc.cluster_name)}</span>
-           ${arc.urgency ? `<span class="qtag" style="font-size:10px;padding:1px 7px">${arc.urgency}</span>` : ''}
+           ${arc.urgency ? `<span class="qtag" style="padding:1px 7px">${arc.urgency}</span>` : ''}
          </div>`
       : '';
 
@@ -981,8 +981,8 @@ function _renderNarrativeArcs(arcs) {
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
           <span style="font-size:13px;font-weight:500;color:var(--text1)">${_esc(arc.topic || '—')}</span>
-          <span class="qtag" style="font-size:10px;padding:1px 7px">${cfg.label}</span>
-          ${trendLabel ? `<span class="qtag" style="font-size:10px;padding:1px 7px">${trendLabel}</span>` : ''}
+          <span class="qtag" style="padding:1px 7px">${cfg.label}</span>
+          ${trendLabel ? `<span class="qtag" style="padding:1px 7px">${trendLabel}</span>` : ''}
         </div>
         ${clusterLine}
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">${kws}</div>
