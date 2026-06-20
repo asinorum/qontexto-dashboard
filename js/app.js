@@ -12,7 +12,7 @@ function surfaceColor() {
 
 function toggleTheme() {
   isDark = !isDark;
-  document.documentElement.setAttribute('mdui-theme', isDark ? 'dark' : 'light');
+  mdui.setTheme(isDark ? 'dark' : 'light');
   document.getElementById('ico-sun').style.display  = isDark ? 'none'  : 'block';
   document.getElementById('ico-moon').style.display = isDark ? 'block' : 'none';
   if (typeof _buildClusterColorMap === 'function') _buildClusterColorMap();
