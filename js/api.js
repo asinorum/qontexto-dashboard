@@ -1460,12 +1460,6 @@ function _updateTemasTrend(narrativas) {
     rangeEl.textContent = `Importancia diaria estimada · ${fmt(allDates[0])}–${fmt(allDates[allDates.length - 1])}`;
   }
 
-  // Colores computados — CSS vars no resuelven en SVG attrs/styles en todos los browsers
-  const cs       = getComputedStyle(document.documentElement);
-  const textColor   = cs.getPropertyValue('--text3').trim()  || '#888';
-  const borderColor = cs.getPropertyValue('--border').trim() || '#ddd';
-  const fontFamily  = cs.getPropertyValue('--font').trim()   || 'sans-serif';
-
   // Dimensiones
   const W   = el.clientWidth || 580;
   const H   = 148;
@@ -1486,27 +1480,15 @@ function _updateTemasTrend(narrativas) {
     .domain([0, yMax])
     .range([H - PAD.bottom, PAD.top]);
 
-  // Eje X — etiquetas manuales por día (DD/M al cambiar mes y en extremos)
-  const tEnd = new Date(allDates[allDates.length - 1]);
-  const axisY = H - PAD.bottom;
-  allDates.forEach(dateStr => {
-    const d   = new Date(dateStr);
-    const xPos = x(d);
-    const label = (d.getDate() === 1 || dateStr === allDates[0] || dateStr === allDates[allDates.length - 1])
-      ? `${d.getDate()}/${d.getMonth() + 1}`
-      : `${d.getDate()}`;
-    _trendSvg.append('line')
-      .attr('x1', xPos).attr('y1', axisY)
-      .attr('x2', xPos).attr('y2', axisY + 3)
-      .attr('stroke', borderColor).attr('stroke-width', 0.5);
-    _trendSvg.append('text')
-      .attr('x', xPos).attr('y', axisY + 14)
-      .attr('text-anchor', 'middle')
-      .attr('fill', textColor)
-      .attr('font-size', 11)
-      .attr('font-family', fontFamily)
-      .text(label);
-  });
+  // Eje X — un tick por día; DD/M al cambiar mes y en extremos
+  const tEnd   = new Date(allDates[allDates.length - 1]);
+  const dayFmt = d => (d.getDate() === 1 || d <= t0 || d >= tEnd)
+    ? `${d.getDate()}/${d.getMonth() + 1}`
+    : `${d.getDate()}`;
+  _trendSvg.append('g')
+    .attr('class', 'qtrend-axis')
+    .attr('transform', `translate(0,${H - PAD.bottom})`)
+    .call(d3.axisBottom(x).ticks(d3.timeDay.every(1)).tickSize(3).tickFormat(dayFmt));
 
   // Line generator — n.series directo (sin null-map), equivale a spanGaps:true
   const lineGen = d3.line()
