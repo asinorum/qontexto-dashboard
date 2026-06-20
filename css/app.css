@@ -148,7 +148,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 
 /* F4: Transiciones suaves */
 #narrative-arcs-list { transition:opacity .3s ease; }
-#advanced-filters { transition:all .3s ease; overflow:hidden; }
+#advanced-filters { transition:all .3s ease; }
 .qfilters-active { transition:all .2s ease; }
 
 /* Dropdown custom de temas */
