@@ -169,7 +169,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 /* Sparkline eje X */
 .qtrend-axis .domain          { display: none; }
 .qtrend-axis .tick line       { stroke: var(--border); }
-.qtrend-axis .tick text       { fill: var(--text3); font-size: 11px; font-family: var(--font); }
+.qtrend-axis .tick text       { fill: var(--text2); font-size: 11px; font-family: var(--font); }
 
 /* Responsive */
 @media (max-width: 768px) {
