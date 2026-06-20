@@ -738,8 +738,8 @@ function _hslToHex(h, s, l) {
 }
 
 function _clusterColorForIndex(idx, isDark) {
-  const hue = (18 + idx * 137.5) % 360;
-  return isDark ? _hslToHex(hue, 58, 62) : _hslToHex(hue, 52, 33);
+  const hue = (220 + idx * 137.5) % 360;
+  return isDark ? _hslToHex(hue, 70, 62) : _hslToHex(hue, 70, 35);
 }
 
 function _buildClusterColorMap(narrativas) {
