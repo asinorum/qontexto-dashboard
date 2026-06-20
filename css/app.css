@@ -42,9 +42,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qtopbar-sep { width:.5px; height:20px; background:var(--border); flex-shrink:0; }
 
 /* Veredicto global */
-.qveredicto { margin-bottom:14px; border-left:3px solid transparent; background:var(--primary-container); }
-.qveredicto .qcard-lbl   { color:var(--on-primary-container); opacity:.75; }
-.qveredicto .qcard-title { color:var(--on-primary-container); }
+.qveredicto { margin-bottom:14px; border-left:6px solid transparent; }
 
 /* Barras Narrativas */
 .qbars { display:flex; flex-direction:column; gap:10px; margin-bottom:4px; }

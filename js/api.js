@@ -1380,8 +1380,9 @@ function _selectTema(clusterName) {
   const urg       = nav.urgency_label ?? nav.urgency ?? '';
   const rationale = nav.rationale ?? '—';
 
-  panel.style.borderLeftColor = hex;
-  panel.style.borderLeftWidth = '3px';
+  panel.style.borderLeftColor  = hex;
+  panel.style.borderLeftWidth  = '6px';
+  panel.style.backgroundColor  = _hexToRgba(hex, 0.07);
   panel.innerHTML =
     `<div style="font-size:14px;font-weight:600;color:${hex};margin-bottom:10px">${_esc(clusterName)}</div>` +
     `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">` +
@@ -1551,10 +1552,12 @@ function _updateTemasFromSummary(summary) {
     _buildClusterColorMap(summary.narrativas);
   }
 
-  // Veredicto: border-left con el color del tema de mayor score (el que referencia el texto)
+  // Veredicto: borde + tinte del tema de mayor score
   if (verdCard && summary.narrativas?.length) {
-    verdCard.style.borderLeftColor = _clusterHex(summary.narrativas[0]?.topic);
-    verdCard.style.borderLeftWidth = '3px';
+    const topHex = _clusterHex(summary.narrativas[0]?.topic);
+    verdCard.style.borderLeftColor  = topHex;
+    verdCard.style.borderLeftWidth  = '6px';
+    verdCard.style.backgroundColor  = _hexToRgba(topHex, 0.07);
   }
 
   // Trend label: veredicto conjunto si no hay selección activa
