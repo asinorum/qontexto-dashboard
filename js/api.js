@@ -1479,13 +1479,18 @@ function _updateTemasTrend(narrativas) {
     .domain([0, yMax])
     .range([H - PAD.bottom, PAD.top]);
 
-  // Eje X — solo etiquetas de fecha, sin línea
+  // Eje X — etiquetas de fecha
   _trendSvg.append('g')
-    .attr('transform', `translate(0,${H - PAD.bottom + 6})`)
-    .call(d3.axisBottom(x).ticks(6).tickSize(0).tickFormat(d3.timeFormat('%m/%d')))
-    .call(g => g.select('.domain').remove())
-    .selectAll('text')
-    .attr('font-size', 11).attr('fill', 'var(--text3)').attr('font-family', 'var(--font)');
+    .attr('transform', `translate(0,${H - PAD.bottom})`)
+    .call(d3.axisBottom(x).ticks(6).tickSize(3).tickFormat(d3.timeFormat('%m/%d')))
+    .call(g => {
+      g.select('.domain').remove();
+      g.selectAll('.tick line').style('stroke', 'var(--border)');
+      g.selectAll('.tick text')
+        .style('font-size', '11px')
+        .style('fill', 'var(--text3)')
+        .style('font-family', 'var(--font)');
+    });
 
   // Line generator — n.series directo (sin null-map), equivale a spanGaps:true
   const lineGen = d3.line()
