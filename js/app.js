@@ -9,9 +9,6 @@ let _sessionIndex = 0;
 function surfaceColor() {
   return getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
 }
-function tickColor() {
-  return getComputedStyle(document.documentElement).getPropertyValue('--text3').trim();
-}
 
 function toggleTheme() {
   isDark = !isDark;
@@ -19,6 +16,9 @@ function toggleTheme() {
   document.getElementById('ico-sun').style.display  = isDark ? 'none'  : 'block';
   document.getElementById('ico-moon').style.display = isDark ? 'block' : 'none';
   if (typeof _buildClusterColorMap === 'function') _buildClusterColorMap();
+  if (typeof _updateTemasTrend === 'function' && typeof _summary !== 'undefined' && _summary?.narrativas?.length) {
+    _updateTemasTrend(_summary.narrativas);
+  }
 }
 
 function switchTab(tab, el) {

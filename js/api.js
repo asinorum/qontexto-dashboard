@@ -1157,10 +1157,12 @@ async function _fetchContract() {
 
 // ── D12: Summary ─────────────────────────────────────────────────────────────
 
-let _trendChart   = null;
+let _trendSvg      = null;   // D3 selection del <svg> del sparkline
+let _trendLines    = null;   // D3 selection de <path> (una por tema)
+let _trendDots     = null;   // D3 selection de <circle> (puntos por dato)
 let _selectedTema  = null;
-let _bubbleSim     = null;   // D3 force simulation activa
-let _bubbleCircles = null;   // D3 selection de circles para actualizar selección en lugar
+let _bubbleSim     = null;
+let _bubbleCircles = null;
 
 function _calcCircleR(N) {
   if (N <= 1) return 0;
@@ -1428,93 +1430,86 @@ function _buildVeredictoConjunto(narrativas) {
 }
 
 function _applyTrendSelection(clusterName) {
-  if (!_trendChart) return;
-  _trendChart.data.datasets.forEach(ds => {
-    const hex = _clusterHex(ds.label);
-    if (!clusterName) {
-      ds.borderColor          = hex;
-      ds.pointBackgroundColor = hex;
-      ds.borderWidth          = 2;
-      ds.pointRadius          = 2;
-    } else if (ds.label === clusterName) {
-      ds.borderColor   = hex;
-      ds.borderWidth   = 3;
-      ds.pointRadius   = ds.data.map(v => v !== null ? 3 : 0);
-    } else {
-      ds.borderColor           = _hexToRgba(hex, 0.07);
-      ds.pointBackgroundColor  = _hexToRgba(hex, 0.07);
-      ds.borderWidth           = 2;
-      ds.pointRadius           = 1;
-    }
-  });
-  _trendChart.update('none');
-}
-
-function _initTrendChart() {
-  const canvas = document.getElementById('temas-trend');
-  if (!canvas) return;
-  if (_trendChart) { _trendChart.destroy(); _trendChart = null; }
-  _trendChart = new Chart(canvas, {
-    type: 'line',
-    data: { labels: [], datasets: [] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: { label: c => ` ${c.dataset.label}` } }
-      },
-      scales: {
-        y: { display: false },
-        x: {
-          grid: { display: false },
-          border: { display: false },
-          ticks: { color: tickColor(), font: { size: 10 }, maxRotation: 0, maxTicksLimit: 6 }
-        }
-      }
-    }
-  });
+  if (!_trendLines) return;
+  if (!clusterName) {
+    _trendLines.transition().duration(250).attr('opacity', 0.65).attr('stroke-width', 1.5);
+    if (_trendDots) _trendDots.transition().duration(250).attr('opacity', 0.65).attr('r', 2);
+  } else {
+    _trendLines.transition().duration(250)
+      .attr('opacity', d => d.topic === clusterName ? 0.9 : 0.07)
+      .attr('stroke-width', d => d.topic === clusterName ? 2.5 : 1.5);
+    if (_trendDots) _trendDots.transition().duration(250)
+      .attr('opacity', d => d.topic === clusterName ? 0.9 : 0.07)
+      .attr('r', d => d.topic === clusterName ? 3 : 1.5);
+  }
 }
 
 function _updateTemasTrend(narrativas) {
-  if (!_trendChart) _initTrendChart();
-  if (!_trendChart || !narrativas?.length) return;
+  const el = document.getElementById('temas-trend');
+  if (!el || !narrativas?.length) return;
 
-  const allDates = [...new Set(
-    narrativas.flatMap(n => (n.series ?? []).map(p => p.date))
-  )].sort();
+  const withSeries = narrativas.filter(n => n.series?.length);
+  if (!withSeries.length) return;
 
-  if (!allDates.length) return;
-
-  const datasets = narrativas.map(n => {
-    const hex = _clusterHex(n.topic);
-    const byDate = Object.fromEntries((n.series ?? []).map(p => [p.date, p.score]));
-    return {
-      label:                n.topic ?? '—',
-      data:                 allDates.map(d => byDate[d] ?? null),
-      borderColor:          hex,
-      backgroundColor:      'transparent',
-      fill:                 false,
-      tension:              0.4,
-      borderWidth:          2,
-      borderCapStyle:       'round',
-      pointRadius:          2,
-      pointHitRadius:       6,
-      pointBackgroundColor: hex,
-      spanGaps:             true,
-    };
-  });
+  // Rango de fechas del conjunto
+  const allDates = [...new Set(withSeries.flatMap(n => n.series.map(p => p.date)))].sort();
 
   const rangeEl = document.getElementById('temas-trend-range');
-  if (rangeEl && allDates.length) {
+  if (rangeEl) {
     const fmt = d => d.slice(5).replace('-', '/');
     rangeEl.textContent = `Importancia diaria estimada · ${fmt(allDates[0])}–${fmt(allDates[allDates.length - 1])}`;
   }
 
-  _trendChart.data.labels   = allDates.map(d => d.slice(5));
-  _trendChart.data.datasets = datasets;
-  _trendChart.options.scales.x.ticks.color = tickColor();
-  _trendChart.update();
+  // Dimensiones
+  const W   = el.clientWidth || 580;
+  const H   = 148;
+  const PAD = { top: 6, right: 8, bottom: 22, left: 2 };
+
+  el.innerHTML = '';
+  _trendSvg = d3.select(el).append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .style('width', '100%').style('height', `${H}px`).style('overflow', 'visible');
+
+  // Escalas
+  const x = d3.scaleTime()
+    .domain([new Date(allDates[0]), new Date(allDates[allDates.length - 1])])
+    .range([PAD.left, W - PAD.right]);
+  const yMax = Math.max(...withSeries.flatMap(n => n.series.map(p => p.score)), 0.1);
+  const y = d3.scaleLinear()
+    .domain([0, yMax])
+    .range([H - PAD.bottom, PAD.top]);
+
+  // Eje X — solo etiquetas de fecha, sin línea
+  _trendSvg.append('g')
+    .attr('transform', `translate(0,${H - PAD.bottom + 6})`)
+    .call(d3.axisBottom(x).ticks(6).tickSize(0).tickFormat(d3.timeFormat('%m/%d')))
+    .call(g => g.select('.domain').remove())
+    .selectAll('text')
+    .attr('font-size', 10).attr('fill', 'var(--text3)').attr('font-family', 'var(--font)');
+
+  // Line generator — n.series directo (sin null-map), equivale a spanGaps:true
+  const lineGen = d3.line()
+    .x(d => x(new Date(d.date)))
+    .y(d => y(d.score))
+    .curve(d3.curveCatmullRom.alpha(0.5));
+
+  // Líneas
+  _trendLines = _trendSvg.selectAll('.qtrend-line').data(withSeries).join('path')
+    .attr('class', 'qtrend-line')
+    .attr('fill', 'none')
+    .attr('stroke', n => _clusterHex(n.topic))
+    .attr('stroke-width', 1.5)
+    .attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+    .attr('opacity', 0.65)
+    .attr('d', n => lineGen(n.series));
+
+  // Puntos
+  const dotData = withSeries.flatMap(n => n.series.map(p => ({ ...p, topic: n.topic })));
+  _trendDots = _trendSvg.selectAll('.qtrend-dot').data(dotData).join('circle')
+    .attr('class', 'qtrend-dot')
+    .attr('cx', d => x(new Date(d.date))).attr('cy', d => y(d.score))
+    .attr('r', 2).attr('fill', d => _clusterHex(d.topic)).attr('opacity', 0.65);
+
   _applyTrendSelection(_selectedTema);
 }
 
