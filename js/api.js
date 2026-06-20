@@ -976,7 +976,7 @@ function _renderNarrativeArcs(arcs) {
          </div>`
       : '';
 
-    return `<div onclick="_toggleArcDetail('${_esc(arc.arc_id)}')" style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;padding-left:12px;border-bottom:.5px solid var(--border);border-left:3px solid ${clusterHex};cursor:pointer" data-arc-id="${_esc(arc.arc_id)}">
+    return `<div onclick="_toggleArcDetail('${_esc(arc.arc_id)}')" style="display:flex;align-items:flex-start;gap:12px;padding:10px 10px 10px 12px;margin-bottom:4px;border-radius:10px;border-left:6px solid ${clusterHex};background:${_hexToRgba(clusterHex, 0.07)};cursor:pointer" data-arc-id="${_esc(arc.arc_id)}">
       <div style="width:8px;height:8px;border-radius:50%;background:${clusterHex};flex-shrink:0;margin-top:4px"></div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
