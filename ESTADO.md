@@ -11,7 +11,43 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-Sin tareas pendientes identificadas. Revisar con el usuario al iniciar.
+**Color semilla pendiente de decisión:** el dashboard usa `#3949AB` (Índigo) temporalmente. El usuario quiere seguir iterando sobre esta elección — no es definitiva. Evaluar alternativas al iniciar.
+
+**Tipografía — seguir iterando:** la escala MD3 está aplicada pero el usuario quiere continuar mejorando la legibilidad. Ver §Tipografía MD3 más abajo.
+
+---
+
+## ✅ Legibilidad + lenguaje visual — identidad de tema consistente (2026-06-19)
+
+Commits: `514e6dd` · `331e08b` · `e456e2d`
+
+### Cambios
+
+| Qué | Antes | Después | Commit |
+|-----|-------|---------|--------|
+| Historias — borde izquierdo | 3px | 6px + background rgba(clusterHex, 0.07) | `514e6dd` |
+| Veredicto card — borde + fondo | border-left 3px, bg primary-container | 6px + rgba(clusterHex, 0.07) via JS | `331e08b` |
+| Rationale panel — borde + fondo | border-left 3px, bg surface | 6px + rgba(clusterHex, 0.07) | `331e08b` |
+| Tipografía: 10px → 11px | 5 instancias inline en api.js | 11px (Label Small mínimo MD3) | `e456e2d` |
+| Tipografía: 13px → 14px | 12 instancias en api.js (títulos, rationale, body) | 14px (Label Large / Body Medium MD3) | `e456e2d` |
+| `qcard-title` (veredicto) | 14px | 16px (Title Medium — elemento más importante) | `e456e2d` |
+| `qbar-name`, `qbar-rationale`, `qtl-sub`, `qtl-quote` | 12px | 13px | `e456e2d` |
+
+### Escala tipográfica final
+
+| Rol | Tamaño | Qué es |
+|-----|--------|--------|
+| Label Small (mínimo) | 11px | Metadata, chips, fechas, ejes |
+| Label Medium | 12px | Leyenda, stream info, timeline hora |
+| Body Small | 13px | Rationale en barras, subtítulos, timeline |
+| Label Large / Body Medium | 14px | Título de arcos, tabs de navegación |
+| Title Medium | 16px | **Veredicto** — elemento más importante |
+
+### Lenguaje visual — identidad de tema
+El mismo tratamiento aplica en los tres lugares donde aparece contenido narrativo:
+- **Tab Historias** — cada fila de arco: `border-left:6px` + `background:rgba(clusterHex, 0.07)`
+- **Tab Temas — card Veredicto** — JS setea borde + tinte del tema top al cargar
+- **Tab Temas — panel Rationale** — al seleccionar un tema: borde + tinte
 
 ---
 

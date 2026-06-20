@@ -88,23 +88,23 @@ La variable `--font` del bridge de compatibilidad (§3.2) sobreescribe `--mdui-t
 
 ### Escala tipográfica — mapeo a M3 type roles
 
-| TYPE ROLE M3 | NOMBRE QONTEXTO | TAMAÑO | PESO | USO |
-|---|---|---|---|---|
-| `display-large` | Slogan / Portada | 40px | 300 | Google Sans Light |
-| `title-large` | Título narrativo | 18px | 400 | Narrativa dominante, encabezados de sección |
-| `title-medium` | Título de sección | 16px | 500 | Subtítulos de card, títulos de módulo |
-| `body-medium` | Cuerpo narrativo | 13px | 400 | Análisis, alertas, recomendaciones |
-| `body-small` | Cuerpo secundario | 12px | 400 | Descripción de apoyo, sublabels |
-| `label-small` | Label de tarjeta | 11px | 500 | UPPERCASE con tracking — NARRATIVA · STREAMS (mínimo MD3) |
-| `label-medium` | Label de chip/badge | 11px | 500 | Chips, badges, estados |
+| TYPE ROLE M3 | TAMAÑO | PESO | USO EN QONTEXTO |
+|---|---|---|---|
+| `title-large` | 18px | 400 | Encabezados de login / portada |
+| `title-medium` | 16px | 600 | **Veredicto** — `.qcard-title` — elemento más importante del dashboard |
+| `label-large` / `body-medium` | 14px | 400–500 | Títulos de arcos, tabs de navegación, topbar values, nombres de emisora |
+| `body-small` | 13px | 400 | Rationale en barras, subtítulos de timeline, quotes |
+| `label-medium` | 12px | 400 | Leyenda de temas, stream info, hora en timeline |
+| `label-small` | 11px | 500 | **Mínimo MD3.** Metadata UPPERCASE, chips, fechas, ejes de sparkline |
+
+> **Regla:** nunca usar tamaños por debajo de 11px. El `label-small` (11px) es el mínimo absoluto de MD3. Tamaños de 13px no existen en MD3 — se usan como paso intermedio solo en elementos de apoyo (no títulos).
 
 **Tipografía numérica — fuera del type scale M3:**
 
 | Clase | Tamaño | Uso |
 |---|---|---|
-| `.q-score-value` | 22px / 400 | Valores de score — 0.81 / 1.0 |
-| `.q-numeric` | 13px / 400 | Contadores, valores en tabla |
-| `.q-timestamp` | 10px / 400 | Timestamps — 14:32 PE |
+| `.q-stat-val` | 15px / 500 | Valores de stat (ventanas, streams, etc.) |
+| `.q-numeric` | 14px / 400 | Contadores, valores en tabla |
 
 ---
 
@@ -140,37 +140,50 @@ Sin `mdui.global.js`, `mdui.setColorScheme('#C4522A')` lanza `ReferenceError`.
 
 **Activación del palette algorítmico (en `js/app.js`, al inicializar):**
 ```js
-mdui.setColorScheme('#C4522A');  // Terra — genera el palette M3 completo
+mdui.setColorScheme('#3949AB');  // Índigo — TEMPORAL, pendiente decisión definitiva
 ```
 
-Esto genera automáticamente todos los `--mdui-color-*` en ambos modos. No se necesita `css/qontexto-tokens.css` con overrides manuales.
+> ⚠️ **El color semilla `#3949AB` (Índigo) es provisional.** El usuario quiere iterar sobre esta elección. Se eligió porque el terracota anterior (`#C4522A`) generaba superficies en la misma familia cálida que los accents, perdiendo diferenciación. El índigo genera superficies neutras (beige) claramente distintas. Opciones exploradas: terracota, teal, índigo. Decisión pendiente.
+
+Esto genera automáticamente todos los `--mdui-color-*` en ambos modos. El tema claro/oscuro se alterna con `mdui.setTheme('dark'|'light')` — **no** `setAttribute('mdui-theme', ...)` que solo activa selectores CSS sin regenerar los tokens de color.
 
 **Bridge de compatibilidad (`css/tokens.css`):**
 ```css
 :root {
-  --bg:      rgb(var(--mdui-color-surface-container-lowest));
-  --surface: rgb(var(--mdui-color-surface-container));
-  --surface2:rgb(var(--mdui-color-surface-container-high));
-  --border:  rgb(var(--mdui-color-outline-variant));
-  --text1:   rgb(var(--mdui-color-on-surface));
-  --text2:   rgb(var(--mdui-color-on-surface-variant));
-  --text3:   rgb(var(--mdui-color-on-surface-variant) / 0.6);
-  --font:    'Google Sans Flex', var(--mdui-typescale-body-medium-font);
-  --mono:    'JetBrains Mono', ui-monospace, monospace;
+  --bg:                rgb(var(--mdui-color-surface-container-lowest));
+  --surface:           rgb(var(--mdui-color-surface-container));
+  --surface2:          rgb(var(--mdui-color-surface-container-high));
+  --border:            rgb(var(--mdui-color-outline-variant));
+  --text1:             rgb(var(--mdui-color-on-surface));
+  --text2:             rgb(var(--mdui-color-on-surface-variant));
+  --text3:             rgb(var(--mdui-color-outline));          /* rol MD3 real — NO on-surface-variant×0.6 */
+  --font:              'Google Sans Flex', var(--mdui-typescale-body-medium-font);
+  --mono:              'JetBrains Mono', ui-monospace, monospace;
+  --primary:           rgb(var(--mdui-color-primary));
+  --on-primary:        rgb(var(--mdui-color-on-primary));
+  --primary-container: rgb(var(--mdui-color-primary-container));
+  --on-primary-container: rgb(var(--mdui-color-on-primary-container));
+  --chip-bg:           rgb(var(--mdui-color-secondary-container));  /* chips, keywords, badges */
+  --chip-fg:           rgb(var(--mdui-color-on-secondary-container));
 }
-/* Dark mode gestionado por MDUI vía atributo mdui-theme — eliminar [data-theme="dark"] */
 ```
 
-**Cambio de tema (JS en `app.js`):**
+**Uso de roles MD3 activos:**
+- `--primary` / `--on-primary` → elementos interactivos activos (chip seleccionado, botón)
+- `--primary-container` / `--on-primary-container` → tab activo en la navegación
+- `--chip-bg` / `--chip-fg` → todos los chips/tags/keywords (rol MD3: secondary-container)
+- `--text3` → texto sutil (outline, no on-surface-variant diluido)
+
+**Palette resultante (índigo):** superficies en beige neutro (light) / gris oscuro (dark). El acento principal es azul-índigo. Los accents de tema (golden angle) contrastan bien sobre estas superficies neutras.
+
+**Cambio de tema:**
 ```js
-// v1 (eliminar):
-document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+// CORRECTO — regenera tokens de color en MDUI:
+mdui.setTheme('dark' | 'light');
 
-// v2 (MDUI):
-document.documentElement.setAttribute('mdui-theme', isDark ? 'dark' : 'light');
+// INCORRECTO — solo activa selectores CSS, los tokens de color no cambian:
+document.documentElement.setAttribute('mdui-theme', 'dark');
 ```
-
-**Palette resultante:** temperatura rosada/terracota desde Terra — warm pinkish en light, rojo-negro en dark. El algoritmo M3 HCT garantiza armonía cromática con los colores de identidad de temas (`--q-cluster-*`), que permanecen como valores manuales.
 
 ### 3.3 Identidad cromática por tema
 
@@ -204,14 +217,18 @@ Los colores `--q-cluster-1..4` del spec original ya no se usan — reemplazados 
 
 **Regla de aplicación:**
 
-| Elemento | Canal de color |
-|---|---|
-| Dot de historia o mención | Color del tema |
-| Borde izquierdo de fila (3px) | Color del tema |
-| Sparkline inline | Color del tema |
-| Burbuja en Tab Temas | Color del tema |
-| Label del tema (texto) | Color del tema (opacidad plena) |
-| Background de card o fila | Nunca el color del tema directamente |
+| Elemento | Canal de color | Implementación |
+|---|---|---|
+| Dot de historia o mención | Color del tema | `background: ${clusterHex}` |
+| Borde izquierdo de fila | Color del tema | `border-left: 6px solid ${clusterHex}` |
+| Sparkline inline | Color del tema | `stroke: ${clusterHex}` |
+| Burbuja en Tab Temas | Color del tema | `fill: ${clusterHex}` |
+| Label del tema (texto) | Color del tema | `color: ${clusterHex}` |
+| Background de card o fila | **Tinte 7% del color del tema** | `background: rgba(r,g,b, 0.07)` vía `_hexToRgba(hex, 0.07)` |
+| Card Veredicto | Tinte 7% del tema top | JS inline en `_updateTemasFromSummary` |
+| Panel Rationale | Tinte 7% del tema seleccionado | JS inline en `_selectTema` |
+
+> **Nota sobre el tinte de fondo:** 7% de opacidad es suficiente para que el ojo agrupe filas del mismo tema sin competir con el texto. El borde de 6px es el canal primario de identificación (se escanea verticalmente sin leer); el tinte es el canal secundario (confirma la agrupación). Juntos son más efectivos que cualquiera solo.
 
 ### 3.4 Urgencia — canales secundarios
 
@@ -299,11 +316,15 @@ Ver v1.5 §4 para la tabla completa de niveles y v1.5 §6–7 para State layers 
 - SVG renderiza una sola vez con posiciones finales — sin `on('tick')`, sin transiciones
 
 **Panel de rationale** (al seleccionar un tema)
-- Barra lateral izquierda en color del tema
-- Nombre del tema (en color del tema)
+- `border-left: 6px solid clusterHex` + `background: rgba(clusterHex, 0.07)` — mismo lenguaje visual que Historias
+- Nombre del tema (en color del tema, 14px bold)
 - Chip "N historias" con borde del color del tema
-- Chip de urgencia neutro
-- Texto de rationale (generado por Haiku, consume campo `rationale` de `GET /my/summary`)
+- Chip de urgencia neutro (`secondary-container`)
+- Texto de rationale (generado por Haiku, consume campo `rationale` de `GET /my/summary`, 14px)
+
+**Card Veredicto** (siempre visible, refleja el tema top)
+- `border-left: 6px solid topHex` + `background: rgba(topHex, 0.07)` — seteado en JS por `_updateTemasFromSummary`
+- Texto del veredicto: `font-size: 16px` (Title Medium — el elemento más importante del dashboard)
 
 **Tendencia de temas**
 - Fuente: `narrativas[].series` — campo pendiente de añadir al backend (ver §6)
@@ -329,8 +350,9 @@ Ver v1.5 §4 para la tabla completa de niveles y v1.5 §6–7 para State layers 
 **Layout:** lista plana ordenada por `last_seen DESC` (igual que Tab Contexto actual). Sin cambios estructurales.
 
 **Cambio principal — identidad cromática:**
-Cada fila de historia recibe el color de su tema en tres lugares:
-- Barra lateral izquierda (3px)
+Cada fila de historia recibe el color de su tema en cuatro canales:
+- Barra lateral izquierda **6px** (canal primario — se escanea sin leer)
+- Fondo tintado al 7% del color del tema (canal secundario — agrupa visualmente)
 - Dot de status
 - Sparkline inline
 
@@ -338,11 +360,12 @@ La urgencia (Escalando / Activo / Dormido) pasa a ser chip de texto neutro.
 
 **Anatomía de fila:**
 ```
-[barra 3px, color tema] [dot, color tema] [nombre del tema — color tema]
-                                          [título de la historia]
-                                          [fecha inicio — fecha fin · Región]
-                                          [keywords] · [chip estado] · [chip urgencia] · [chip trend]
-                                          [sparkline 80px, color tema]
+[barra 6px, color tema │ fondo rgba(tema, 0.07)]
+  [dot, color tema] [nombre del tema — color tema]
+                    [título de la historia]
+                    [fecha inicio — fecha fin · Región]
+                    [keywords] · [chip estado] · [chip urgencia] · [chip trend]
+                    [sparkline 80px, color tema]
 ```
 
 **Filtros:** sin cambio estructural respecto a Tab Contexto actual.
