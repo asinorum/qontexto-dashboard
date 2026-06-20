@@ -970,8 +970,8 @@ function _renderNarrativeArcs(arcs) {
     const pts        = (arc.intensity_history ?? []).length;
 
     const clusterLine = arc.cluster_name
-      ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-           <span style="font-size:11px;font-weight:500;color:${clusterHex}">${_esc(arc.cluster_name)}</span>
+      ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+           <span style="font-size:13px;font-weight:500;color:${clusterHex}">${_esc(arc.cluster_name)}</span>
            ${arc.urgency ? `<span class="qtag" style="padding:1px 7px">${arc.urgency}</span>` : ''}
          </div>`
       : '';
