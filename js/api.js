@@ -1471,18 +1471,23 @@ function _updateTemasTrend(narrativas) {
     .style('width', '100%').style('height', `${H}px`).style('overflow', 'visible');
 
   // Escalas
+  const t0 = new Date(allDates[0]);
   const x = d3.scaleTime()
-    .domain([new Date(allDates[0]), new Date(allDates[allDates.length - 1])])
+    .domain([t0, new Date(allDates[allDates.length - 1])])
     .range([PAD.left, W - PAD.right]);
   const yMax = Math.max(...withSeries.flatMap(n => n.series.map(p => p.score)), 0.1);
   const y = d3.scaleLinear()
     .domain([0, yMax])
     .range([H - PAD.bottom, PAD.top]);
 
-  // Eje X — fechas del contrato en formato DD/M
+  // Eje X — un tick por día; DD/M solo al cambiar de mes, resto solo día
+  const tEnd = new Date(allDates[allDates.length - 1]);
+  const dayFmt = d => (d.getDate() === 1 || d <= t0 || d >= tEnd)
+    ? `${d.getDate()}/${d.getMonth() + 1}`
+    : `${d.getDate()}`;
   _trendSvg.append('g')
     .attr('transform', `translate(0,${H - PAD.bottom})`)
-    .call(d3.axisBottom(x).ticks(6).tickSize(3).tickFormat(d => `${d.getDate()}/${d.getMonth() + 1}`))
+    .call(d3.axisBottom(x).ticks(d3.timeDay.every(1)).tickSize(3).tickFormat(dayFmt))
     .call(g => {
       g.select('.domain').remove();
       g.selectAll('.tick line').style('stroke', 'var(--border)');
