@@ -164,7 +164,7 @@ function _renderTimeline(state, alerts, streams) {
     const themes = [...new Set(sorted.map(ev => ev.alert?.cluster_name).filter(Boolean))];
     leyendaEl.innerHTML = themes.map(name => {
       const hex = _clusterHex(name);
-      return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)">` +
+      return `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--text2)">` +
              `<span style="width:7px;height:7px;border-radius:50%;background:${hex};flex-shrink:0"></span>${_esc(name)}</span>`;
     }).join('');
   }
@@ -243,7 +243,7 @@ function _renderAnalisis(state, snap, alerts) {
   if (snap.recommended_focus) {
     html +=
       `<div style="background:var(--surface2);border-radius:10px;padding:10px 12px">` +
-      `<div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;` +
+      `<div style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;` +
       `color:var(--text3);margin-bottom:6px">Recomendación</div>` +
       `<div style="font-size:12px;color:var(--text1);line-height:1.5">${_esc(snap.recommended_focus)}</div>` +
       `</div>`;
@@ -560,7 +560,7 @@ function _formatClusterData(arc) {
 
   if (cluster.urgency && _CLUSTER_URGENCY[cluster.urgency]) {
     cluster.urgencyConfig = _CLUSTER_URGENCY[cluster.urgency];
-    cluster.urgencyChip = `<span style="font-size:10px;background:${cluster.urgencyConfig.bg};color:${cluster.urgencyConfig.color};border-radius:5px;padding:1px 7px;font-weight:500;margin-left:6px">${cluster.urgencyConfig.label}</span>`;
+    cluster.urgencyChip = `<span style="font-size:11px;background:${cluster.urgencyConfig.bg};color:${cluster.urgencyConfig.color};border-radius:5px;padding:1px 7px;font-weight:500;margin-left:6px">${cluster.urgencyConfig.label}</span>`;
   } else {
     cluster.urgencyChip = '';
   }
@@ -956,7 +956,7 @@ function _renderNarrativeArcs(arcs) {
   const el = document.getElementById('narrative-arcs-list');
   if (!el) return;
   if (!arcs?.length) {
-    el.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">Sin historias para el filtro seleccionado.</div>';
+    el.innerHTML = '<div style="font-size:14px;color:var(--text3);padding:8px 0">Sin historias para el filtro seleccionado.</div>';
     return;
   }
   el.innerHTML = arcs.map(arc => {
@@ -980,13 +980,13 @@ function _renderNarrativeArcs(arcs) {
       <div style="width:8px;height:8px;border-radius:50%;background:${clusterHex};flex-shrink:0;margin-top:4px"></div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
-          <span style="font-size:13px;font-weight:500;color:var(--text1)">${_esc(arc.topic || '—')}</span>
+          <span style="font-size:14px;font-weight:500;color:var(--text1)">${_esc(arc.topic || '—')}</span>
           <span class="qtag" style="padding:1px 7px">${cfg.label}</span>
           ${trendLabel ? `<span class="qtag" style="padding:1px 7px">${trendLabel}</span>` : ''}
         </div>
         ${clusterLine}
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">${kws}</div>
-        <div style="font-size:10px;color:var(--text3)">${first} → ${last} · ${pts} ventana${pts !== 1 ? 's' : ''}</div>
+        <div style="font-size:11px;color:var(--text3)">${first} → ${last} · ${pts} ventana${pts !== 1 ? 's' : ''}</div>
       </div>
       <div style="flex-shrink:0;opacity:.8">${spark}</div>
     </div>
@@ -1064,7 +1064,7 @@ function _renderContratoTab(contract) {
       `<div class="qstat"><div class="qstat-lbl">Sector</div>` +
       `<div class="qstat-val" style="font-size:16px">${_esc(contract.sector || '—')}</div></div>` +
       `<div class="qstat"><div class="qstat-lbl">Tier</div><div class="qstat-val">` +
-      `<span style="background:${tier.bg};color:${tier.color};border-radius:8px;padding:3px 12px;font-size:13px;font-weight:500">${tier.label}</span>` +
+      `<span style="background:${tier.bg};color:${tier.color};border-radius:8px;padding:3px 12px;font-size:14px;font-weight:500">${tier.label}</span>` +
       `</div></div>` +
       `<div class="qstat"><div class="qstat-lbl">Vigencia desde</div>` +
       `<div class="qstat-val" style="font-size:16px">${_esc((contract.start_date ?? '').slice(0, 10) || '—')}</div></div>`;
@@ -1074,13 +1074,13 @@ function _renderContratoTab(contract) {
   if (winEl) {
     const windows = contract.windows ?? [];
     winEl.innerHTML = !windows.length
-      ? '<p style="font-size:13px;color:var(--text3)">Sin ventanas configuradas.</p>'
+      ? '<p style="font-size:14px;color:var(--text3)">Sin ventanas configuradas.</p>'
       : windows.map(w =>
           `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;` +
           `background:var(--surface2);border-radius:10px;margin-bottom:8px">` +
           `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.8" stroke-linecap="round">` +
           `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>` +
-          `<span style="font-size:13px;color:var(--text1);font-weight:500">${_esc(w.start_time)} — ${_esc(w.end_time)}</span>` +
+          `<span style="font-size:14px;color:var(--text1);font-weight:500">${_esc(w.start_time)} — ${_esc(w.end_time)}</span>` +
           `<span style="font-size:12px;color:var(--text3)">${_formatDays(w.days_of_week)}</span>` +
           `<span style="font-size:11px;color:var(--text3);margin-left:auto">${_esc(w.tz ?? 'America/Lima')}</span>` +
           `</div>`
@@ -1098,7 +1098,7 @@ function _renderContratoTab(contract) {
     if (contract.contract_id) {
       kwEl.innerHTML +=
         `<div style="margin-top:14px;padding-top:12px;border-top:.5px solid var(--border)">` +
-        `<div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;` +
+        `<div style="font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;` +
         `color:var(--text3);margin-bottom:4px">ID de contrato</div>` +
         `<code style="font-family:var(--mono);font-size:11px;color:var(--text2);background:var(--surface2);` +
         `border:.5px solid var(--border);border-radius:6px;padding:2px 8px;word-break:break-all">${_esc(contract.contract_id)}</code>` +
@@ -1111,7 +1111,7 @@ function _renderContratoTab(contract) {
     const streams        = contract.streams ?? [];
     const contractWins   = contract.windows ?? [];
     streamEl.innerHTML = !streams.length
-      ? '<p style="font-size:13px;color:var(--text3)">Sin emisoras configuradas.</p>'
+      ? '<p style="font-size:14px;color:var(--text3)">Sin emisoras configuradas.</p>'
       : streams.map((s, i) => {
           const ownWins    = s.stream_windows ?? [];
           const hasOwn     = ownWins.length > 0;
@@ -1130,7 +1130,7 @@ function _renderContratoTab(contract) {
             (isLast ? '' : 'border-bottom:.5px solid var(--border);') + `">` +
             `<div style="width:8px;height:8px;border-radius:50%;background:#4CAF50;flex-shrink:0;margin-top:4px"></div>` +
             `<div style="flex:1;min-width:0">` +
-            `<div style="font-size:13px;font-weight:500;color:var(--text1)">${_esc(s.radio_id || s.label || '—')}` +
+            `<div style="font-size:14px;font-weight:500;color:var(--text1)">${_esc(s.radio_id || s.label || '—')}` +
             (s.region ? ` <span style="color:var(--text3);font-weight:400">· ${_esc(s.region)}</span>` : '') +
             `</div>` +
             `<div style="display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap">` +
@@ -1150,7 +1150,7 @@ async function _fetchContract() {
     _renderContratoTab(contract);
   } catch {
     const el = document.getElementById('contrato-stats');
-    if (el) el.innerHTML = '<p style="font-size:13px;color:var(--text3)">Sin contrato activo.</p>';
+    if (el) el.innerHTML = '<p style="font-size:14px;color:var(--text3)">Sin contrato activo.</p>';
   }
 }
 
@@ -1185,7 +1185,7 @@ function _renderTemasBubble(narrativas) {
   _bubbleCircles = null;
 
   if (!narrativas?.length) {
-    el.innerHTML = '<p style="font-size:13px;color:var(--text3);text-align:center;padding:40px 0">Sin temas activos.</p>';
+    el.innerHTML = '<p style="font-size:14px;color:var(--text3);text-align:center;padding:40px 0">Sin temas activos.</p>';
     return;
   }
   el.innerHTML = '';
@@ -1353,7 +1353,7 @@ function _selectTema(clusterName) {
     }
     if (panel) {
       panel.style.borderLeftColor = 'var(--border)';
-      panel.innerHTML = '<div style="font-size:13px;color:var(--text3);line-height:1.6">Selecciona un tema para ver su análisis: historias activas, señal de urgencia y contexto.</div>';
+      panel.innerHTML = '<div style="font-size:14px;color:var(--text3);line-height:1.6">Selecciona un tema para ver su análisis: historias activas, señal de urgencia y contexto.</div>';
     }
     return;
   }
@@ -1389,7 +1389,7 @@ function _selectTema(clusterName) {
     (arcCount ? `<span style="font-size:11px;padding:2px 10px;border-radius:20px;border:1.5px solid ${hex};color:${hex}">${arcCount} historias</span>` : '') +
     (urg      ? `<span class="qtag" style="font-size:11px;padding:2px 10px;border-radius:20px">${_esc(urg)}</span>` : '') +
     `</div>` +
-    `<div style="font-size:13px;color:var(--text2);line-height:1.6">${_esc(rationale)}</div>`;
+    `<div style="font-size:14px;color:var(--text2);line-height:1.6">${_esc(rationale)}</div>`;
 }
 
 function _calcTrendFromSeries(series) {
@@ -1572,7 +1572,7 @@ function _updateTemasFromSummary(summary) {
     const panel = document.getElementById('temas-rationale-panel');
     if (panel) {
       panel.style.borderLeftColor = 'var(--border)';
-      panel.innerHTML = '<div style="font-size:13px;color:var(--text3);line-height:1.6">Selecciona un tema para ver su análisis: historias activas, señal de urgencia y contexto.</div>';
+      panel.innerHTML = '<div style="font-size:14px;color:var(--text3);line-height:1.6">Selecciona un tema para ver su análisis: historias activas, señal de urgencia y contexto.</div>';
     }
   }
 }
