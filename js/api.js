@@ -186,7 +186,7 @@ function _renderTimeline(state, alerts, streams) {
     const tSty  = isUrgent ? ` style="color:${sevColor};font-weight:500"` : '';
     const hdSty = isUrgent ? ` style="color:${sevColor}"` : '';
 
-    const urgChip = `<span style="font-size:10px;background:var(--surface2);color:var(--text2);border-radius:4px;padding:1px 6px;margin-left:4px">${urgLabel}</span>`;
+    const urgChip = `<span class="qtag" style="font-size:10px;padding:1px 6px;margin-left:4px">${urgLabel}</span>`;
 
     rows.push(
       `<div class="qtevent" ${wrap}><div class="qtl-left">` +
@@ -963,7 +963,7 @@ function _renderNarrativeArcs(arcs) {
     const clusterHex = _clusterHex(arc.cluster_name);
     const cfg        = _ARC_STATUS[arc.status] ?? _ARC_STATUS.active;
     const trendLabel = _ARC_TREND[arc.trend] ?? arc.trend;
-    const kws        = (arc.keywords ?? []).slice(0, 5).map(k => `<span style="font-size:10px;background:var(--surface2);border-radius:4px;padding:1px 6px;color:var(--text2)">${_esc(k)}</span>`).join('');
+    const kws        = (arc.keywords ?? []).slice(0, 5).map(k => `<span class="qtag" style="font-size:10px;padding:1px 6px">${_esc(k)}</span>`).join('');
     const spark      = _drawSparkline(arc.intensity_history ?? [], clusterHex);
     const last       = arc.last_seen ? new Date(arc.last_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
     const first      = arc.first_seen ? new Date(arc.first_seen).toLocaleDateString('es-PE', { day: 'numeric', month: 'numeric', timeZone: 'America/Lima' }) : '—';
@@ -972,7 +972,7 @@ function _renderNarrativeArcs(arcs) {
     const clusterLine = arc.cluster_name
       ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
            <span style="font-size:11px;font-weight:500;color:${clusterHex}">${_esc(arc.cluster_name)}</span>
-           ${arc.urgency ? `<span style="font-size:10px;background:var(--surface2);color:var(--text2);border-radius:5px;padding:1px 7px">${arc.urgency}</span>` : ''}
+           ${arc.urgency ? `<span class="qtag" style="font-size:10px;padding:1px 7px">${arc.urgency}</span>` : ''}
          </div>`
       : '';
 
@@ -981,8 +981,8 @@ function _renderNarrativeArcs(arcs) {
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap">
           <span style="font-size:13px;font-weight:500;color:var(--text1)">${_esc(arc.topic || '—')}</span>
-          <span style="font-size:10px;background:var(--surface2);color:var(--text2);border-radius:5px;padding:1px 7px">${cfg.label}</span>
-          ${trendLabel ? `<span style="font-size:10px;background:var(--surface2);color:var(--text2);border-radius:5px;padding:1px 7px">${trendLabel}</span>` : ''}
+          <span class="qtag" style="font-size:10px;padding:1px 7px">${cfg.label}</span>
+          ${trendLabel ? `<span class="qtag" style="font-size:10px;padding:1px 7px">${trendLabel}</span>` : ''}
         </div>
         ${clusterLine}
         <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px">${kws}</div>
@@ -1093,8 +1093,7 @@ function _renderContratoTab(contract) {
     kwEl.innerHTML = !kws.length
       ? '<span style="font-size:12px;color:var(--text3)">Sin keywords configurados</span>'
       : kws.map(k =>
-          `<span style="display:inline-block;background:var(--surface2);color:var(--text2);` +
-          `border-radius:6px;padding:2px 8px;font-size:11px;margin:0 3px 4px 0">${_esc(k)}</span>`
+          `<span class="qtag" style="margin:0 3px 4px 0">${_esc(k)}</span>`
         ).join('');
     if (contract.contract_id) {
       kwEl.innerHTML +=
@@ -1124,7 +1123,7 @@ function _renderContratoTab(contract) {
             ? `<span style="font-size:11px;font-weight:500;padding:1px 8px;border-radius:20px;` +
               `background:rgba(186,117,23,0.12);color:#854F0B;border:.5px solid rgba(186,117,23,0.4)">Ventana propia</span>`
             : `<span style="font-size:11px;padding:1px 8px;border-radius:20px;` +
-              `background:var(--surface2);color:var(--text3)">Hereda del contrato</span>`;
+              `background:var(--chip-bg);color:var(--chip-fg)">Hereda del contrato</span>`;
           const isLast = i === streams.length - 1;
           return (
             `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;` +
@@ -1387,7 +1386,7 @@ function _selectTema(clusterName) {
     `<div style="font-size:14px;font-weight:600;color:${hex};margin-bottom:10px">${_esc(clusterName)}</div>` +
     `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">` +
     (arcCount ? `<span style="font-size:11px;padding:2px 10px;border-radius:20px;border:1.5px solid ${hex};color:${hex}">${arcCount} historias</span>` : '') +
-    (urg      ? `<span style="font-size:11px;padding:2px 10px;border-radius:20px;background:var(--surface2);color:var(--text2)">${_esc(urg)}</span>` : '') +
+    (urg      ? `<span class="qtag" style="font-size:11px;padding:2px 10px;border-radius:20px">${_esc(urg)}</span>` : '') +
     `</div>` +
     `<div style="font-size:13px;color:var(--text2);line-height:1.6">${_esc(rationale)}</div>`;
 }

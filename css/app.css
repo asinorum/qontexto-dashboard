@@ -171,6 +171,10 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qdd-opt:hover { background:var(--surface2); }
 .qdd-opt.sel   { background:var(--surface2); color:var(--text1); font-weight:500; }
 
+/* Tags / chips de contenido (keywords, badges, urgencia) */
+.qtag { display:inline-block; background:var(--chip-bg); color:var(--chip-fg);
+        border-radius:6px; padding:2px 8px; font-size:11px; font-family:var(--font); }
+
 /* Sparkline eje X */
 .qtrend-axis .domain          { display: none; }
 .qtrend-axis .tick line       { stroke: var(--border); }

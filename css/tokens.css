@@ -11,6 +11,9 @@
   --font:    'Google Sans Flex', var(--mdui-typescale-body-medium-font);
   --mono:    'JetBrains Mono', ui-monospace, monospace;
 
+  --chip-bg: rgb(var(--mdui-color-secondary-container));
+  --chip-fg: rgb(var(--mdui-color-on-secondary-container));
+
   --q-cluster-1:    #993C1D;
   --q-cluster-2:    #534AB7;
   --q-cluster-3:    #0F6E56;
