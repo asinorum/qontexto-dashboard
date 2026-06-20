@@ -1460,6 +1460,12 @@ function _updateTemasTrend(narrativas) {
     rangeEl.textContent = `Importancia diaria estimada · ${fmt(allDates[0])}–${fmt(allDates[allDates.length - 1])}`;
   }
 
+  // Colores computados — CSS vars no resuelven en SVG attrs/styles en todos los browsers
+  const cs       = getComputedStyle(document.documentElement);
+  const textColor   = cs.getPropertyValue('--text3').trim()  || '#888';
+  const borderColor = cs.getPropertyValue('--border').trim() || '#ddd';
+  const fontFamily  = cs.getPropertyValue('--font').trim()   || 'sans-serif';
+
   // Dimensiones
   const W   = el.clientWidth || 580;
   const H   = 148;
@@ -1480,8 +1486,8 @@ function _updateTemasTrend(narrativas) {
     .domain([0, yMax])
     .range([H - PAD.bottom, PAD.top]);
 
-  // Eje X — un tick por día; DD/M solo al cambiar de mes, resto solo día
-  const tEnd = new Date(allDates[allDates.length - 1]);
+  // Eje X — un tick por día; DD/M solo al cambiar de mes y en extremos
+  const tEnd   = new Date(allDates[allDates.length - 1]);
   const dayFmt = d => (d.getDate() === 1 || d <= t0 || d >= tEnd)
     ? `${d.getDate()}/${d.getMonth() + 1}`
     : `${d.getDate()}`;
@@ -1490,11 +1496,11 @@ function _updateTemasTrend(narrativas) {
     .call(d3.axisBottom(x).ticks(d3.timeDay.every(1)).tickSize(3).tickFormat(dayFmt))
     .call(g => {
       g.select('.domain').remove();
-      g.selectAll('.tick line').style('stroke', 'var(--border)');
+      g.selectAll('.tick line').attr('stroke', borderColor);
       g.selectAll('.tick text')
-        .style('font-size', '11px')
-        .style('fill', 'var(--text3)')
-        .style('font-family', 'var(--font)');
+        .attr('fill', textColor)
+        .attr('font-size', 11)
+        .attr('font-family', fontFamily);
     });
 
   // Line generator — n.series directo (sin null-map), equivale a spanGaps:true
