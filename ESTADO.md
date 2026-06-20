@@ -11,25 +11,18 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**Sparkline tendencia de temas — refactor Chart.js → D3 (plan aprobado)**
+Sin tareas pendientes identificadas. Revisar con el usuario al iniciar.
 
-8 puntos en orden. Implementar en secuencia según dependencias.
+---
 
-| # | Tarea | Archivo | Depende de |
-|---|---|---|---|
-| 1 | `<canvas id="temas-trend">` → `<div id="temas-trend">` | `index.html` | — |
-| 2 | `let _trendChart` → `let _trendSvg / _trendLines / _trendDots` | `api.js` | — |
-| 3 | Eliminar `_initTrendChart()` | `api.js` | — |
-| 4 | Reescribir `_updateTemasTrend()` con D3 · escalas time+linear · `d3.line()+curveCatmullRom` · `defined()` para spanGaps · SVG `width="100%"` + `viewBox` | `api.js` | 1, 2, 3 |
-| 5 | Reescribir `_applyTrendSelection()` con `.transition().duration(250)` sobre `_trendLines/_trendDots` | `api.js` | 4 |
-| 6 | `toggleTheme()`: añadir `_updateTemasTrend(_summary?.narrativas)` tras reconstruir color map | `app.js` | 4 |
-| 7 | Eliminar `tickColor()` de `app.js` (solo usada en `_initTrendChart`) | `app.js` | 3 |
-| 8 | Eliminar CDN Chart.js de `index.html` (último paso, verificar cero referencias) | `index.html` | 7 |
+## ✅ Sparkline tendencia — Chart.js → D3 (2026-06-19) · commit `a0d3515`
 
-**Notas de implementación:**
-- `spanGaps`: usar `n.series` directo en `d3.line()` — no null-map sobre `allDates`. Equivale a `spanGaps:true`.
-- Tooltips: omitir en primera iteración (no eran críticos)
-- Resize: SVG `viewBox` + `width="100%"` — escala sin ResizeObserver
+- `canvas` → `div`; SVG creado por D3 con `viewBox` + `width:100%`
+- `_updateTemasTrend`: `d3.line()` + `curveCatmullRom`, `scaleTime` + `scaleLinear`
+- `n.series` directo en el line generator — equivale a `spanGaps:true`, sin null-map
+- `_applyTrendSelection`: `.transition().duration(250)` sobre paths y dots D3
+- `toggleTheme`: re-renderiza sparkline tras reconstruir color map
+- Eliminados: `_initTrendChart()`, `_trendChart`, `tickColor()`, CDN Chart.js
 
 ---
 
