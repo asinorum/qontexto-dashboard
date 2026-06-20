@@ -11,9 +11,24 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-**Color semilla pendiente de decisión:** el dashboard usa `#3949AB` (Índigo) temporalmente. El usuario quiere seguir iterando sobre esta elección — no es definitiva. Evaluar alternativas al iniciar.
+**Verificar tabs MDUI en producción:** commit `231e590` reemplazó los botones custom por `<mdui-tabs>`. Probar en Vultr que la navegación entre tabs funciona correctamente y que el estilo MD3 (indicador inferior, ripple) se ve bien.
 
-**Tipografía — seguir iterando:** la escala MD3 está aplicada pero el usuario quiere continuar mejorando la legibilidad. Ver §Tipografía MD3 más abajo.
+**Legibilidad — seguir iterando:** se avanzó en tamaños y logo, pero puede haber más ajustes de espaciado y línea base según lo que se vea en producción.
+
+---
+
+## ✅ Legibilidad + color — sesión 2026-06-20
+
+Commits: `92430b4` · `45cbbb4` · `165cacf` · `231e590`
+
+| Cambio | Detalle | Commit |
+|--------|---------|--------|
+| Color semilla | Índigo → **Terracota `#C4522A`** (definitivo, preferencia del usuario) | `92430b4` |
+| Chips/tags | `secondary-container` → `tertiary-container` (`#F4E2A7` dorado pálido) — resuelve colisión con primaryContainer | `92430b4` |
+| Paleta burbujas | Inicio 18°→220° (azul eléctrico), saturación 52%→70% — evita colisión con terracota UI | `45cbbb4` |
+| Logo Qontexto | 15px/500 → 20px/700, dot 10→13px — prominente como marca | `165cacf` |
+| Tema en Historias | 11px → 13px, margin-bottom 3→6px — jerarquía visible entre historia y tema | `165cacf` |
+| Tabs MDUI | `<button class="qtab">` → `<mdui-tabs>/<mdui-tab>` — indicador inferior MD3, ripple, accesibilidad | `231e590` |
 
 ---
 
