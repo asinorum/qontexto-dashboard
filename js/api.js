@@ -1485,7 +1485,7 @@ function _updateTemasTrend(narrativas) {
     .call(d3.axisBottom(x).ticks(6).tickSize(0).tickFormat(d3.timeFormat('%m/%d')))
     .call(g => g.select('.domain').remove())
     .selectAll('text')
-    .attr('font-size', 10).attr('fill', 'var(--text3)').attr('font-family', 'var(--font)');
+    .attr('font-size', 11).attr('fill', 'var(--text3)').attr('font-family', 'var(--font)');
 
   // Line generator — n.series directo (sin null-map), equivale a spanGaps:true
   const lineGen = d3.line()
