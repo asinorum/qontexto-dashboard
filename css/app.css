@@ -3,10 +3,10 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 /* Navbar */
 .qnav { display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:52px; background:var(--surface); border-bottom:.5px solid var(--border); }
 .qlogo { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:500; color:var(--text1); }
-.qlogo-dot { width:10px; height:10px; border-radius:50%; background:var(--primary); flex-shrink:0; }
+.qlogo-dot { width:10px; height:10px; border-radius:50%; background:#FF5722; flex-shrink:0; }
 .qtabs { display:flex; background:var(--surface2); border-radius:10px; padding:3px; gap:2px; border:.5px solid var(--border); }
 .qtab { padding:5px 16px; border-radius:7px; font-size:14px; color:var(--text3); cursor:pointer; border:none; background:transparent; font-family:var(--font); transition:color .15s; }
-.qtab.active { background:var(--surface); color:var(--text1); font-weight:600; box-shadow:0 1px 4px rgba(0,0,0,.12); }
+.qtab.active { background:var(--primary-container); color:var(--on-primary-container); font-weight:600; }
 .qnav-right { display:flex; align-items:center; gap:12px; }
 .qlive { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2); }
 .qlive-dot { width:7px; height:7px; border-radius:50%; background:#4CAF50; flex-shrink:0; }
@@ -17,7 +17,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qwlabel { font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-right:12px; }
 .qwindow-tabs { display:flex; align-items:center; gap:2px; }
 .qwt { padding:4px 11px; border-radius:6px; font-size:12px; color:var(--text3); cursor:pointer; border:none; background:transparent; font-family:var(--font); }
-.qwt.active { background:var(--surface2); color:var(--text1); font-weight:500; }
+.qwt.active { background:transparent; color:var(--primary); font-weight:600; }
 .qrange { font-size:11px; color:var(--text3); }
 .qsnap { display:flex; align-items:center; gap:6px; padding:5px 12px; border-radius:8px; border:.5px solid var(--border); background:var(--surface2); font-size:11px; font-weight:500; color:var(--text2); cursor:pointer; font-family:var(--font); }
 .qsnap-dot { width:6px; height:6px; border-radius:50%; background:var(--primary); flex-shrink:0; }
@@ -42,7 +42,9 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qtopbar-sep { width:.5px; height:20px; background:var(--border); flex-shrink:0; }
 
 /* Veredicto global */
-.qveredicto { margin-bottom:14px; border-left:3px solid transparent; }
+.qveredicto { margin-bottom:14px; border-left:3px solid transparent; background:var(--primary-container); }
+.qveredicto .qcard-lbl   { color:var(--on-primary-container); opacity:.75; }
+.qveredicto .qcard-title { color:var(--on-primary-container); }
 
 /* Barras Narrativas */
 .qbars { display:flex; flex-direction:column; gap:10px; margin-bottom:4px; }
@@ -60,7 +62,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 /* Cards */
 .qcard { background:var(--surface); border-radius:20px; border:.5px solid var(--border); padding:18px; position:relative; }
 .qcard-lbl { font-size:11px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--text3); margin-bottom:5px; }
-.qcard-title { font-size:14px; font-weight:500; color:var(--text1); margin-bottom:14px; line-height:1.45; }
+.qcard-title { font-size:14px; font-weight:600; color:var(--text1); margin-bottom:14px; line-height:1.45; }
 .qcard-note { font-size:11px; color:var(--text3); margin-top:10px; padding:7px 10px; background:var(--surface2); border-radius:8px; line-height:1.5; }
 .qcard-footer { font-size:11px; color:var(--text3); margin-top:10px; padding-top:10px; border-top:.5px solid var(--border); }
 

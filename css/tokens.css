@@ -11,8 +11,10 @@
   --font:    'Google Sans Flex', var(--mdui-typescale-body-medium-font);
   --mono:    'JetBrains Mono', ui-monospace, monospace;
 
-  --primary:    rgb(var(--mdui-color-primary));
-  --on-primary: rgb(var(--mdui-color-on-primary));
+  --primary:              rgb(var(--mdui-color-primary));
+  --on-primary:           rgb(var(--mdui-color-on-primary));
+  --primary-container:    rgb(var(--mdui-color-primary-container));
+  --on-primary-container: rgb(var(--mdui-color-on-primary-container));
 
   --chip-bg: rgb(var(--mdui-color-secondary-container));
   --chip-fg: rgb(var(--mdui-color-on-secondary-container));
