@@ -1479,10 +1479,12 @@ function _updateTemasTrend(narrativas) {
     .domain([0, yMax])
     .range([H - PAD.bottom, PAD.top]);
 
-  // Eje X — etiquetas de fecha
+  // Eje X — días del contrato (Día 1, Día 15, …)
+  const t0 = new Date(allDates[0]);
+  const dayOf = d => Math.round((d - t0) / 86400000) + 1;
   _trendSvg.append('g')
     .attr('transform', `translate(0,${H - PAD.bottom})`)
-    .call(d3.axisBottom(x).ticks(6).tickSize(3).tickFormat(d3.timeFormat('%m/%d')))
+    .call(d3.axisBottom(x).ticks(6).tickSize(3).tickFormat(d => `Día ${dayOf(d)}`))
     .call(g => {
       g.select('.domain').remove();
       g.selectAll('.tick line').style('stroke', 'var(--border)');
