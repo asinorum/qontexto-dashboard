@@ -4,9 +4,7 @@ body { background: var(--bg); font-family: var(--font); color: var(--text1); min
 .qnav { display:flex; align-items:center; justify-content:space-between; padding:0 20px; height:52px; background:var(--surface); border-bottom:.5px solid var(--border); }
 .qlogo { display:flex; align-items:center; gap:8px; font-size:20px; font-weight:700; color:var(--text1); }
 .qlogo-dot { width:13px; height:13px; border-radius:50%; background:#FF5722; flex-shrink:0; }
-.qtabs { display:flex; background:var(--surface2); border-radius:10px; padding:3px; gap:2px; border:.5px solid var(--border); }
-.qtab { padding:5px 16px; border-radius:7px; font-size:14px; color:var(--text3); cursor:pointer; border:none; background:transparent; font-family:var(--font); transition:color .15s; }
-.qtab.active { background:var(--primary-container); color:var(--on-primary-container); font-weight:600; }
+mdui-tabs { --mdui-typescale-label-large-size: 14px; }
 .qnav-right { display:flex; align-items:center; gap:12px; }
 .qlive { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text2); }
 .qlive-dot { width:7px; height:7px; border-radius:50%; background:#4CAF50; flex-shrink:0; }

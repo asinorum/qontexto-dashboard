@@ -23,12 +23,12 @@
 
   <nav class="qnav">
     <div class="qlogo"><div class="qlogo-dot"></div>Qontexto</div>
-    <div class="qtabs">
-      <button class="qtab active" onclick="switchTab('temas',this)">Temas</button>
-      <button class="qtab" onclick="switchTab('historias',this)">Historias</button>
-      <button class="qtab" onclick="switchTab('menciones',this)">Menciones</button>
-      <button class="qtab" onclick="switchTab('contrato',this)">Contrato</button>
-    </div>
+    <mdui-tabs value="temas" id="main-tabs">
+      <mdui-tab value="temas">Temas</mdui-tab>
+      <mdui-tab value="historias">Historias</mdui-tab>
+      <mdui-tab value="menciones">Menciones</mdui-tab>
+      <mdui-tab value="contrato">Contrato</mdui-tab>
+    </mdui-tabs>
     <div class="qnav-right">
       <span id="user-chip" style="display:none;font-size:11px;color:var(--text2);align-items:center;gap:8px">
         <span id="user-name"></span>

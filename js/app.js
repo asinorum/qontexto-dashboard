@@ -21,9 +21,7 @@ function toggleTheme() {
   }
 }
 
-function switchTab(tab, el) {
-  document.querySelectorAll('.qtab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+function switchTab(tab) {
   document.getElementById('tab-temas').style.display     = tab === 'temas'     ? 'block' : 'none';
   document.getElementById('tab-historias').style.display = tab === 'historias' ? 'block' : 'none';
   document.getElementById('tab-menciones').style.display = tab === 'menciones' ? 'block' : 'none';
@@ -39,6 +37,11 @@ function switchTab(tab, el) {
     if (typeof _loadSessionList === 'function' && !_sessionList.length) _loadSessionList();
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  const tabs = document.getElementById('main-tabs');
+  if (tabs) tabs.addEventListener('change', () => switchTab(tabs.value));
+});
 
 function setWindow(el, label, params) {
   document.querySelectorAll('.qwt').forEach(t => t.classList.remove('active'));
