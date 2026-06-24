@@ -1288,7 +1288,11 @@ function _renderTemasBubble(narrativas) {
     .attr('class', 'qbubble')
     .attr('r', d => d.r).attr('cx', d => d.x).attr('cy', d => d.y)
     .attr('fill', d => _clusterHex(d.topic))
-    .attr('fill-opacity', d => d.topic === _selectedTema ? 0.25 : 0.14)
+    .attr('fill-opacity', d => {
+      const silent = (d.nav?.days_since_last_seen ?? 0) > 2;
+      if (d.topic === _selectedTema) return silent ? 0.18 : 0.25;
+      return silent ? 0.07 : 0.14;
+    })
     .attr('stroke', d => _clusterHex(d.topic))
     .attr('stroke-width', d => d.topic === _selectedTema ? 2.5 : 1.8)
     .style('cursor', 'pointer')
@@ -1334,7 +1338,11 @@ function _selectTema(clusterName) {
   // Actualizar burbujas en lugar sin reiniciar la simulación D3
   if (_bubbleCircles) {
     _bubbleCircles
-      .attr('fill-opacity', d => d.topic === _selectedTema ? 0.25 : 0.14)
+      .attr('fill-opacity', d => {
+        const silent = (d.nav?.days_since_last_seen ?? 0) > 2;
+        if (d.topic === _selectedTema) return silent ? 0.18 : 0.25;
+        return silent ? 0.07 : 0.14;
+      })
       .attr('stroke-width', d => d.topic === _selectedTema ? 2.5 : 1.8);
   }
   _applyTrendSelection(clusterName);
@@ -1376,15 +1384,19 @@ function _selectTema(clusterName) {
   }
 
   if (!panel) return;
-  const arcCount  = nav.arc_count ?? '';
-  const urg       = nav.urgency_label ?? nav.urgency ?? '';
-  const rationale = nav.rationale ?? '—';
+  const arcCount    = nav.arc_count ?? '';
+  const urg         = nav.urgency_label ?? nav.urgency ?? '';
+  const rationale   = nav.rationale ?? '—';
+  const daysSilent  = nav.days_since_last_seen ?? 0;
+  const silenceBadge = daysSilent > 2
+    ? `<span class="qsilence-chip">Sin actividad · ${daysSilent}d</span>`
+    : '';
 
   panel.style.borderLeftColor  = hex;
   panel.style.borderLeftWidth  = '6px';
   panel.style.backgroundColor  = _hexToRgba(hex, 0.07);
   panel.innerHTML =
-    `<div style="font-size:14px;font-weight:600;color:${hex};margin-bottom:10px">${_esc(clusterName)}</div>` +
+    `<div style="font-size:14px;font-weight:600;color:${hex};margin-bottom:10px">${_esc(clusterName)}${silenceBadge}</div>` +
     `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">` +
     (arcCount ? `<span style="font-size:11px;padding:2px 10px;border-radius:20px;border:1.5px solid ${hex};color:${hex}">${arcCount} historias</span>` : '') +
     (urg      ? `<span class="qtag" style="font-size:11px;padding:2px 10px;border-radius:20px">${_esc(urg)}</span>` : '') +

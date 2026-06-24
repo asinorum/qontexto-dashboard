@@ -173,6 +173,9 @@ mdui-segmented-button-group { font-size: 14px; }
 .qtag { display:inline-block; background:var(--chip-bg); color:var(--chip-fg);
         border-radius:6px; padding:2px 8px; font-size:11px; font-family:var(--font); }
 
+.qsilence-chip { font-size:11px; background:var(--surface2); color:var(--text3);
+                 border-radius:5px; padding:1px 7px; font-weight:500; margin-left:6px; }
+
 /* Sparkline eje X */
 .qtrend-axis .domain          { display: none; }
 .qtrend-axis .tick line       { stroke: var(--border); }
