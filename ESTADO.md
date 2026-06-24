@@ -11,51 +11,21 @@ Deploy: `https://qontexto.com`
 
 ## → PRÓXIMA SESIÓN — CONTINUAR AQUÍ
 
-### Pendiente: badge de silencio en Tab Temas — `days_since_last_seen`
-
-**Contexto:** el backend agrega `days_since_last_seen` (int | null) al response de `GET /my/summary` en cada item de `narrativas[]`. El frontend debe consumir ese campo para mostrar un indicador cuando un cluster lleva más de 2 días sin actividad, sin que eso afecte su urgencia ni su posición en el ranking.
-
-**Cambios requeridos:**
-
-**`js/api.js`** — en la función que renderiza cada narrativa en el Tab Temas (donde ya aparece `urgencyChip`):
-
-```javascript
-const silenceBadge = nav.days_since_last_seen > 2
-  ? `<span class="qsilence-chip">Sin actividad · ${nav.days_since_last_seen}d</span>`
-  : '';
-```
-
-Añadir `silenceBadge` junto al `urgencyChip` en el HTML renderizado.
-
-Opcionalmente: en `_renderTemasBubble()`, aplicar opacidad reducida a burbujas con `days_since_last_seen > 2`:
-
-```javascript
-const opacity = nav.days_since_last_seen > 2 ? 0.55 : 1.0;
-```
-
-**`css/app.css`** — añadir estilo `.qsilence-chip`:
-
-```css
-.qsilence-chip {
-  font-size: 11px;
-  background: var(--surface2);
-  color: var(--text3);
-  border-radius: 5px;
-  padding: 1px 7px;
-  font-weight: 500;
-  margin-left: 6px;
-}
-```
-
-**Comportamiento al reaparecer:** cuando el cluster vuelve a ser detectado, `days_since_last_seen` vuelve a 0 y el badge desaparece en el próximo poll (30s). No requiere lógica adicional.
-
-**Dependencia:** requiere que el backend esté deployado con `days_since_last_seen` en `narrativas[]` antes de implementar este cambio.
-
----
-
 **Diseño del menú de navegación:** `mdui-segmented-button-group` funciona correctamente pero el diseño visual necesita revisión — colores, tamaño, proporciones dentro de la barra de nav. Pendiente de análisis → planeamiento → implementación.
 
 **Legibilidad — seguir iterando:** se avanzó en tamaños, logo y jerarquía en Historias. Puede haber más ajustes de espaciado según lo que se observe en producción.
+
+---
+
+## ✅ Badge de silencio — sesión 2026-06-24
+
+Commit: `4e6b100`
+
+| Cambio | Detalle |
+|--------|---------|
+| Panel rationale | Muestra `"Sin actividad · Nd"` cuando `days_since_last_seen > 2` |
+| Burbujas | Opacidad reducida (0.14→0.07 normal, 0.25→0.18 seleccionada) cuando silencio > 2d |
+| CSS | `.qsilence-chip` — neutro, `surface2`/`text3`, 11px |
 
 ---
 
