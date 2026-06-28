@@ -88,6 +88,18 @@ docker compose up -d --build
 - Los tokens de color CSS viven en `css/tokens.css`
 - Timestamps siempre en hora de Lima (UTC-5, PE)
 
+## Comandos de producción
+
+### Deploy
+```bash
+cd /opt/qontexto-dashboard && git pull && docker compose up -d --build
+```
+
+### URLs
+- Dashboard producción: `https://qontexto.com`
+- API producción: `https://api.qontexto.com`
+- Container en Vultr: `qontexto-dashboard-web-1`
+
 ## Numeración de fases
 
 - Backend (`narrative-intelligence`): número entero secuencial (13, 24, 25…).
