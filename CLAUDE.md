@@ -87,3 +87,11 @@ docker compose up -d --build
 - Toda llamada a la API va en `js/api.js`
 - Los tokens de color CSS viven en `css/tokens.css`
 - Timestamps siempre en hora de Lima (UTC-5, PE)
+
+## Reglas
+- Todo cambio sigue el proceso obligatorio en tres pasos:
+  1. **Análisis** — leer los archivos relevantes, identificar impacto y riesgos.
+  2. **Planeamiento** — proponer el plan detallado (qué archivos, qué cambios, en qué orden).
+  3. **Implementación** — ejecutar solo lo aprobado.
+  Cada paso requiere aprobación explícita del usuario antes de avanzar al siguiente.
+  No se escribe ninguna línea de código sin haber pasado por Análisis y Planeamiento aprobados.
