@@ -88,6 +88,16 @@ docker compose up -d --build
 - Los tokens de color CSS viven en `css/tokens.css`
 - Timestamps siempre en hora de Lima (UTC-5, PE)
 
+## Numeración de fases
+
+- Backend (`narrative-intelligence`): número entero secuencial (13, 24, 25…).
+  Antes de asignar número nuevo, verificar el último en HISTORIAL.md.
+- Frontend (`qontexto-dashboard`): prefijo D + número (D12, D13…).
+  Antes de asignar número nuevo, verificar el último en ESTADO.md.
+- Subfases: sufijo punto-número (28.1, 28.2). Backend y frontend dentro
+  de la misma fase usan prefijos B/F (B1, F1, B2, F2…).
+- Nunca inventar número de fase sin verificar ESTADO.md e HISTORIAL.md primero.
+
 ## Reglas
 - Todo cambio sigue el proceso obligatorio en tres pasos:
   1. **Análisis** — leer los archivos relevantes, identificar impacto y riesgos.
